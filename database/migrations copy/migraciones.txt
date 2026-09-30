@@ -1,0 +1,87 @@
+1. roles
+2. permisos
+3. clinicas
+4. periodos
+5. pacientes
+6. usuarios
+7. rol_permiso            (FK: roles, permisos)
+8. usuario_rol            (FK: usuarios, roles)
+9. sesiones               (FK: usuarios)
+10. bitacoras             (FK: usuarios)
+11. especialidades        (FK: usuarios, clinicas)
+12. motivos_consulta
+13. admisiones            (FK: pacientes, periodos, motivos_consulta, especialidades x2)
+14. consentimientos       (FK: admisiones)
+15. remisiones            (FK: clinicas, admisiones, periodos)
+16. historias_clinicas    (FK: remisiones, especialidades x2, periodos)
+17. tratamientos          (FK: clinicas)
+18. insumos_tratamiento   (FK: clinicas)
+19. insumos               (FK: insumos_tratamiento)
+20. tratamientos_realizados (FK: historias_clinicas, tratamientos)
+21. sesiones_atencion     (FK: tratamientos_realizados, usuarios x2)
+22. cajas                 (FK: tratamientos, historias_clinicas, usuarios)
+23. caja_detalles         (FK: cajas, tratamientos_realizados)
+24. insumos_solicitados   (FK: insumos_tratamiento, historias_clinicas, usuarios x2, tratamientos_realizados)
+25. insumos_solicitados_detalle (FK: insumos_solicitados, insumos)
+26. insumos_tratamiento_usados  (FK: insumos, tratamientos_realizados)
+27. esterilizaciones      (FK: clinicas, usuarios x2, periodos)
+28. autorizaciones        (FK: historias_clinicas, esterilizaciones)
+29. radiologias           (FK: cajas, usuarios, pacientes, historias_clinicas)
+30. archivos              (FK: pacientes, historias_clinicas, radiologias, usuarios, clinicas)
+31. shico_sincronizacion  (sin FK)
+32. reportes              (FK: usuarios)
+
+php artisan make:migration create_roles_table
+php artisan make:migration create_permisos_table
+php artisan make:migration create_clinicas_table
+php artisan make:migration create_periodos_table
+php artisan make:migration create_pacientes_table
+php artisan make:migration create_usuarios_table
+php artisan make:migration create_rol_permiso_table
+php artisan make:migration create_usuario_rol_table
+php artisan make:migration create_sesiones_table
+php artisan make:migration create_bitacoras_table
+php artisan make:migration create_especialidades_table
+php artisan make:migration create_motivos_consulta_table
+php artisan make:migration create_admisiones_table
+php artisan make:migration create_consentimientos_table
+php artisan make:migration create_remisiones_table
+php artisan make:migration create_historias_clinicas_table
+php artisan make:migration create_tratamientos_table
+php artisan make:migration create_insumos_tratamiento_table
+php artisan make:migration create_insumos_table
+php artisan make:migration create_tratamientos_realizados_table
+php artisan make:migration create_sesiones_atencion_table
+php artisan make:migration create_cajas_table
+php artisan make:migration create_caja_detalles_table
+php artisan make:migration create_insumos_solicitados_table
+php artisan make:migration create_insumos_solicitados_detalle_table
+php artisan make:migration create_insumos_tratamiento_usados_table
+php artisan make:migration create_esterilizaciones_table
+php artisan make:migration create_autorizaciones_table
+php artisan make:migration create_radiologias_table
+php artisan make:migration create_archivos_table
+php artisan make:migration create_shico_sincronizacion_table
+php artisan make:migration create_reportes_table
+
+
+
+
+
+
+php artisan make:seeder ClinicalTableSeeder
+php artisan make:seeder UserTableSeeder
+php artisan make:seeder PatientTableSeeder
+php artisan make:seeder SpecialtyTableSeeder
+php artisan make:seeder LogTableSeeder
+php artisan make:seeder PatientAdmissionTableSeeder
+php artisan make:seeder RemissionTableSeeder
+php artisan make:seeder ClinicHistoryTableSeeder
+php artisan make:seeder TreatmentTableSeeder
+php artisan make:seeder SuppliesTreatmentTableSeeder
+php artisan make:seeder SuppliesTableSeeder
+php artisan make:seeder SuppliesRequestedTableSeeder
+php artisan make:seeder SterilizationTableSeeder
+php artisan make:seeder BoxTableSeeder
+php artisan make:seeder AuthorizationTableSeeder
+php artisan make:seeder RadiologyTableSeeder

@@ -1,0 +1,68 @@
+/mi-proyecto
+│
+├── /backend                      ← Laravel (API + admin)
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   │   ├── Api/
+│   │   │   │   │   ├── AuthController.php
+│   │   │   │   │   ├── PacienteController.php
+│   │   │   │   │   ├── CitaController.php
+│   │   │   │   │   └── ...
+│   │   │   │   └── Controller.php
+│   │   │   ├── Middleware/
+│   │   │   └── Requests/
+│   │   ├── Models/
+│   │   │   ├── User.php
+│   │   │   ├── Paciente.php
+│   │   │   └── ...
+│   │   └── Providers/
+│   ├── bootstrap/
+│   ├── config/
+│   │   ├── app.php
+│   │   ├── cors.php          ← configurar CORS
+│   │   ├── database.php      ← conexión PostgreSQL
+│   │   └── sanctum.php
+│   ├── database/
+│   │   ├── migrations/
+│   │   ├── seeders/
+│   │   └── factories/
+│   ├── routes/
+│   │   ├── api.php           ← endpoints JSON
+│   │   ├── web.php           ← rutas Blade (si las hay)
+│   │   └── console.php
+│   ├── storage/
+│   ├── tests/
+│   ├── .env                  ← credenciales BD, APP_KEY, etc.
+│   ├── artisan
+│   └── composer.json
+│
+└── /frontend                     ← Vue 3 + Vite (tu captura)
+    ├── public/
+    ├── src/
+    │   ├── api/                ← llamadas a la API (axios/fetch)
+    │   │   ├── http.ts         ← instancia axios con baseURL
+    │   │   ├── auth.ts
+    │   │   ├── pacientes.ts
+    │   │   └── ...
+    │   ├── assets/
+    │   ├── components/
+    │   ├── composables/        ← lógica reutilizable (useAuth, usePacientes)
+    │   ├── icons/
+    │   ├── router/             ← vue-router
+    │   │   └── index.ts
+    │   ├── stores/             ← Pinia (estado global)
+    │   │   ├── auth.ts
+    │   │   └── pacientes.ts
+    │   ├── views/              ← páginas
+    │   │   ├── LoginView.vue
+    │   │   ├── DashboardView.vue
+    │   │   └── PacientesView.vue
+    │   ├── App.vue
+    │   ├── main.ts
+    │   └── env.d.ts
+    ├── .env                    ← VITE_API_URL=http://localhost:8000/api
+    ├── index.html
+    ├── package.json
+    ├── tsconfig.json
+    └── vite.config.ts

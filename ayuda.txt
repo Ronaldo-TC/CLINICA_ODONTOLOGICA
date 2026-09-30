@@ -1,0 +1,25 @@
+Admin (admin) - Acceso total
+
+Subadmin (subadmin) - Subadministrador
+
+Director (director) - Director de Carrera
+
+Jefatura de Clínicas (jefatura-clinicas) - Jefatura de Clínicas
+
+Jefe de Cátedra (jefe-catedra) - Jefe de Cátedra
+
+Docente (docente) - Docente
+
+Estudiante (estudiante) - Estudiante
+
+Interno (interno) - Interno de Odontología
+
+Cajero (cajas) - Cajero
+
+Esterilización (esterilizacion) - Esterilización
+
+Insumos (insumos) - Insumos
+
+Radiología (radiologia) - Radiología
+
+Investigación (investigacion) - Instituto de Investigación

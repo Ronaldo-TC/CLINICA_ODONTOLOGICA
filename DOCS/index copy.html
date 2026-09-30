@@ -1,0 +1,4005 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Odontologia UPEA - Documentacion Completa</title>
+    <style>
+        /* ============ RESET & VARIABLES ============ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f172a;
+            --bg-alt: #1e293b;
+            --bg-code: #0b1220;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --method-get: #10b981;
+            --method-post: #2563eb;
+            --method-put: #f59e0b;
+            --method-patch: #a855f7;
+            --method-delete: #ef4444;
+            --sidebar-w: 300px;
+            --header-h: 64px;
+            --radius: 8px;
+            --font-mono: 'SFMono-Regular', Menlo, Consolas, monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: #f8fafc;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ============ HEADER ============ */
+        .header {
+            position: sticky;
+            top: 0;
+            height: var(--header-h);
+            background: var(--bg);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+        }
+
+        .header__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 17px;
+        }
+
+        .header__logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: white;
+        }
+
+        .header__actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header__btn {
+            background: rgba(255, 255, 255, .1);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header__btn:hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        /* ============ LAYOUT ============ */
+        .layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            min-height: calc(100vh - var(--header-h));
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            background: var(--bg-alt);
+            color: #cbd5e1;
+            padding: 24px 0;
+            position: sticky;
+            top: var(--header-h);
+            height: calc(100vh - var(--header-h));
+            overflow-y: auto;
+        }
+
+        .sidebar__search {
+            padding: 0 16px 16px;
+        }
+
+        .sidebar__search input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: var(--radius);
+            color: white;
+            font-size: 14px;
+        }
+
+        .sidebar__search input::placeholder {
+            color: #64748b;
+        }
+
+        .sidebar__search input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .sidebar__section {
+            margin-bottom: 8px;
+        }
+
+        .sidebar__title {
+            padding: 8px 24px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .sidebar__link {
+            display: block;
+            padding: 7px 24px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13.5px;
+            border-left: 3px solid transparent;
+            transition: all .15s;
+        }
+
+        .sidebar__link:hover {
+            background: rgba(255, 255, 255, .05);
+            color: white;
+        }
+
+        .sidebar__link.active {
+            background: rgba(37, 99, 235, .15);
+            border-left-color: var(--accent);
+            color: white;
+        }
+
+        /* ============ MAIN ============ */
+        .main {
+            padding: 40px 48px;
+            max-width: 1150px;
+        }
+
+        /* ============ HERO ============ */
+        .hero {
+            background: linear-gradient(135deg, var(--bg) 0%, #1e3a8a 100%);
+            color: white;
+            padding: 48px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            letter-spacing: -.02em;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #cbd5e1;
+            max-width: 750px;
+        }
+
+        .hero__badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge--success {
+            background: rgba(16, 185, 129, .2);
+            border-color: rgba(16, 185, 129, .4);
+        }
+
+        .badge--warning {
+            background: rgba(245, 158, 11, .2);
+            border-color: rgba(245, 158, 11, .4);
+        }
+
+        .badge--info {
+            background: rgba(6, 182, 212, .2);
+            border-color: rgba(6, 182, 212, .4);
+        }
+
+        .badge--danger {
+            background: rgba(239, 68, 68, .2);
+            border-color: rgba(239, 68, 68, .4);
+        }
+
+        /* ============ SECCIONES ============ */
+        section {
+            margin-bottom: 48px;
+            scroll-margin-top: calc(var(--header-h) + 20px);
+        }
+
+        h2 {
+            font-size: 26px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            letter-spacing: -.01em;
+        }
+
+        h3 {
+            font-size: 19px;
+            margin: 24px 0 12px;
+            color: var(--text);
+        }
+
+        h4 {
+            font-size: 16px;
+            margin: 16px 0 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 12px;
+        }
+
+        ul,
+        ol {
+            margin: 8px 0 12px 20px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        /* ============ TABLAS ============ */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            margin: 16px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        td code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #be185d;
+        }
+
+        /* ============ ENDPOINTS ============ */
+        .endpoint {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: box-shadow .2s;
+        }
+
+        .endpoint:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+        }
+
+        .endpoint__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            cursor: pointer;
+            background: #fafbfc;
+            border-bottom: 1px solid transparent;
+            transition: background .15s;
+        }
+
+        .endpoint__header:hover {
+            background: #f1f5f9;
+        }
+
+        .endpoint.open .endpoint__header {
+            border-bottom-color: var(--border);
+            background: #f1f5f9;
+        }
+
+        .endpoint__method {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .05em;
+            color: white;
+            font-family: var(--font-mono);
+            flex-shrink: 0;
+        }
+
+        .method-GET {
+            background: var(--method-get);
+        }
+
+        .method-POST {
+            background: var(--method-post);
+        }
+
+        .method-PUT {
+            background: var(--method-put);
+        }
+
+        .method-PATCH {
+            background: var(--method-patch);
+        }
+
+        .method-DELETE {
+            background: var(--method-delete);
+        }
+
+        .endpoint__path {
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            color: var(--text);
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .endpoint__desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .endpoint__toggle {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform .2s;
+        }
+
+        .endpoint.open .endpoint__toggle {
+            transform: rotate(180deg);
+        }
+
+        .endpoint__body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .3s ease;
+        }
+
+        .endpoint.open .endpoint__body {
+            max-height: 3000px;
+            padding: 18px;
+        }
+
+        /* ============ CODIGO ============ */
+        pre {
+            background: var(--bg-code);
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 12px 0;
+            position: relative;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        :not(pre)>code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #be185d;
+            font-size: 13px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .15);
+            color: #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity .15s, background .15s;
+        }
+
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, .2);
+            color: white;
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        /* ============ CALLOUTS ============ */
+        .callout {
+            display: flex;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout--info {
+            background: #eff6ff;
+            border-color: var(--info);
+            color: #0c4a6e;
+        }
+
+        .callout--success {
+            background: #ecfdf5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .callout--warning {
+            background: #fffbeb;
+            border-color: var(--warning);
+            color: #78350f;
+        }
+
+        .callout--danger {
+            background: #fef2f2;
+            border-color: var(--danger);
+            color: #7f1d1d;
+        }
+
+        .callout__icon {
+            font-size: 16px;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============ CARDS ============ */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .06);
+        }
+
+        .card__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+        }
+
+        .card__title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .card__text {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ============ PROGRESS ============ */
+        .progress-item {
+            margin-bottom: 14px;
+        }
+
+        .progress-item__header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .progress-item__label {
+            font-weight: 500;
+        }
+
+        .progress-item__value {
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-bar__fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            transition: width .8s ease;
+            width: 0;
+        }
+
+        .progress-bar__fill--success {
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+        }
+
+        .progress-bar__fill--warning {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        /* ============ FLUJO ============ */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 16px 0;
+        }
+
+        .flow__step {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            padding: 14px 18px;
+            background: #f8fafc;
+            border-left: 4px solid var(--accent);
+            border-radius: 6px;
+        }
+
+        .flow__step-num {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .flow__step-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .flow__step-text {
+            font-size: 13.5px;
+            color: var(--text-muted);
+        }
+
+        /* ============ TREE VIEW ============ */
+        .tree-view {
+            background: #0b1220;
+            color: #e2e8f0;
+            padding: 20px 24px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid #1e293b;
+        }
+
+        .tree-view ul {
+            list-style: none;
+            margin: 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tree-view>ul {
+            padding-left: 0;
+        }
+
+        .tree-view li {
+            position: relative;
+            padding-left: 0;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .tree-view li::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            bottom: 0;
+            border-left: 1px solid #334155;
+        }
+
+        .tree-view li:last-child::before {
+            height: 0.9em;
+        }
+
+        .tree-view li::after {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0.9em;
+            width: 12px;
+            border-top: 1px solid #334155;
+        }
+
+        .tree-view>ul>li::before,
+        .tree-view>ul>li::after {
+            display: none;
+        }
+
+        .tree-view .folder-name {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .tree-view .folder-name::before {
+            content: '📁 ';
+            font-size: 12px;
+        }
+
+        .tree-view .file-name {
+            color: #e2e8f0;
+        }
+
+        .tree-view .file-name::before {
+            content: '📄 ';
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .tree-view .comment {
+            color: #64748b;
+            font-style: italic;
+            margin-left: 8px;
+        }
+
+        .tree-view .comment--new {
+            color: #10b981;
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+                max-height: 320px;
+            }
+
+            .main {
+                padding: 24px;
+            }
+
+            .hero {
+                padding: 32px 24px;
+            }
+
+            .hero h1 {
+                font-size: 26px;
+            }
+        }
+
+        /* ============ SCROLLBAR ============ */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        /* ============ PRINT ============ */
+        @media print {
+
+            .sidebar,
+            .header,
+            .copy-btn {
+                display: none;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .endpoint__body {
+                max-height: none !important;
+                padding: 20px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header__brand">
+            <div class="header__logo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M12 2C8 2 5 5 5 9c0 3 1 5 2 8s2 5 3 5 1-2 1-4 0-3 1-3 1 1 1 3 0 4 1 4 2-2 3-5 2-5 2-8c0-4-3-7-7-7z" />
+                </svg>
+            </div>
+            <span>Odontologia UPEA - API Docs Completa</span>
+        </div>
+        <div class="header__actions">
+            <button class="header__btn" onclick="window.print()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Imprimir
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="sidebar">
+            <div class="sidebar__search">
+                <input type="text" id="search" placeholder="Buscar endpoint...">
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Inicio</div>
+                <a class="sidebar__link active" href="#overview">Descripcion general</a>
+                <a class="sidebar__link" href="#objetivos">Objetivos del sistema</a>
+                <a class="sidebar__link" href="#stack">Stack tecnologico</a>
+                <a class="sidebar__link" href="#arquitectura">Arquitectura</a>
+                <a class="sidebar__link" href="#estructura">Estructura de carpetas</a>
+                <a class="sidebar__link" href="#flujo">Flujo de atencion</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Autenticacion</div>
+                <a class="sidebar__link" href="#auth">Login / Logout / Me</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Modulos del sistema</div>
+                <a class="sidebar__link" href="#admin">1. Administrador</a>
+                <a class="sidebar__link" href="#admision">2. Admision</a>
+                <a class="sidebar__link" href="#remision">3. Remision / Derivacion</a>
+                <a class="sidebar__link" href="#historia">4. Historia Clinica</a>
+                <a class="sidebar__link" href="#docente">5. Docente</a>
+                <a class="sidebar__link" href="#estudiante">6. Estudiante</a>
+                <a class="sidebar__link" href="#cajas">7. Cajas</a>
+                <a class="sidebar__link" href="#esterilizacion">8. Esterilizacion</a>
+                <a class="sidebar__link" href="#insumos">9. Insumos</a>
+                <a class="sidebar__link" href="#radiologia">10. Radiologia</a>
+                <a class="sidebar__link" href="#subadmin">11. Subadmin</a>
+                <a class="sidebar__link" href="#investigacion">12. Investigacion</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Reportes</div>
+                <a class="sidebar__link" href="#reportes">Reportes del sistema</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Base de datos</div>
+                <a class="sidebar__link" href="#tablas">Tablas y modelos</a>
+                <a class="sidebar__link" href="#roles">Roles del sistema</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Desarrollo</div>
+                <a class="sidebar__link" href="#convenciones">Convenciones de codigo</a>
+                <a class="sidebar__link" href="#buenas-practicas">Buenas practicas</a>
+                <a class="sidebar__link" href="#seguridad">Seguridad</a>
+            </div>
+
+            <div class="sidebar__section">
+                <div class="sidebar__title">Referencia</div>
+                <a class="sidebar__link" href="#respuestas">Respuestas estandar</a>
+                <a class="sidebar__link" href="#errores">Codigos HTTP</a>
+                <a class="sidebar__link" href="#avance">Estado de avance</a>
+                <a class="sidebar__link" href="#instalacion">Manual de instalacion</a>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN ============ -->
+        <main class="main">
+
+            <!-- HERO -->
+            <div class="hero">
+                <h1>API Backend Odontologia UPEA</h1>
+                <p>API REST en Laravel 13 + Sanctum para el sistema odontologico de la Universidad Publica de El Alto.
+                    Cubre el flujo completo: Admision, Remision, Historia Clinica, Autorizacion Docente, Cajas,
+                    Insumos, Esterilizacion y Radiologia. Basado en las 16 tablas del sistema legado en PostgreSQL.</p>
+                <div class="hero__badges">
+                    <span class="badge">Laravel 13</span>
+                    <span class="badge">Sanctum</span>
+                    <span class="badge">PostgreSQL 16</span>
+                    <span class="badge badge--success">Auth completo</span>
+                    <span class="badge badge--success">Admin completo</span>
+                    <span class="badge badge--warning">Modulos en progreso</span>
+                </div>
+            </div>
+
+            <!-- OVERVIEW -->
+            <section id="overview">
+                <h2>1. Descripcion general</h2>
+                <p>Backend desarrollado en <strong>Laravel 13</strong> para gestionar la plataforma odontologica de la
+                    UPEA. La API REST usa <strong>Sanctum</strong> para autenticacion por token y un middleware
+                    personalizado (<code>CheckRole</code>) para validacion de roles.</p>
+                <!-- <p>Mantiene compatibilidad total con la base de datos PostgreSQL <code>clinica_odontologica</code> del
+                    sistema original, definida en el script <code>clinic.sql</code> (16 tablas).</p> -->
+                <div class="callout callout--info">
+                    <svg class="callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4M12 8h.01" />
+                    </svg>
+                    <div>Este documento cubre <strong>todos los modulos</strong> definidos en la nota interna
+                        CITE:/ODONT./Nº 172/2026 y en el informe de la Jefatura de Semiologia Estomatologica.</div>
+                </div>
+            </section>
+
+            <!-- OBJETIVOS -->
+            <section id="objetivos">
+                <h2>2. Objetivos del sistema</h2>
+                <ul>
+                    <li>Que ningun paciente se pierda entre especialidades.</li>
+                    <li>Seguimiento continuo y coordinado a traves de las diferentes especialidades.</li>
+                    <li>Reemplazar las fichas fisicas por un registro digital confiable.</li>
+                    <li>Acceso oportuno a los datos para brindar atencion de calidad.</li>
+                    <li>Centralizar la informacion odontologica en un solo soporte tecnologico.</li>
+                </ul>
+                <div class="callout callout--success">
+                    <svg class="callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <div>El sistema busca resolver: perdida de informacion, tiempos de espera, errores clinicos,
+                        dispersion de datos y modernizacion del proceso de atencion.</div>
+                </div>
+            </section>
+
+            <!-- STACK -->
+            <section id="stack">
+                <h2>3. Stack tecnologico</h2>
+                <div class="cards">
+                    <div class="card">
+                        <div class="card__icon">PHP</div>
+                        <div class="card__title">PHP 8.3</div>
+                        <div class="card__text">Runtime principal del backend</div>
+                    </div>
+                    <div class="card">
+                        <div class="card__icon">L13</div>
+                        <div class="card__title">Laravel 13</div>
+                        <div class="card__text">Framework MVC + API REST</div>
+                    </div>
+                    <div class="card">
+                        <div class="card__icon">KEY</div>
+                        <div class="card__title">Sanctum</div>
+                        <div class="card__text">Autenticacion por tokens Bearer</div>
+                    </div>
+                    <div class="card">
+                        <div class="card__icon">DB</div>
+                        <div class="card__title">PostgreSQL 16</div>
+                        <div class="card__text">Base de datos relacional</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ARQUITECTURA -->
+            <section id="arquitectura">
+                <h2>4. Arquitectura</h2>
+                <pre><code>Cliente / Frontend / App
+        |
+        v  HTTP JSON
++----------------------------------------------------------+
+|                  BACKEND_ODONTOLOGIA                     |
+|                 Laravel 13 + Sanctum                    |
+|                                                          |
+|  routes/api.php                                          |
+|  - /api/login /api/logout /api/me                        |
+|  - /api/admin/*                                          |
+|  - /api/admision/*                                       |
+|  - /api/remision/*                                       |
+|  - /api/historia/*                                       |
+|  - /api/docente/*                                        |
+|  - /api/estudiante/*                                     |
+|  - /api/cajas/*                                          |
+|  - /api/esterilizacion/*                                 |
+|  - /api/insumos/*                                        |
+|  - /api/radiologia/*                                     |
+|  - /api/subadmin/*                                       |
+|  - /api/investigacion/*                                  |
+|  - /api/reportes/*                                       |
+|                          |                               |
+|  Middleware / Seguridad  |                               |
+|  - auth:sanctum          |                               |
+|  - role:admin,teacher,   |                               |
+|    student,cashier,...   |                               |
+|  - CheckRole             |                               |
+|                          v                               |
+|  Controllers Api                                         |
+|  - AuthController, AdminController, AdmisionController,  |
+|    RemisionController, HistoriaController,               |
+|    DocenteController, EstudianteController,              |
+|    CajaController, EsterilizacionController,             |
+|    InsumoController, RadiologiaController,               |
+|    SubadminController, InvestigacionController,          |
+|    ReporteController                                     |
+|                          |                               |
+|  Validaciones / Recursos |                               |
+|  - Form Requests         |                               |
+|  - Resources (JSON)      |                               |
+|  - Services (logica)     |                               |
+|                          v                               |
+|  Models Eloquent                                         |
+|  - User, Clinical, Specialty, Patient,                   |
+|    PatientAdmission, Remission, ClinicHistory,           |
+|    Treatment, Box, Sterilization, Authorization,         |
+|    Supplies, SuppliesTreatment, SuppliesRequested,       |
+|    Radiology, Log                                        |
++----------------------------------------------------------+
+        |
+        v
+    PostgreSQL clinica_odontologica
+    (usertable, clinicaltable, patienttable, ...)
+</code></pre>
+            </section>
+
+            <!-- ESTRUCTURA -->
+            <section id="estructura">
+                <h2>5. Estructura de carpetas</h2>
+                <p>Estructura del proyecto backend Laravel 13, organizada por capas y modulos. Basada en el estandar de
+                    Laravel con separacion por dominio.</p>
+
+                <div class="tree-view">
+                    <ul>
+                        <li>
+                            <span class="folder-name">backend_odontologia/</span>
+                            <ul>
+                                <!-- app/ -->
+                                <li>
+                                    <span class="folder-name">app/</span>
+                                    <ul>
+                                        <li>
+                                            <span class="folder-name">Http/</span>
+                                            <ul>
+                                                <li>
+                                                    <span class="folder-name">Controllers/</span>
+                                                    <ul>
+                                                        <li>
+                                                            <span class="folder-name">Api/</span>
+                                                            <ul>
+                                                                <li><span
+                                                                        class="file-name">AuthController.php</span><span
+                                                                        class="comment"># login, logout, me</span></li>
+                                                                <li><span
+                                                                        class="file-name">AdminController.php</span><span
+                                                                        class="comment"># panel admin</span></li>
+                                                                <li><span
+                                                                        class="file-name">UsuarioController.php</span><span
+                                                                        class="comment"># CRUD usuarios</span></li>
+                                                                <li><span
+                                                                        class="file-name">AdmisionController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">RemisionController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">HistoriaController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">DocenteController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">EstudianteController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">CajaController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">EsterilizacionController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">InsumoController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">RadiologiaController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">SubadminController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">InvestigacionController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                                <li><span
+                                                                        class="file-name">ReporteController.php</span><span
+                                                                        class="comment comment--new"># NUEVO</span></li>
+                                                            </ul>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    <span class="folder-name">Middleware/</span>
+                                                    <ul>
+                                                        <li><span class="file-name">CheckRole.php</span><span
+                                                                class="comment"># valida rol del usuario</span></li>
+                                                        <li><span class="file-name">Authenticate.php</span></li>
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    <span class="folder-name">Requests/</span>
+                                                    <ul>
+                                                        <li><span class="file-name">LoginRequest.php</span></li>
+                                                        <li><span class="file-name">StoreUserRequest.php</span></li>
+                                                        <li><span class="file-name">StorePatientRequest.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span
+                                                                class="file-name">StoreAdmissionRequest.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span
+                                                                class="file-name">StoreRemissionRequest.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span
+                                                                class="file-name">StoreClinicHistoryRequest.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    <span class="folder-name">Resources/</span>
+                                                    <ul>
+                                                        <li><span class="file-name">UserResource.php</span></li>
+                                                        <li><span class="file-name">ClinicalResource.php</span></li>
+                                                        <li><span class="file-name">PatientResource.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span class="file-name">AdmissionResource.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span class="file-name">RemissionResource.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                        <li><span
+                                                                class="file-name">ClinicHistoryResource.php</span><span
+                                                                class="comment comment--new"># NUEVO</span></li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">Models/</span>
+                                            <ul>
+                                                <li><span class="file-name">User.php</span></li>
+                                                <li><span class="file-name">Clinical.php</span></li>
+                                                <li><span class="file-name">Specialty.php</span></li>
+                                                <li><span class="file-name">Patient.php</span></li>
+                                                <li><span class="file-name">PatientAdmission.php</span></li>
+                                                <li><span class="file-name">Remission.php</span></li>
+                                                <li><span class="file-name">ClinicHistory.php</span></li>
+                                                <li><span class="file-name">Treatment.php</span></li>
+                                                <li><span class="file-name">Box.php</span></li>
+                                                <li><span class="file-name">Sterilization.php</span></li>
+                                                <li><span class="file-name">Authorization.php</span></li>
+                                                <li><span class="file-name">Supplies.php</span></li>
+                                                <li><span class="file-name">SuppliesTreatment.php</span></li>
+                                                <li><span class="file-name">SuppliesRequested.php</span></li>
+                                                <li><span class="file-name">Radiology.php</span></li>
+                                                <li><span class="file-name">Log.php</span></li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">Services/</span>
+                                            <ul>
+                                                <li><span class="file-name">LogService.php</span><span class="comment">#
+                                                        registro de auditoria</span></li>
+                                                <li><span class="file-name">ReportService.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                                <li><span class="file-name">DashboardService.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">Traits/</span>
+                                            <ul>
+                                                <li><span class="file-name">ApiResponse.php</span><span
+                                                        class="comment"># respuestas estandar</span></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- config/ -->
+                                <li>
+                                    <span class="folder-name">config/</span>
+                                    <ul>
+                                        <li><span class="file-name">app.php</span></li>
+                                        <li><span class="file-name">auth.php</span></li>
+                                        <li><span class="file-name">cors.php</span></li>
+                                        <li><span class="file-name">database.php</span></li>
+                                        <li><span class="file-name">sanctum.php</span></li>
+                                    </ul>
+                                </li>
+
+                                <!-- database/ -->
+                                <li>
+                                    <span class="folder-name">database/</span>
+                                    <ul>
+                                        <li>
+                                            <span class="folder-name">migrations/</span>
+                                            <ul>
+                                                <li><span class="file-name">..._create_usertable_table.php</span></li>
+                                                <li><span class="file-name">..._create_clinicaltable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_patienttable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_specialtytable_table.php</span>
+                                                </li>
+                                                <li><span
+                                                        class="file-name">..._create_patientadmissiontable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_remissiontable_table.php</span>
+                                                </li>
+                                                <li><span
+                                                        class="file-name">..._create_clinichistorytable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_boxtable_table.php</span></li>
+                                                <li><span
+                                                        class="file-name">..._create_sterilizationtable_table.php</span>
+                                                </li>
+                                                <li><span
+                                                        class="file-name">..._create_authorizationtable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_suppliestable_table.php</span>
+                                                </li>
+                                                <li><span
+                                                        class="file-name">..._create_suppliestreatmenttable_table.php</span>
+                                                </li>
+                                                <li><span
+                                                        class="file-name">..._create_suppliesrequestedtable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_radiologytable_table.php</span>
+                                                </li>
+                                                <li><span class="file-name">..._create_logtable_table.php</span></li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">seeders/</span>
+                                            <ul>
+                                                <li><span class="file-name">DatabaseSeeder.php</span></li>
+                                                <li><span class="file-name">UserSeeder.php</span></li>
+                                                <li><span class="file-name">ClinicalSeeder.php</span></li>
+                                                <li><span class="file-name">TreatmentSeeder.php</span></li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">factories/</span>
+                                            <ul>
+                                                <li><span class="file-name">UserFactory.php</span></li>
+                                                <li><span class="file-name">PatientFactory.php</span></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- routes/ -->
+                                <li>
+                                    <span class="folder-name">routes/</span>
+                                    <ul>
+                                        <li><span class="file-name">api.php</span><span class="comment"># todas las
+                                                rutas API</span></li>
+                                        <li><span class="file-name">web.php</span></li>
+                                        <li><span class="file-name">console.php</span></li>
+                                    </ul>
+                                </li>
+
+                                <!-- storage/ -->
+                                <li>
+                                    <span class="folder-name">storage/</span>
+                                    <ul>
+                                        <li>
+                                            <span class="folder-name">app/</span>
+                                            <ul>
+                                                <li>
+                                                    <span class="folder-name">public/</span>
+                                                    <ul>
+                                                        <li>
+                                                            <span class="folder-name">historias/</span><span
+                                                                class="comment"># archivos de historias clinicas</span>
+                                                        </li>
+                                                        <li>
+                                                            <span class="folder-name">radiografias/</span><span
+                                                                class="comment"># imagenes de radiologia</span>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">logs/</span>
+                                            <ul>
+                                                <li><span class="file-name">laravel.log</span></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- tests/ -->
+                                <li>
+                                    <span class="folder-name">tests/</span>
+                                    <ul>
+                                        <li>
+                                            <span class="folder-name">Feature/</span>
+                                            <ul>
+                                                <li><span class="file-name">AuthTest.php</span></li>
+                                                <li><span class="file-name">AdminTest.php</span></li>
+                                                <li><span class="file-name">AdmisionTest.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                                <li><span class="file-name">HistoriaTest.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                                <li><span class="file-name">CajaTest.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <span class="folder-name">Unit/</span>
+                                            <ul>
+                                                <li><span class="file-name">LogServiceTest.php</span></li>
+                                                <li><span class="file-name">ReportServiceTest.php</span><span
+                                                        class="comment comment--new"># NUEVO</span></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <!-- Archivos raiz -->
+                                <li><span class="file-name">.env</span><span class="comment"># variables de entorno (no
+                                        commitear)</span></li>
+                                <li><span class="file-name">.env.example</span><span class="comment"># plantilla de
+                                        variables</span></li>
+                                <li><span class="file-name">.gitignore</span></li>
+                                <li><span class="file-name">artisan</span></li>
+                                <li><span class="file-name">composer.json</span></li>
+                                <li><span class="file-name">composer.lock</span></li>
+                                <li><span class="file-name">package.json</span></li>
+                                <li><span class="file-name">phpunit.xml</span></li>
+                                <li><span class="file-name">README.md</span></li>
+                                <li><span class="file-name">odon.sql</span><span class="comment"># dump PostgreSQL del
+                                        sistema legado</span></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="callout callout--info">
+                    <svg class="callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4M12 8h.01" />
+                    </svg>
+                    <div><strong>Convencion:</strong> Los archivos marcados con <span
+                            style="color:#10b981;font-weight:600;"># NUEVO</span> corresponden a modulos que aun deben
+                        implementarse. Los modulos de Auth y Admin ya estan completos.</div>
+                </div>
+            </section>
+
+            <!-- FLUJO -->
+            <section id="flujo">
+                <h2>6. Flujo de atencion</h2>
+                <p>El sistema acompana el flujo real de la clinica sin forzar a docentes ni estudiantes a adaptarse a
+                    una logica ajena.</p>
+                <div class="flow">
+                    <div class="flow__step">
+                        <div class="flow__step-num">1</div>
+                        <div>
+                            <div class="flow__step-title">Ingreso del paciente</div>
+                            <div class="flow__step-text">El paciente ingresa por la Clinica de Admision, donde se
+                                registran sus datos personales y se llena la ficha de admision digital.</div>
+                        </div>
+                    </div>
+                    <div class="flow__step">
+                        <div class="flow__step-num">2</div>
+                        <div>
+                            <div class="flow__step-title">Derivacion a especialidad</div>
+                            <div class="flow__step-text">Segun el caso, el paciente es derivado a la especialidad
+                                correspondiente (Ortodoncia, Endodoncia, Cirugia, etc.).</div>
+                        </div>
+                    </div>
+                    <div class="flow__step">
+                        <div class="flow__step-num">3</div>
+                        <div>
+                            <div class="flow__step-title">Aprobacion del docente y pago en Cajas</div>
+                            <div class="flow__step-text">El docente aprueba el tratamiento propuesto por el estudiante.
+                                El paciente pasa por Cajas para cancelar el tratamiento.</div>
+                        </div>
+                    </div>
+                    <div class="flow__step">
+                        <div class="flow__step-num">4</div>
+                        <div>
+                            <div class="flow__step-title">Registro del avance</div>
+                            <div class="flow__step-text">El docente registra paso a paso el avance del tratamiento en la
+                                historia clinica digital.</div>
+                        </div>
+                    </div>
+                    <div class="flow__step">
+                        <div class="flow__step-num">5</div>
+                        <div>
+                            <div class="flow__step-title">Autorizacion de insumos y esterilizacion</div>
+                            <div class="flow__step-text">El registro de avance permite autorizar al area de Insumos la
+                                entrega de materiales y a Esterilizacion la entrega de paquetes.</div>
+                        </div>
+                    </div>
+                    <div class="flow__step">
+                        <div class="flow__step-num">6</div>
+                        <div>
+                            <div class="flow__step-title">Finalizacion del tratamiento</div>
+                            <div class="flow__step-text">El estudiante finaliza el tratamiento y el docente lo registra
+                                como culminado. El Instituto de Investigacion puede acceder a informacion estadistica.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AUTENTICACION -->
+            <section id="auth">
+                <h2>7. Autenticacion</h2>
+                <div class="callout callout--info">
+                    <svg class="callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4M12 8h.01" />
+                    </svg>
+                    <div>Todas las rutas protegidas requieren el header <code>Authorization: Bearer &lt;token&gt;</code>
+                        y <code>Accept: application/json</code>.</div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/login">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/login</span>
+                        <span class="endpoint__desc">Login</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Autentica un usuario por <code>username</code> y <code>password</code>.</p>
+                        <h4>Body</h4>
+                        <pre><code>{
+    "username": "admin",
+    "password": "123"
+}</code></pre>
+                        <h4>Respuesta exitosa</h4>
+                        <pre><code>{
+    "success": true,
+    "message": "Login exitoso.",
+    "data": {
+        "user": {
+            "usernumber": 1,
+            "username": "admin",
+            "userfullname": "Administrador del Sistema",
+            "usertype": "admin",
+            "userdesc": "Acceso total"
+        },
+        "token": "1|xxxxxxxxxxxxxxxxxxxx",
+        "token_type": "Bearer",
+        "dashboard": { "route": "/dashboard/admin", "name": "Panel de Administracion" }
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/logout">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/logout</span>
+                        <span class="endpoint__desc">Cerrar sesion</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Revoca el token actual del usuario autenticado y registra el evento en
+                            <code>logtable</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/me">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/me</span>
+                        <span class="endpoint__desc">Usuario autenticado</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve la informacion del usuario autenticado segun el token Bearer, incluyendo sus
+                            especialidades activas.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN -->
+            <section id="admin">
+                <h2>8. Modulo Administrador - <code>/api/admin</code></h2>
+                <p>Modulo completo del panel administrativo: dashboard, estadisticas, CRUD de usuarios, gestion de
+                    especialidades, clinicas, tratamientos, insumos y logs.</p>
+
+                <h3>Dashboard y estadisticas</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/dashboard</span>
+                        <span class="endpoint__desc">Metricas del panel</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve sesion, rango de fechas, remisiones por clinica, contadores globales y alertas del
+                            sistema.</p>
+                        <h4>Query params</h4>
+                        <ul>
+                            <li><code>from</code> - fecha inicial (YYYY-MM-DD)</li>
+                            <li><code>to</code> - fecha final (YYYY-MM-DD)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/stats/remissions">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/stats/remissions</span>
+                        <span class="endpoint__desc">Remisiones por clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Cuenta las remisiones agrupadas por <code>clinicalid</code> en un rango de fechas.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/stats/boxes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/stats/boxes</span>
+                        <span class="endpoint__desc">Estadisticas de cajas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Totales de cajas, items y montos agrupados por clinica.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/stats/supplies">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/stats/supplies</span>
+                        <span class="endpoint__desc">Stock y solicitudes</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Solicitudes de insumos vs. stock disponible por clinica.</p>
+                    </div>
+                </div>
+
+                <h3>Gestion de clinicas y especialidades</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/clinicals">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/clinicals</span>
+                        <span class="endpoint__desc">Lista clinicas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista todas las clinicas del catalogo <code>clinicaltable</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admin/clinicals">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admin/clinicals</span>
+                        <span class="endpoint__desc">Crear clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "clinicalmodule": "Odontologia",
+    "clinicalspecialty": "Implantologia",
+    "clinicalcourse": 7
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/admin/clinicals/{clinicalid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/admin/clinicals/{clinicalid}</span>
+                        <span class="endpoint__desc">Actualizar clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza los datos de una clinica existente.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/specialties">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/specialties</span>
+                        <span class="endpoint__desc">Inscripciones usuario-clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista las inscripciones usuario-clinica con filtros <code>userid</code>,
+                            <code>clinicalid</code>, <code>enabled</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admin/specialties/enroll">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admin/specialties/enroll</span>
+                        <span class="endpoint__desc">Inscribir a clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "userid": 4,
+    "clinicalid": 5,
+    "enabled": true
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="DELETE" data-path="/api/admin/specialties/{userid}/{clinicalid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-DELETE">DELETE</span>
+                        <span class="endpoint__path">/api/admin/specialties/{userid}/{clinicalid}</span>
+                        <span class="endpoint__desc">Desinscribir</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Deshabilita la inscripcion usuario-clinica.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admin/specialties/responsible">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admin/specialties/responsible</span>
+                        <span class="endpoint__desc">Asignar responsable</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "userid": 4,
+    "clinicalid": 1,
+    "responsibleadmission": true
+}</code></pre>
+                        <p>Designa un responsable de admision para la clinica. Solo puede haber uno activo por clinica.
+                        </p>
+                    </div>
+                </div>
+
+                <h3>Gestion de tratamientos (catalogo)</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/treatments">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/treatments</span>
+                        <span class="endpoint__desc">Listar tratamientos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>clinicalid</code>, <code>search</code>. Devuelve el catalogo completo de
+                            <code>treatmenttable</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admin/treatments">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admin/treatments</span>
+                        <span class="endpoint__desc">Crear tratamiento</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "treatmentname": "Implante dental",
+    "treatmentcost": 1500.00,
+    "treatmentpgpercent": "60",
+    "treatmentdesc": "Colocacion de implante",
+    "clinicalid": 3
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/admin/treatments/{treatmentid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/admin/treatments/{treatmentid}</span>
+                        <span class="endpoint__desc">Actualizar tratamiento</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza los datos de un tratamiento del catalogo.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="DELETE" data-path="/api/admin/treatments/{treatmentid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-DELETE">DELETE</span>
+                        <span class="endpoint__path">/api/admin/treatments/{treatmentid}</span>
+                        <span class="endpoint__desc">Eliminar tratamiento</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Elimina un tratamiento del catalogo (borrado logico si tiene dependencias).</p>
+                    </div>
+                </div>
+
+                <h3>Gestion de insumos (catalogo)</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/supplies-treatments">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/supplies-treatments</span>
+                        <span class="endpoint__desc">Kits de insumos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista los kits de insumos de <code>suppliestreatmenttable</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admin/supplies-treatments">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admin/supplies-treatments</span>
+                        <span class="endpoint__desc">Crear kit</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "suppliestreatmentname": "Kit implantologia",
+    "suppliesdesc": "Implante+tornillos",
+    "clinicalid": 3
+}</code></pre>
+                    </div>
+                </div>
+
+                <h3>Logs del sistema</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/logs">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/logs</span>
+                        <span class="endpoint__desc">Listado de logs</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Paginado. Filtros: <code>logtype</code>, <code>loguser</code>, <code>logstatus</code>,
+                            <code>from</code>, <code>to</code>, <code>per_page</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admin/logs/{lognumber}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admin/logs/{lognumber}</span>
+                        <span class="endpoint__desc">Detalle de log</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Obtiene un log en detalle por su numero.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMISION -->
+            <section id="admision">
+                <h2>9. Modulo Admision - <code>/api/admision</code></h2>
+                <p>Modulo de la Clinica de Admision: registro de pacientes, llenado de la ficha de admision digital y
+                    derivacion a especialidades.</p>
+
+                <h3>Pacientes</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admision/pacientes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admision/pacientes</span>
+                        <span class="endpoint__desc">Listar pacientes</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Paginado. Filtros: <code>search</code> (CI, nombre, apellido), <code>per_page</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admision/pacientes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admision/pacientes</span>
+                        <span class="endpoint__desc">Registrar paciente</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "patientci": "12345678",
+    "patientname": "Maria",
+    "patientfatherlastname": "Gonzalez",
+    "patientmotherlastname": "Perez",
+    "patientgender": "F",
+    "patientbirthdate": 631152000
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admision/pacientes/{patientid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admision/pacientes/{patientid}</span>
+                        <span class="endpoint__desc">Ver paciente</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve el paciente con sus admisiones, remisiones e historias clinicas vinculadas.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/admision/pacientes/{patientid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/admision/pacientes/{patientid}</span>
+                        <span class="endpoint__desc">Actualizar paciente</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza los datos personales del paciente.</p>
+                    </div>
+                </div>
+
+                <h3>Ficha de Admision</h3>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admision/fichas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admision/fichas</span>
+                        <span class="endpoint__desc">Listar fichas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista las fichas de admision. Filtros: <code>patientid</code>, <code>studentid</code>,
+                            <code>from</code>, <code>to</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admision/fichas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admision/fichas</span>
+                        <span class="endpoint__desc">Crear ficha digital</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Crea una nueva ficha de admision digital con todos los campos del formulario fisico
+                            (antecedentes, signos vitales, odontograma, diagnostico presuntivo, etc.).</p>
+                        <h4>Body</h4>
+                        <pre><code>{
+    "patientid": 1,
+    "patientcivilstatus": "Soltero",
+    "patientschool": "UMSA",
+    "patientoccupation": "Estudiante",
+    "patientdirection": "Zona Central #1",
+    "patientemergency": "Familiar 7770001",
+    "patientphone": 70000001,
+    "patientmotconsult": "Dolor molar",
+    "patientdiseasehistory": "Ninguno",
+    "patientgmh": "Sin alergias",
+    "patientgpe": "Sin antecedentes",
+    "patientvitalsigns": "PA 120/80",
+    "patientee": "Sin asimetria",
+    "patientcn": "No palpables",
+    "patientodontogram": "{}",
+    "patientodontopaint": "{}",
+    "patientatm": "Normal",
+    "patientbm": "Normal",
+    "patientgm": "Normal",
+    "patientcalculation": "Angle I",
+    "patientocclusion": "Angle I",
+    "patientdentalpiece": "16, 26",
+    "patientdiagnosis": "Caries",
+    "patientexam": "Radiografia periapical",
+    "studentid": 4,
+    "studentspecialty": 1,
+    "responsibleid": 2,
+    "responsiblespecialty": 1
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/admision/fichas/{patientadmissionid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/admision/fichas/{patientadmissionid}</span>
+                        <span class="endpoint__desc">Ver ficha</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve la ficha completa con odontograma, diagnostico y responsable.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/admision/fichas/{id}/archivo">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/admision/fichas/{id}/archivo</span>
+                        <span class="endpoint__desc">Subir archivo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Sube un archivo (PDF, imagen) de historia clinica previa. Content-Type:
+                            <code>multipart/form-data</code>.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REMISION -->
+            <section id="remision">
+                <h2>10. Modulo Remision / Derivacion - <code>/api/remision</code></h2>
+                <p>Modulo que gestiona la derivacion del paciente desde Admision hacia la especialidad correspondiente.
+                </p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/remision">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/remision</span>
+                        <span class="endpoint__desc">Listar remisiones</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>clinicalid</code>, <code>patientid</code>, <code>enabled</code>,
+                            <code>from</code>, <code>to</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/remision">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/remision</span>
+                        <span class="endpoint__desc">Crear remision</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Deriva al paciente desde una ficha de admision hacia una especialidad.</p>
+                        <h4>Body</h4>
+                        <pre><code>{
+    "admissionid": 1,
+    "patientid": 1,
+    "clinicalid": 2
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/remision/{remissionid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/remision/{remissionid}</span>
+                        <span class="endpoint__desc">Ver remision</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve la remision con la historia clinica vinculada, el estudiante y el docente
+                            asignados.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PATCH" data-path="/api/remision/{remissionid}/toggle">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PATCH">PATCH</span>
+                        <span class="endpoint__path">/api/remision/{remissionid}/toggle</span>
+                        <span class="endpoint__desc">Activar/desactivar</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Cambia el estado <code>enabled</code> de la remision.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HISTORIA CLINICA -->
+            <section id="historia">
+                <h2>11. Modulo Historia Clinica - <code>/api/historia</code></h2>
+                <p>El corazon del sistema. Gestiona el historial clinico completo del paciente a traves de las
+                    diferentes especialidades, permitiendo que un mismo paciente tenga historia en multiples
+                    especialidades vinculadas entre si.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/historia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/historia</span>
+                        <span class="endpoint__desc">Listar historias</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>patientid</code>, <code>clinicalid</code>, <code>status</code>,
+                            <code>studentid</code>, <code>teacherid</code>, <code>authorized</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/historia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/historia</span>
+                        <span class="endpoint__desc">Crear historia clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Crea una nueva historia clinica vinculada a una remision existente.</p>
+                        <h4>Body</h4>
+                        <pre><code>{
+    "remissionid": 1,
+    "admissionid": 1,
+    "patientid": 1,
+    "clinicalid": 1,
+    "studentid": 4,
+    "studentclinicalid": 1,
+    "teacherid": 2,
+    "teacherclinicalid": 1,
+    "status": "Abierto"
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/historia/{remissionid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}</span>
+                        <span class="endpoint__desc">Ver historia completa</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve la historia clinica con: paciente, admision, remision, tratamiento, insumos
+                            solicitados, esterilizaciones y radiografias vinculadas.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/historia/{remissionid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}</span>
+                        <span class="endpoint__desc">Actualizar historia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza el estado, el diagnostico, el pronostico o los tratamientos de la historia.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/historia/{remissionid}/archivo">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}/archivo</span>
+                        <span class="endpoint__desc">Subir archivo de historia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Sube un archivo PDF o imagen de la historia clinica fisica escaneada. Se calcula un hash
+                            SHA-256 para integridad. Content-Type: <code>multipart/form-data</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/historia/{remissionid}/revisar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}/revisar</span>
+                        <span class="endpoint__desc">Revisar historia (docente)</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "reviewstatus": true,
+    "reviewteacher": "OK",
+    "reviewany": false
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/historia/{remissionid}/autorizar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}/autorizar</span>
+                        <span class="endpoint__desc">Autorizar historia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Autoriza la historia clinica (solo docentes responsables). Habilita el paso a Cajas.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/historia/{remissionid}/finalizar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/historia/{remissionid}/finalizar</span>
+                        <span class="endpoint__desc">Finalizar tratamiento</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Registra la finalizacion del tratamiento. Cambia <code>status</code> a "Cerrado" y asigna
+                            <code>endatetime</code>.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DOCENTE -->
+            <section id="docente">
+                <h2>12. Modulo Docente - <code>/api/docente</code></h2>
+                <p>Modulo para docentes: revision de historias, autorizacion de tratamientos, autorizacion de insumos y
+                    evaluacion de estudiantes.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/dashboard</span>
+                        <span class="endpoint__desc">Resumen docente</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Historias por revisar, historias revisadas, insumos por autorizar, pacientes asignados.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/historias">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/historias</span>
+                        <span class="endpoint__desc">Historias asignadas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista las historias clinicas asignadas al docente autenticado. Filtros:
+                            <code>status</code>, <code>clinicalid</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/pacientes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/pacientes</span>
+                        <span class="endpoint__desc">Pacientes derivados</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Pacientes derivados en linea al docente segun su especialidad.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/docente/pacientes/{patientid}/designar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/docente/pacientes/{patientid}/designar</span>
+                        <span class="endpoint__desc">Designar paciente a estudiante</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "studentid": 4,
+    "clinicalid": 2
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/docente/historias/{remissionid}/revisar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/docente/historias/{remissionid}/revisar</span>
+                        <span class="endpoint__desc">Revisar historia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "reviewstatus": true,
+    "reviewteacher": "Dr. Garcia",
+    "reviewany": false
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/insumos">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/insumos</span>
+                        <span class="endpoint__desc">Solicitudes de insumos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista las solicitudes de insumos pendientes de autorizacion.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST"
+                    data-path="/api/docente/insumos/{suppliesrequestedid}/autorizar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/docente/insumos/{id}/autorizar</span>
+                        <span class="endpoint__desc">Autorizar insumo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "authorizedsupplies": true,
+    "authorizedteacher": 2
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/esterilizacion</span>
+                        <span class="endpoint__desc">Esterilizaciones del estudiante</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Visualiza las esterilizaciones del estudiante asignado.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/docente/cajas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/docente/cajas</span>
+                        <span class="endpoint__desc">Visualizar cajas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Autorizacion y visualizacion de cajas de los pacientes asignados.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/docente/estudiantes/{studentid}/evaluar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/docente/estudiantes/{studentid}/evaluar</span>
+                        <span class="endpoint__desc">Evaluar estudiante</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "evaluation": "Buen desempeno",
+    "score": 85,
+    "clinicalid": 2
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESTUDIANTE -->
+            <section id="estudiante">
+                <h2>13. Modulo Estudiante - <code>/api/estudiante</code></h2>
+                <p>Modulo para estudiantes de 3ro a 5to ano e internos: pacientes asignados, llenado de fichas,
+                    solicitud de insumos, esterilizacion y subida de historias.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/estudiante/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/estudiante/dashboard</span>
+                        <span class="endpoint__desc">Panel del estudiante</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Metricas personales: historias abiertas, admisiones activas, remisiones, insumos solicitados.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/estudiante/pacientes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/estudiante/pacientes</span>
+                        <span class="endpoint__desc">Pacientes designados</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Pacientes designados al estudiante por el docente.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/estudiante/historias">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/estudiante/historias</span>
+                        <span class="endpoint__desc">Mis historias</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Historias clinicas del estudiante autenticado.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/estudiante/historias/{remissionid}/archivo">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/estudiante/historias/{id}/archivo</span>
+                        <span class="endpoint__desc">Subir archivo de historia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Sube el archivo de la historia clinica llenada por el estudiante.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/estudiante/insumos">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/estudiante/insumos</span>
+                        <span class="endpoint__desc">Mis solicitudes de insumos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista las solicitudes de insumos del estudiante.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/estudiante/insumos">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/estudiante/insumos</span>
+                        <span class="endpoint__desc">Solicitar insumos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "piece": 16,
+    "supplies": "Resina compuesta",
+    "suppliestreatmentid": 7,
+    "clinicalid": 1,
+    "remissionid": 1
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/estudiante/esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/estudiante/esterilizacion</span>
+                        <span class="endpoint__desc">Mis esterilizaciones</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Registros de esterilizacion del estudiante.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/estudiante/esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/estudiante/esterilizacion</span>
+                        <span class="endpoint__desc">Registrar esterilizacion</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "sterilizationenvelope": 111,
+    "sterilizationpackage": 211,
+    "sterilizationinfo": "Paquete K",
+    "clinicalid": 1
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CAJAS -->
+            <section id="cajas">
+                <h2>14. Modulo Cajas - <code>/api/cajas</code></h2>
+                <p>Modulo de Cajas: registro de pagos por tratamiento, emision de recibos y reportes de afluencia.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/cajas/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/cajas/dashboard</span>
+                        <span class="endpoint__desc">Totales del turno</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Totales de caja del usuario autenticado en el turno actual, agrupados por tipo de pago.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/cajas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/cajas</span>
+                        <span class="endpoint__desc">Listado paginado</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Lista los registros de caja. Filtros: <code>clinicalid</code>, <code>treatmentid</code>,
+                            <code>from</code>, <code>to</code>, <code>boxtypepayment</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/cajas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/cajas</span>
+                        <span class="endpoint__desc">Registrar operacion</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "boxreceipt": 1011,
+    "boxamount": 2,
+    "boxtotalcost": 150.0,
+    "boxci": 12345678,
+    "boxpatientfullname": "Ana Perez",
+    "treatmentid": 1,
+    "clinicalid": 2,
+    "remissionid": 3,
+    "boxtypepayment": "Efectivo"
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/cajas/{boxid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/cajas/{boxid}</span>
+                        <span class="endpoint__desc">Ver recibo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Devuelve el recibo con los datos del paciente, tratamiento y monto.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/cajas/{boxid}/pdf">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/cajas/{boxid}/pdf</span>
+                        <span class="endpoint__desc">Generar PDF del recibo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Genera el PDF del recibo de caja.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/cajas/reportes/afluencia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/cajas/reportes/afluencia</span>
+                        <span class="endpoint__desc">Reporte de afluencia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte de afluencia de cajas por periodo, tratamiento y tipo de pago.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESTERILIZACION -->
+            <section id="esterilizacion">
+                <h2>15. Modulo Esterilizacion - <code>/api/esterilizacion</code></h2>
+                <p>Modulo de Esterilizacion: registro de paquetes entregados, control de tiempos y autorizaciones.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/esterilizacion/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/esterilizacion/dashboard</span>
+                        <span class="endpoint__desc">Panel del modulo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Paquetes entregados, pendientes, autorizaciones y tiempos promedio.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/esterilizacion</span>
+                        <span class="endpoint__desc">Listar procesos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>studentid</code>, <code>clinicalid</code>, <code>from</code>,
+                            <code>to</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/esterilizacion</span>
+                        <span class="endpoint__desc">Registrar entrega</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "sterilizationenvelope": 111,
+    "sterilizationpackage": 211,
+    "sterilizationinfo": "Paquete K",
+    "sterilizationdesc": "Esterilizado",
+    "studentid": 4,
+    "clinicalid": 1
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PATCH" data-path="/api/esterilizacion/{sterilizationid}/recojo">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PATCH">PATCH</span>
+                        <span class="endpoint__path">/api/esterilizacion/{id}/recojo</span>
+                        <span class="endpoint__desc">Registrar recojo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Registra la hora de recojo del paquete esterilizado.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/esterilizacion/{sterilizationid}/autorizar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/esterilizacion/{id}/autorizar</span>
+                        <span class="endpoint__desc">Autorizar entrega</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "authorizationstatus": true,
+    "authorizationdesc": "Autorizado",
+    "authorizationteacher": "Dr. Juan Perez",
+    "authorizationenvelope": 101
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/esterilizacion/reportes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/esterilizacion/reportes</span>
+                        <span class="endpoint__desc">Reportes de afluencia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte de afluencia de esterilizacion por periodo y estudiante.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INSUMOS -->
+            <section id="insumos">
+                <h2>16. Modulo Insumos - <code>/api/insumos</code></h2>
+                <p>Modulo de Insumos: stock, solicitudes, autorizaciones y entrega de materiales.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/insumos/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/insumos/dashboard</span>
+                        <span class="endpoint__desc">Panel del modulo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Stock total, solicitudes pendientes y autorizadas.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/insumos/stock">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/insumos/stock</span>
+                        <span class="endpoint__desc">Listar stock</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Stock actual de insumos. Filtros: <code>clinicalid</code>, <code>search</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/insumos/stock">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/insumos/stock</span>
+                        <span class="endpoint__desc">Registrar insumo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "suppliesname": "Resina compuesta",
+    "suppliesquantitynumber": 50.00,
+    "suppliesquantity": "tubos",
+    "suppliestreatmentid": 7,
+    "clinicalid": 1
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/insumos/stock/{suppliesid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/insumos/stock/{suppliesid}</span>
+                        <span class="endpoint__desc">Actualizar stock</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza la cantidad disponible de un insumo.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/insumos/solicitudes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/insumos/solicitudes</span>
+                        <span class="endpoint__desc">Listar solicitudes</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>authorizedsupplies</code>, <code>clinicalid</code>, <code>teacherid</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST"
+                    data-path="/api/insumos/solicitudes/{suppliesrequestedid}/entregar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/insumos/solicitudes/{id}/entregar</span>
+                        <span class="endpoint__desc">Entregar insumo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Registra la entrega del insumo autorizado y descuenta del stock.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/insumos/reportes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/insumos/reportes</span>
+                        <span class="endpoint__desc">Reporte de insumos</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte de insumos utilizados por periodo y especialidad.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RADIOLOGIA -->
+            <section id="radiologia">
+                <h2>17. Modulo Radiologia - <code>/api/radiologia</code></h2>
+                <p>Modulo de Radiologia: registro de estudios radiologicos y reportes de afluencia.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/radiologia/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/radiologia/dashboard</span>
+                        <span class="endpoint__desc">Panel del modulo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Estudios completados, pendientes y por tipo.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/radiologia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/radiologia</span>
+                        <span class="endpoint__desc">Listar estudios</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Filtros: <code>radiologystate</code>, <code>from</code>, <code>to</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="POST" data-path="/api/radiologia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-POST">POST</span>
+                        <span class="endpoint__path">/api/radiologia</span>
+                        <span class="endpoint__desc">Registrar estudio</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <h4>Body</h4>
+                        <pre><code>{
+    "radiologydesc": "Radiografia panoramica",
+    "radiologyobs": "Sin hallazgos",
+    "radiologystate": "Completado",
+    "boxid": 1
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="PUT" data-path="/api/radiologia/{radiologyid}">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-PUT">PUT</span>
+                        <span class="endpoint__path">/api/radiologia/{radiologyid}</span>
+                        <span class="endpoint__desc">Actualizar estudio</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Actualiza observaciones o estado del estudio.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/radiologia/reportes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/radiologia/reportes</span>
+                        <span class="endpoint__desc">Reporte de afluencia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte de afluencia de pacientes y servicios atendidos en radiologia.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUBADMIN -->
+            <section id="subadmin">
+                <h2>18. Modulo Subadmin - <code>/api/subadmin</code></h2>
+                <p>Modulo del Subadministrador: operaciones delegadas por el admin.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/subadmin/dashboard">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/subadmin/dashboard</span>
+                        <span class="endpoint__desc">Panel del subadministrador</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Resumen operativo delegado por el admin.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/subadmin/users">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/subadmin/users</span>
+                        <span class="endpoint__desc">Gestion de usuarios</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>CRUD de usuarios con permisos limitados (no puede crear admins).</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/subadmin/reportes">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/subadmin/reportes</span>
+                        <span class="endpoint__desc">Reportes delegados</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Acceso a reportes operativos delegados por el administrador.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INVESTIGACION -->
+            <section id="investigacion">
+                <h2>19. Modulo Investigacion - <code>/api/investigacion</code></h2>
+                <p>Modulo para el Instituto de Investigacion de la Carrera de Odontologia. Acceso de solo lectura a
+                    informacion estadistica anonimizada.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/investigacion/estadisticas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/investigacion/estadisticas</span>
+                        <span class="endpoint__desc">Estadisticas anonimizadas</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Estadisticas agregadas por especialidad, grupo etario, sexo y motivo de consulta.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/investigacion/exportar">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/investigacion/exportar</span>
+                        <span class="endpoint__desc">Exportar dataset</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Exporta un dataset anonimizado en CSV o JSON para investigacion.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REPORTES -->
+            <section id="reportes">
+                <h2>20. Reportes del sistema - <code>/api/reportes</code></h2>
+                <p>Modulo unificado de reportes solicitados en el PDF: pacientes por periodo, tratamientos por
+                    especialidad, estadisticas por docente/estudiante, afluencia por grupo etario y sexo, motivos de
+                    consulta, insumos utilizados, radiologia y esterilizacion.</p>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/pacientes-por-periodo">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/pacientes-por-periodo</span>
+                        <span class="endpoint__desc">Pacientes por periodo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Query params: <code>from</code>, <code>to</code>, <code>clinicalid</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/tratamientos-por-especialidad">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/tratamientos-por-especialidad</span>
+                        <span class="endpoint__desc">Tratamientos por especialidad</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Query params: <code>from</code>, <code>to</code>.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/atenciones-por-docente">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/atenciones-por-docente</span>
+                        <span class="endpoint__desc">Atenciones por docente</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Estadisticas de atenciones agrupadas por docente. Query params: <code>from</code>,
+                            <code>to</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/atenciones-por-estudiante">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/atenciones-por-estudiante</span>
+                        <span class="endpoint__desc">Atenciones por estudiante</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Estadisticas de atenciones agrupadas por estudiante. Query params: <code>from</code>,
+                            <code>to</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/pacientes-por-grupo-etario">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/pacientes-por-grupo-etario</span>
+                        <span class="endpoint__desc">Pacientes por grupo etario y sexo</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Agrupa pacientes por rango de edad (nino, adolescente, adulto, adulto mayor) y sexo.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/motivos-consulta">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/motivos-consulta</span>
+                        <span class="endpoint__desc">Motivos de consulta</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Extrae los motivos de consulta de la ficha de admision
+                            (<code>patientmotconsult</code>).</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/afluencia-clinicas">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/afluencia-clinicas</span>
+                        <span class="endpoint__desc">Afluencia por clinica</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Cantidad de pacientes por cada clinica o especialidad: Admision, Operatoria, Endodoncia,
+                            Periodoncia, Cirugia, Odontopediatria, Prostodoncia fija, Prostodoncia removible,
+                            Radiologia, Integral ninos, Integral adultos, Ortodoncia, Cirugia mayor.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/insumos-utilizados">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/insumos-utilizados</span>
+                        <span class="endpoint__desc">Insumos utilizados</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte de insumos y cantidades utilizadas por periodo.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/afluencia-radiologia">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/afluencia-radiologia</span>
+                        <span class="endpoint__desc">Afluencia radiologia</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Afluencia de pacientes y servicios atendidos en radiologia.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/afluencia-esterilizacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/afluencia-esterilizacion</span>
+                        <span class="endpoint__desc">Afluencia esterilizacion</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Afluencia de atencion del servicio de esterilizacion.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint" data-method="GET" data-path="/api/reportes/acreditacion">
+                    <div class="endpoint__header" onclick="toggleEndpoint(this)">
+                        <span class="endpoint__method method-GET">GET</span>
+                        <span class="endpoint__path">/api/reportes/acreditacion</span>
+                        <span class="endpoint__desc">Reporte para acreditacion</span>
+                        <span class="endpoint__toggle">&#9660;</span>
+                    </div>
+                    <div class="endpoint__body">
+                        <p>Reporte consolidado para procesos de acreditacion academica.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TABLAS -->
+            <section id="tablas">
+                <h2>21. Tablas y modelos</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tabla</th>
+                                <th>Modelo</th>
+                                <th>Modulo</th>
+                                <th>Descripcion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>usertable</code></td>
+                                <td><code>User</code></td>
+                                <td>Admin</td>
+                                <td>Usuarios del sistema (8+ roles)</td>
+                            </tr>
+                            <tr>
+                                <td><code>clinicaltable</code></td>
+                                <td><code>Clinical</code></td>
+                                <td>Admin</td>
+                                <td>Clinicas / especialidades</td>
+                            </tr>
+                            <tr>
+                                <td><code>specialtytable</code></td>
+                                <td><code>Specialty</code></td>
+                                <td>Admin</td>
+                                <td>Inscripcion usuario-clinica</td>
+                            </tr>
+                            <tr>
+                                <td><code>patienttable</code></td>
+                                <td><code>Patient</code></td>
+                                <td>Admision</td>
+                                <td>Pacientes</td>
+                            </tr>
+                            <tr>
+                                <td><code>patientadmissiontable</code></td>
+                                <td><code>PatientAdmission</code></td>
+                                <td>Admision</td>
+                                <td>Fichas de admision</td>
+                            </tr>
+                            <tr>
+                                <td><code>remissiontable</code></td>
+                                <td><code>Remission</code></td>
+                                <td>Remision</td>
+                                <td>Remisiones / derivaciones</td>
+                            </tr>
+                            <tr>
+                                <td><code>clinichistorytable</code></td>
+                                <td><code>ClinicHistory</code></td>
+                                <td>Historia</td>
+                                <td>Historias clinicas</td>
+                            </tr>
+                            <tr>
+                                <td><code>treatmenttable</code></td>
+                                <td><code>Treatment</code></td>
+                                <td>Admin</td>
+                                <td>Catalogo de tratamientos</td>
+                            </tr>
+                            <tr>
+                                <td><code>boxtable</code></td>
+                                <td><code>Box</code></td>
+                                <td>Cajas</td>
+                                <td>Cajas / cobros</td>
+                            </tr>
+                            <tr>
+                                <td><code>sterilizationtable</code></td>
+                                <td><code>Sterilization</code></td>
+                                <td>Esterilizacion</td>
+                                <td>Procesos de esterilizacion</td>
+                            </tr>
+                            <tr>
+                                <td><code>authorizationtable</code></td>
+                                <td><code>Authorization</code></td>
+                                <td>Esterilizacion</td>
+                                <td>Autorizaciones</td>
+                            </tr>
+                            <tr>
+                                <td><code>suppliestable</code></td>
+                                <td><code>Supplies</code></td>
+                                <td>Insumos</td>
+                                <td>Insumos en stock</td>
+                            </tr>
+                            <tr>
+                                <td><code>suppliestreatmenttable</code></td>
+                                <td><code>SuppliesTreatment</code></td>
+                                <td>Insumos</td>
+                                <td>Kits de insumos</td>
+                            </tr>
+                            <tr>
+                                <td><code>suppliesrequestedtable</code></td>
+                                <td><code>SuppliesRequested</code></td>
+                                <td>Insumos</td>
+                                <td>Solicitudes de insumos</td>
+                            </tr>
+                            <tr>
+                                <td><code>radiologytable</code></td>
+                                <td><code>Radiology</code></td>
+                                <td>Radiologia</td>
+                                <td>Estudios radiologicos</td>
+                            </tr>
+                            <tr>
+                                <td><code>logtable</code></td>
+                                <td><code>Log</code></td>
+                                <td>Admin</td>
+                                <td>Auditoria del sistema</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ROLES -->
+            <section id="roles">
+                <h2>22. Roles del sistema</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rol</th>
+                                <th>Dashboard</th>
+                                <th>Descripcion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>admin</code></td>
+                                <td>/dashboard/admin</td>
+                                <td>Acceso total</td>
+                            </tr>
+                            <tr>
+                                <td><code>subadmin</code></td>
+                                <td>/dashboard/subadmin</td>
+                                <td>Subadministrador</td>
+                            </tr>
+                            <tr>
+                                <td><code>director</code></td>
+                                <td>/dashboard/director</td>
+                                <td>Director de Carrera</td>
+                            </tr>
+                            <tr>
+                                <td><code>chief_clinic</code></td>
+                                <td>/dashboard/jefatura-clinicas</td>
+                                <td>Jefatura de Clinicas</td>
+                            </tr>
+                            <tr>
+                                <td><code>chief_chair</code></td>
+                                <td>/dashboard/jefe-catedra</td>
+                                <td>Jefe de Catedra</td>
+                            </tr>
+                            <tr>
+                                <td><code>teacher</code></td>
+                                <td>/dashboard/docente</td>
+                                <td>Docente</td>
+                            </tr>
+                            <tr>
+                                <td><code>student</code></td>
+                                <td>/dashboard/estudiante</td>
+                                <td>Estudiante</td>
+                            </tr>
+                            <tr>
+                                <td><code>intern</code></td>
+                                <td>/dashboard/interno</td>
+                                <td>Interno de Odontologia</td>
+                            </tr>
+                            <tr>
+                                <td><code>cashier</code></td>
+                                <td>/dashboard/cajas</td>
+                                <td>Cajero</td>
+                            </tr>
+                            <tr>
+                                <td><code>sterilization</code></td>
+                                <td>/dashboard/esterilizacion</td>
+                                <td>Esterilizacion</td>
+                            </tr>
+                            <tr>
+                                <td><code>supplies</code></td>
+                                <td>/dashboard/insumos</td>
+                                <td>Insumos</td>
+                            </tr>
+                            <tr>
+                                <td><code>radiology</code></td>
+                                <td>/dashboard/radiologia</td>
+                                <td>Radiologia</td>
+                            </tr>
+                            <tr>
+                                <td><code>research</code></td>
+                                <td>/dashboard/investigacion</td>
+                                <td>Instituto de Investigacion</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CONVENCIONES -->
+            <section id="convenciones">
+                <h2>23. Convenciones de codigo</h2>
+                <p>El proyecto sigue los estandares de <strong>PSR-12</strong> y las convenciones oficiales de Laravel.
+                    Todas las nuevas contribuciones deben respetar estas reglas.</p>
+
+                <h3>23.1. Nombres de clases y archivos</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Convencion</th>
+                                <th>Ejemplo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Controlador</td>
+                                <td>PascalCase + sufijo Controller</td>
+                                <td><code>AdmisionController.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Modelo</td>
+                                <td>PascalCase singular</td>
+                                <td><code>PatientAdmission.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Request</td>
+                                <td>Verbo + Sustantivo + Request</td>
+                                <td><code>StorePatientRequest.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Resource</td>
+                                <td>Sustantivo + Resource</td>
+                                <td><code>PatientResource.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Migracion</td>
+                                <td>snake_case + _table</td>
+                                <td><code>create_patienttable_table.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Seeder</td>
+                                <td>PascalCase + Seeder</td>
+                                <td><code>UserSeeder.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Servicio</td>
+                                <td>PascalCase + Service</td>
+                                <td><code>LogService.php</code></td>
+                            </tr>
+                            <tr>
+                                <td>Middleware</td>
+                                <td>PascalCase</td>
+                                <td><code>CheckRole.php</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>23.2. Metodos y variables</h3>
+                <ul>
+                    <li><strong>Metodos</strong>: camelCase → <code>getPatientHistory()</code></li>
+                    <li><strong>Variables</strong>: camelCase → <code>$patientId</code></li>
+                    <li><strong>Constantes</strong>: UPPER_SNAKE_CASE → <code>MAX_RETRY_ATTEMPTS</code></li>
+                    <li><strong>Rutas</strong>: kebab-case en URL → <code>/api/pacientes-por-periodo</code></li>
+                    <li><strong>Columnas DB</strong>: snake_case → <code>patient_mother_lastname</code></li>
+                </ul>
+
+                <h3>23.3. Estructura de un controlador</h3>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePatientRequest;
+use App\Http\Resources\PatientResource;
+use App\Models\Patient;
+use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+
+class AdmisionController extends Controller
+{
+    use ApiResponse;
+
+    public function index(): JsonResponse
+    {
+        $patients = Patient::query()
+            ->when(request('search'), fn($q, $s) =>
+                $q->where('patientci', 'like', "%{$s}%")
+                  ->orWhere('patientname', 'like', "%{$s}%"))
+            ->paginate(request('per_page', 15));
+
+        return $this->success(PatientResource::collection($patients));
+    }
+
+    public function store(StorePatientRequest $request): JsonResponse
+    {
+        $patient = Patient::create($request->validated());
+
+        return $this->success(
+            new PatientResource($patient),
+            'Paciente registrado correctamente.',
+            201
+        );
+    }
+}</code></pre>
+
+                <h3>23.4. Reglas de estilo</h3>
+                <ul>
+                    <li>Usar <strong>4 espacios</strong> para indentacion (no tabs).</li>
+                    <li>Llaves de apertura en la <strong>misma linea</strong> de la declaracion.</li>
+                    <li>Linea en blanco entre metodos.</li>
+                    <li>Usar <strong>type hints</strong> en parametros y retornos siempre que sea posible.</li>
+                    <li>Documentar metodos publicos con <strong>PHPDoc</strong>.</li>
+                    <li>Orden de imports: clases de Laravel primero, luego las del proyecto, luego las de PHP.</li>
+                    <li>No dejar codigo comentado ni <code>dd()</code> / <code>dump()</code> en produccion.</li>
+                </ul>
+            </section>
+
+            <!-- BUENAS PRACTICAS -->
+            <section id="buenas-practicas">
+                <h2>24. Buenas practicas</h2>
+
+                <h3>24.1. Validacion siempre con Form Requests</h3>
+                <p>Nunca validar en el controlador directamente. Crear un <code>FormRequest</code> por cada operacion.
+                </p>
+                <pre><code>&lt;?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StorePatientRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true; // la autorizacion la maneja el middleware CheckRole
+    }
+
+    public function rules(): array
+    {
+        return [
+            'patientci' => ['required', 'string', 'max:50', 'unique:patienttable,patientci'],
+            'patientname' => ['required', 'string', 'max:50'],
+            'patientfatherlastname' => ['required', 'string', 'max:50'],
+            'patientmotherlastname' => ['required', 'string', 'max:50'],
+            'patientgender' => ['required', 'in:M,F'],
+            'patientbirthdate' => ['required', 'integer'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'patientci.required' => 'El CI del paciente es obligatorio.',
+            'patientci.unique' => 'Ya existe un paciente con ese CI.',
+            'patientname.required' => 'El nombre es obligatorio.',
+        ];
+    }
+}</code></pre>
+
+                <h3>24.2. Usar transacciones en operaciones criticas</h3>
+                <p>Cuando una operacion modifica varias tablas (ej: crear remision + historia clinica), envolver todo
+                    en una transaccion.</p>
+                <pre><code>use Illuminate\Support\Facades\DB;
+
+public function store(StoreRemissionRequest $request): JsonResponse
+{
+    return DB::transaction(function () use ($request) {
+        $remission = Remission::create($request->validated());
+
+        ClinicHistory::create([
+            'remissionid' => $remission->remissionid,
+            'admissionid' => $remission->admissionid,
+            'patientid' => $remission->patientid,
+            'clinicalid' => $remission->clinicalid,
+            'status' => 'Abierto',
+            'studentid' => $request->studentid,
+            'studentclinicalid' => $request->clinicalid,
+            'teacherid' => $request->teacherid,
+            'teacherclinicalid' => $request->clinicalid,
+        ]);
+
+        return $this->success(new RemissionResource($remission), 'Remision creada.', 201);
+    });
+}</code></pre>
+
+                <h3>24.3. Registrar eventos en logtable</h3>
+                <p>Toda operacion sensible (crear, actualizar, eliminar, login, logout) debe registrarse en
+                    <code>logtable</code> a traves del <code>LogService</code>.
+                </p>
+                <pre><code>// En el controlador
+$this->logService->record(
+    type: 'create',
+    data: ['model' => 'Patient', 'id' => $patient->patientid],
+    status: 'success'
+);</code></pre>
+
+                <h3>24.4. Usar Resources para las respuestas</h3>
+                <p>Nunca devolver modelos Eloquent directamente. Usar <code>JsonResource</code> para controlar que
+                    campos se exponen.</p>
+                <pre><code>&lt;?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class PatientResource extends JsonResource
+{
+    public function toArray($request): array
+    {
+        return [
+            'patientid' => $this->patientid,
+            'patientci' => $this->patientci,
+            'patientname' => $this->patientname,
+            'patientfatherlastname' => $this->patientfatherlastname,
+            'patientmotherlastname' => $this->patientmotherlastname,
+            'patientgender' => $this->patientgender,
+            'patientbirthdate' => $this->patientbirthdate,
+            // NO exponer campos sensibles ni internos
+        ];
+    }
+}</code></pre>
+
+                <h3>24.5. No hacer queries en los controladores directamente</h3>
+                <p>Usar <strong>scopes</strong> en los modelos o <strong>servicios</strong> para logica compleja.</p>
+                <pre><code>// En el modelo Patient
+public function scopeSearch($query, string $term): Builder
+{
+    return $query->where('patientci', 'like', "%{$term}%")
+                 ->orWhere('patientname', 'like', "%{$term}%")
+                 ->orWhere('patientfatherlastname', 'like', "%{$term}%");
+}
+
+// En el controlador
+$patients = Patient::search(request('search'))->paginate();</code></pre>
+
+                <h3>24.6. Testear antes de commitear</h3>
+                <ul>
+                    <li>Todo endpoint nuevo debe tener su <strong>Feature Test</strong>.</li>
+                    <li>Toda logica de negocio debe tener su <strong>Unit Test</strong>.</li>
+                    <li>Ejecutar <code>php artisan test</code> antes de cada commit.</li>
+                    <li>Usar <code>RefreshDatabase</code> para no contaminar la base de datos.</li>
+                </ul>
+
+                <h3>24.7. Manejo de archivos (historias clinicas)</h3>
+                <pre><code>public function uploadFile(Request $request, int $remissionid): JsonResponse
+{
+    $request->validate([
+        'archivo' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+    ]);
+
+    $history = ClinicHistory::findOrFail($remissionid);
+    $file = $request->file('archivo');
+    $hash = hash_file('sha256', $file->getRealPath());
+
+    $history->update([
+        'inputfilename' => $file->getClientOriginalName(),
+        'inputfile' => file_get_contents($file->getRealPath()),
+        'inputfilehash' => $hash,
+    ]);
+
+    return $this->success(null, 'Archivo subido correctamente.');
+}</code></pre>
+
+                <h3>24.8. Nunca exponer credenciales</h3>
+                <ul>
+                    <li>Usar siempre <code>.env</code> para credenciales.</li>
+                    <li>No commitear el <code>.env</code> (si el <code>.env.example</code>).</li>
+                    <li>No loggear passwords ni tokens.</li>
+                    <li>No devolver passwords hasheados en las respuestas.</li>
+                </ul>
+            </section>
+
+            <!-- SEGURIDAD -->
+            <section id="seguridad">
+                <h2>25. Seguridad</h2>
+
+                <h3>25.1. Autenticacion con Sanctum</h3>
+                <p>Todas las rutas excepto <code>/api/login</code> estan protegidas por
+                    <code>auth:sanctum</code>. El token se genera en el login y se revoca en el logout.
+                </p>
+                <pre><code>Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::apiResource('users', UsuarioController::class);
+    });
+});</code></pre>
+
+                <h3>25.2. Middleware CheckRole</h3>
+                <p>Valida que el usuario autenticado tenga uno de los roles permitidos antes de ejecutar el
+                    controlador.</p>
+                <pre><code>&lt;?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class CheckRole
+{
+    public function handle(Request $request, Closure $next, string ...$roles)
+    {
+        $user = $request->user();
+
+        if (!$user || !in_array($user->usertype, $roles, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tiene permisos para acceder a este recurso.',
+                'role' => $user?->usertype,
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}</code></pre>
+
+                <h3>25.3. Rate limiting</h3>
+                <p>Proteger endpoints sensibles (login, subida de archivos) con limites de peticiones.</p>
+                <pre><code>Rate::for('api', function (Request $request) {
+    return Limit::perMinute(60)->by($request->user()?->usernumber ?: $request->ip());
+});
+
+Rate::for('login', function (Request $request) {
+    return Limit::perMinute(5)->by($request->ip());
+});</code></pre>
+
+                <h3>25.4. CORS</h3>
+                <p>Configurado en <code>config/cors.php</code>. Solo permite el origen del frontend.</p>
+                <pre><code>return [
+    'paths' => ['api/*'],
+    'allowed_methods' => ['*'],
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173')],
+    'allowed_headers' => ['*'],
+    'supports_credentials' => true,
+];</code></pre>
+
+                <h3>25.5. Proteccion contra ataques comunes</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ataque</th>
+                                <th>Mitigacion en Laravel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SQL Injection</td>
+                                <td>Eloquent / Query Builder con bindings</td>
+                            </tr>
+                            <tr>
+                                <td>XSS</td>
+                                <td>Blade escapa por defecto, JSON responses no</td>
+                            </tr>
+                            <tr>
+                                <td>CSRF</td>
+                                <td>No aplica para API token-based</td>
+                            </tr>
+                            <tr>
+                                <td>Mass Assignment</td>
+                                <td>Usar <code>$fillable</code> o <code>$guarded</code></td>
+                            </tr>
+                            <tr>
+                                <td>Fuerza bruta</td>
+                                <td>Rate limiting en <code>/api/login</code></td>
+                            </tr>
+                            <tr>
+                                <td>Escalada de privilegios</td>
+                                <td>Middleware <code>CheckRole</code> en cada ruta</td>
+                            </tr>
+                            <tr>
+                                <td>Exposicion de datos</td>
+                                <td>Usar Resources, no devolver modelos</td>
+                            </tr>
+                            <tr>
+                                <td>Tokens robados</td>
+                                <td>Revocar tokens en logout, expiracion</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>25.6. Buenas practicas de seguridad</h3>
+                <ul>
+                    <li>Usar HTTPS en produccion (forzar <code>URL::forceScheme('https')</code>).</li>
+                    <li>Hashear passwords con <code>Hash::make()</code> (bcrypt por defecto).</li>
+                    <li>No loggear informacion sensible (CI, diagnosticos).</li>
+                    <li>Limitar el tamaño de archivos subidos (<code>max:10240</code> = 10MB).</li>
+                    <li>Validar MIME types de archivos (<code>mimes:pdf,jpg,png</code>).</li>
+                    <li>Guardar archivos fuera de <code>public/</code>.</li>
+                    <li>Usar <code>env()</code> solo en archivos de config, nunca en controladores.</li>
+                    <li>Rotar <code>APP_KEY</code> si se compromete.</li>
+                </ul>
+            </section>
+
+            <!-- RESPUESTAS -->
+            <section id="respuestas">
+                <h2>26. Respuestas estandar</h2>
+                <h4>Exito</h4>
+                <pre><code>{
+    "success": true,
+    "message": "Operacion realizada correctamente.",
+    "data": {}
+}</code></pre>
+                <h4>Error</h4>
+                <pre><code>{
+    "success": false,
+    "message": "Mensaje descriptivo.",
+    "role": "admin"
+}</code></pre>
+                <h4>Validacion (422)</h4>
+                <pre><code>{
+    "message": "The username field is required.",
+    "errors": {
+        "username": ["El campo username es obligatorio."]
+    }
+}</code></pre>
+            </section>
+
+            <!-- ERRORES -->
+            <section id="errores">
+                <h2>27. Codigos HTTP</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Codigo</th>
+                                <th>Significado</th>
+                                <th>Cuando ocurre</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>200</code></td>
+                                <td>OK</td>
+                                <td>Peticion exitosa</td>
+                            </tr>
+                            <tr>
+                                <td><code>201</code></td>
+                                <td>Created</td>
+                                <td>Recurso creado (POST)</td>
+                            </tr>
+                            <tr>
+                                <td><code>204</code></td>
+                                <td>No Content</td>
+                                <td>Eliminacion exitosa</td>
+                            </tr>
+                            <tr>
+                                <td><code>401</code></td>
+                                <td>Unauthorized</td>
+                                <td>Token ausente o invalido</td>
+                            </tr>
+                            <tr>
+                                <td><code>403</code></td>
+                                <td>Forbidden</td>
+                                <td>Rol no autorizado</td>
+                            </tr>
+                            <tr>
+                                <td><code>404</code></td>
+                                <td>Not Found</td>
+                                <td>Recurso no existe</td>
+                            </tr>
+                            <tr>
+                                <td><code>422</code></td>
+                                <td>Unprocessable</td>
+                                <td>Validacion fallida</td>
+                            </tr>
+                            <tr>
+                                <td><code>429</code></td>
+                                <td>Too Many Requests</td>
+                                <td>Rate limit excedido</td>
+                            </tr>
+                            <tr>
+                                <td><code>500</code></td>
+                                <td>Server Error</td>
+                                <td>Excepcion no controlada</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AVANCE -->
+            <section id="avance">
+                <h2>28. Estado de avance</h2>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Autenticacion (login / logout / me)</span>
+                        <span class="progress-item__value">100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill progress-bar__fill--success" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Admin (panel + usuarios + catalogos)</span>
+                        <span class="progress-item__value">100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill progress-bar__fill--success" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modelos Eloquent (16 tablas)</span>
+                        <span class="progress-item__value">100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill progress-bar__fill--success" data-width="100"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Admision (pacientes + fichas)</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Remision / Derivacion</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Historia Clinica</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Docente (revision + autorizacion)</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Estudiante</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Cajas</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Esterilizacion</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Insumos</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Radiologia</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Reportes (12 reportes del PDF)</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Modulo Investigacion</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Tests automatizados (Pest)</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-item__header">
+                        <span class="progress-item__label">Documentacion OpenAPI / Swagger</span>
+                        <span class="progress-item__value">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar__fill" data-width="0"></div>
+                    </div>
+                </div>
+
+                <div class="callout callout--info" style="margin-top:24px;">
+                    <svg class="callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9M13 17V5M8 17v-3" />
+                    </svg>
+                    <div><strong>Avance global estimado: 22%</strong> - Nucleo del sistema (auth + admin + modelos)
+                        completo, modulos de negocio y reportes por implementar.</div>
+                </div>
+            </section>
+
+            <!-- INSTALACION -->
+            <section id="instalacion">
+                <h2>29. Manual de instalacion</h2>
+                <pre><code># 1. Clonar
+git clone REPO backend_odontologia
+cd backend_odontologia
+
+# 2. Dependencias
+composer install
+
+# 3. Entorno
+cp .env.example .env
+php artisan key:generate
+
+# 4. Configurar .env
+#    DB_CONNECTION=pgsql
+#    DB_HOST=127.0.0.1
+#    DB_PORT=5432
+#    DB_DATABASE=clinica_odontologica
+#    DB_USERNAME=postgres
+#    DB_PASSWORD=****
+#    CACHE_STORE=file
+#    FRONTEND_URL=http://localhost:5173
+
+# 5. Restaurar dump PostgreSQL
+psql -U postgres -d clinica_odontologica -f odon.sql
+
+# 6. Limpiar caches
+php artisan optimize:clear
+
+# 7. Levantar servidor
+php artisan serve
+# -> http://127.0.0.1:8000
+
+# 8. (Opcional) Documentacion OpenAPI
+php artisan l5-swagger:generate
+
+# 9. (Opcional) Ejecutar tests
+php artisan test</code></pre>
+            </section>
+
+            <footer
+                style="margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-muted); font-size:13px;">
+                <p>API Backend Odontologia UPEA - Laravel 13 + PostgreSQL 16 - 2026</p>
+                <p style="margin-top:4px;">Documentacion generada a partir de la nota CITE:/ODONT./Nº 172/2026, el
+                    informe de Semiologia Estomatologica, el script odon.sql y los archivos API.md y Documentacion.md.
+                </p>
+            </footer>
+
+        </main>
+    </div>
+
+    <script>
+        /* ============ TOGGLE ENDPOINTS ============ */
+        function toggleEndpoint(header) {
+            const endpoint = header.parentElement;
+            endpoint.classList.toggle('open');
+        }
+
+        /* ============ BUSQUEDA ============ */
+        const searchInput = document.getElementById('search');
+        const endpoints = document.querySelectorAll('.endpoint');
+        const sections = document.querySelectorAll('section');
+
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            if (!q) {
+                endpoints.forEach(ep => ep.style.display = '');
+                sections.forEach(s => s.style.display = '');
+                return;
+            }
+            endpoints.forEach(ep => {
+                const path = ep.dataset.path?.toLowerCase() || '';
+                const method = ep.dataset.method?.toLowerCase() || '';
+                const text = ep.textContent.toLowerCase();
+                const match = path.includes(q) || method.includes(q) || text.includes(q);
+                ep.style.display = match ? '' : 'none';
+            });
+            sections.forEach(s => {
+                const visible = [...s.querySelectorAll('.endpoint')].some(ep => ep.style.display !== 'none');
+                const sectionMatch = s.textContent.toLowerCase().includes(q);
+                s.style.display = (visible || sectionMatch) ? '' : 'none';
+            });
+        });
+
+        /* ============ SIDEBAR ACTIVE LINK ============ */
+        const links = document.querySelectorAll('.sidebar__link');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+            });
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+            });
+        });
+
+        /* ============ PROGRESS BARS ============ */
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.progress-bar__fill').forEach(bar => {
+                const width = bar.dataset.width || 0;
+                setTimeout(() => { bar.style.width = width + '%'; }, 200);
+            });
+        });
+
+        /* ============ COPY BUTTON EN PRE ============ */
+        document.querySelectorAll('pre').forEach(pre => {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.textContent = 'Copiar';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const code = pre.querySelector('code')?.innerText || pre.innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copiado';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copiar';
+                        btn.classList.remove('copied');
+                    }, 1500);
+                });
+            };
+            pre.appendChild(btn);
+        });
+
+        /* ============ ATAJOS DE TECLADO ============ */
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+                searchInput.blur();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación · Sistema Clínica Odontológica UPEA</title>
+    <style>
+        :root {
+            --bg: #f5f7f8;
+            --surface: #ffffff;
+            --surface-soft: #eef3f2;
+            --sidebar-bg: #0f2b28;
+            --sidebar-hover: #16413c;
+            --sidebar-active: #1d5a52;
+            --text: #1b2e2b;
+            --text-muted: #60736f;
+            --teal: #087f79;
+            --teal-light: #0aa39a;
+            --cyan: #078fa0;
+            --fuchsia: #b3449e;
+            --line: #dce6e2;
+            --line-strong: #b9ccc7;
+            --success: #16a34a;
+            --success-bg: #dcfce7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --info: #0284c7;
+            --info-bg: #dbeafe;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(24, 37, 45, 0.06);
+            --shadow-md: 0 4px 14px rgba(24, 37, 45, 0.08);
+            --shadow-lg: 0 12px 32px rgba(24, 37, 45, 0.12);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 90px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            font-size: 15px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            background: var(--sidebar-bg);
+            color: #cfe3df;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 22px 0;
+        }
+
+        .sidebar-brand {
+            padding: 0 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-brand h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+
+        .sidebar-brand span {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #7bb8ae;
+            margin-top: 6px;
+        }
+
+        .sidebar-search {
+            padding: 0 16px 14px;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-search input:focus {
+            border-color: var(--teal-light);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #6b9a92;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0 10px;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 9px 14px;
+            color: #cfe3df;
+            text-decoration: none;
+            font-size: 13.5px;
+            border-radius: 8px;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav a:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-nav a.active {
+            background: var(--sidebar-active);
+            color: #fff;
+            border-left-color: var(--teal-light);
+            font-weight: 600;
+        }
+
+        .sidebar-nav .group-label {
+            padding: 16px 14px 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #6b9a92;
+            font-weight: 700;
+        }
+
+        /* ============ MAIN ============ */
+        .main {
+            padding: 0 0 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #087f79 0%, #078fa0 60%, #b3449e 130%);
+            color: #fff;
+            padding: 48px 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero-eyebrow {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 700;
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 16px;
+            opacity: 0.95;
+            max-width: 720px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        .hero-meta div {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hero-meta strong {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.75;
+            font-weight: 700;
+        }
+
+        /* ============ CONTENT ============ */
+        .content {
+            padding: 40px 60px;
+            max-width: 1100px;
+        }
+
+        section {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 32px 36px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 24px;
+        }
+
+        section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text);
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--teal);
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        section h2 .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--teal), var(--cyan));
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        section h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 26px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        section h3::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--teal);
+            border-radius: 2px;
+        }
+
+        section h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--teal);
+            margin-top: 20px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        section p {
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        section ul,
+        section ol {
+            margin: 12px 0 16px 22px;
+        }
+
+        section li {
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        section li::marker {
+            color: var(--teal);
+            font-weight: 700;
+        }
+
+        /* ============ TABLES ============ */
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            margin: 14px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        thead th {
+            background: var(--surface-soft);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            font-weight: 700;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(8, 127, 121, 0.03);
+        }
+
+        /* ============ CODE ============ */
+        code {
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            background: var(--surface-soft);
+            padding: 2px 7px;
+            border-radius: 5px;
+            color: var(--teal);
+            border: 1px solid var(--line);
+        }
+
+        pre {
+            background: #0f2b28;
+            color: #cfe3df;
+            padding: 18px 22px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.65;
+            margin: 14px 0;
+        }
+
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            border: none;
+            font-size: inherit;
+        }
+
+        /* ============ BADGES ============ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .badge-admin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-director {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .badge-operativo {
+            background: var(--info-bg);
+            color: #1e40af;
+        }
+
+        .badge-clinico {
+            background: var(--success-bg);
+            color: #14532d;
+        }
+
+        .badge-consulta {
+            background: var(--surface-soft);
+            color: var(--text-muted);
+        }
+
+        .badge-si {
+            background: var(--success-bg);
+            color: #14532d;
+        }
+
+        .badge-no {
+            background: var(--danger-bg);
+            color: #7f1d1d;
+        }
+
+        .badge-parcial {
+            background: var(--warning-bg);
+            color: #78350f;
+        }
+
+        /* ============ CARDS ============ */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .card {
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: var(--teal);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .card h5 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--teal);
+        }
+
+        .card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ============ CALLOUTS ============ */
+        .callout {
+            border-left: 4px solid;
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background: var(--info-bg);
+            border-color: var(--info);
+            color: #1e3a8a;
+        }
+
+        .callout-warning {
+            background: var(--warning-bg);
+            border-color: var(--warning);
+            color: #78350f;
+        }
+
+        .callout-danger {
+            background: var(--danger-bg);
+            border-color: var(--danger);
+            color: #7f1d1d;
+        }
+
+        .callout-success {
+            background: var(--success-bg);
+            border-color: var(--success);
+            color: #14532d;
+        }
+
+        .callout strong {
+            font-weight: 700;
+        }
+
+        /* ============ STEPS ============ */
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            margin: 16px 0;
+            padding: 0;
+        }
+
+        .steps li {
+            counter-increment: step;
+            position: relative;
+            padding: 14px 18px 14px 60px;
+            background: var(--surface-soft);
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            border: 1px solid var(--line);
+            transition: var(--transition);
+        }
+
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--teal), var(--cyan));
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .steps li strong {
+            display: block;
+            margin-bottom: 3px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .steps li span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ============ TREE ============ */
+        .tree {
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            background: #0f2b28;
+            color: #cfe3df;
+            padding: 20px 22px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            line-height: 1.7;
+        }
+
+        .tree .folder {
+            color: #7bb8ae;
+            font-weight: 700;
+        }
+
+        .tree .file {
+            color: #cfe3df;
+        }
+
+        .tree .comment {
+            color: #6b9a92;
+            font-style: italic;
+        }
+
+        /* ============ TOC ============ */
+        .toc {
+            background: linear-gradient(135deg, rgba(8, 127, 121, 0.06), rgba(179, 68, 158, 0.04));
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            margin-bottom: 28px;
+        }
+
+        .toc h3 {
+            margin-top: 0 !important;
+            border: none;
+        }
+
+        .toc ol {
+            columns: 2;
+            column-gap: 40px;
+            margin: 12px 0 0 22px;
+        }
+
+        .toc ol li {
+            break-inside: avoid;
+            margin-bottom: 6px;
+        }
+
+        .toc a {
+            color: var(--teal);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        /* ============ BACK TO TOP ============ */
+        .back-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        .back-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .back-top:hover {
+            background: var(--teal-light);
+            transform: translateY(-3px);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 900px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                z-index: 200;
+                transition: transform var(--transition);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .content,
+            .hero {
+                padding: 24px 20px;
+            }
+
+            .hero h1 {
+                font-size: 24px;
+            }
+
+            section {
+                padding: 22px 20px;
+            }
+
+            .toc ol {
+                columns: 1;
+            }
+
+            .mobile-toggle {
+                position: fixed;
+                top: 14px;
+                left: 14px;
+                z-index: 300;
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                background: var(--sidebar-bg);
+                color: #fff;
+                border: none;
+                cursor: pointer;
+                display: grid;
+                place-items: center;
+                box-shadow: var(--shadow-md);
+            }
+        }
+
+        @media (min-width: 901px) {
+            .mobile-toggle {
+                display: none;
+            }
+        }
+
+        /* ============ SEARCH HIGHLIGHT ============ */
+        mark {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"
+        aria-label="Menú">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+    </button>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>Sistema Clínica Odontológica</h1>
+            <span>UPEA · UTIC · 2026</span>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="searchInput" placeholder="Buscar sección..." autocomplete="off">
+        </div>
+
+        <ul class="sidebar-nav" id="sidebarNav">
+            <li class="group-label">Introducción</li>
+            <li><a href="#resumen">Resumen ejecutivo</a></li>
+            <li><a href="#objetivos">Objetivos</a></li>
+            <li><a href="#alcance">Alcance del sistema</a></li>
+
+            <li class="group-label">Arquitectura</li>
+            <li><a href="#stack">Stack tecnológico</a></li>
+            <li><a href="#estructura">Estructura de carpetas</a></li>
+            <li><a href="#modelo-datos">Modelo de datos</a></li>
+
+            <li class="group-label">Roles y permisos</li>
+            <li><a href="#roles">Catálogo de roles</a></li>
+            <li><a href="#permisos">Matriz de permisos</a></li>
+            <li><a href="#que-hace-cada-rol">Qué hace cada rol</a></li>
+
+            <li class="group-label">Funcionalidad</li>
+            <li><a href="#flujo">Flujo de atención</a></li>
+            <li><a href="#modulos">Módulos del sistema</a></li>
+            <li><a href="#reportes">Reportes</a></li>
+
+            <li class="group-label">Desarrollo</li>
+            <li><a href="#pasos">Pasos a seguir</a></li>
+            <li><a href="#fases">Fases del proyecto</a></li>
+            <li><a href="#convenciones">Convenciones</a></li>
+            <li><a href="#checklist">Checklist de entrega</a></li>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <div class="hero">
+            <div class="hero-content">
+                <div class="hero-eyebrow">Documentación técnica</div>
+                <h1>Sistema de Gestión para la Clínica Odontológica</h1>
+                <p>Guía completa de arquitectura, roles, permisos, módulos y pasos de desarrollo para el sistema
+                    institucional de la Carrera de Odontología de la UPEA.</p>
+                <div class="hero-meta">
+                    <div><strong>Cliente</strong><span>Carrera de Odontología · UPEA</span></div>
+                    <div><strong>Solicitante</strong><span>Dr. Rolando Néstor Soliz Arias · Director</span></div>
+                    <div><strong>Validación clínica</strong><span>Dra. Ines Ponce Armaly · Jefe Semiología</span></div>
+                    <div><strong>Coordinación</strong><span>Dr. Edwing Max Mollericona Marin · Jefe de Clínicas</span>
+                    </div>
+                    <div><strong>Área técnica</strong><span>U-TIC · Ing. Juan Regis Nuñez Sirpa</span></div>
+                    <div><strong>Versión</strong><span>1.0 · Agosto 2026</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <div class="toc">
+                <h3>Contenido</h3>
+                <ol>
+                    <li><a href="#resumen">Resumen ejecutivo</a></li>
+                    <li><a href="#objetivos">Objetivos</a></li>
+                    <li><a href="#alcance">Alcance</a></li>
+                    <li><a href="#stack">Stack tecnológico</a></li>
+                    <li><a href="#estructura">Estructura de carpetas</a></li>
+                    <li><a href="#modelo-datos">Modelo de datos</a></li>
+                    <li><a href="#roles">Catálogo de roles</a></li>
+                    <li><a href="#permisos">Matriz de permisos</a></li>
+                    <li><a href="#que-hace-cada-rol">Qué hace cada rol</a></li>
+                    <li><a href="#flujo">Flujo de atención</a></li>
+                    <li><a href="#modulos">Módulos del sistema</a></li>
+                    <li><a href="#reportes">Reportes</a></li>
+                    <li><a href="#pasos">Pasos a seguir</a></li>
+                    <li><a href="#fases">Fases del proyecto</a></li>
+                    <li><a href="#convenciones">Convenciones</a></li>
+                    <li><a href="#checklist">Checklist de entrega</a></li>
+                </ol>
+            </div>
+
+            <div class="no-results" id="noResults">No se encontraron secciones que coincidan con la búsqueda.</div>
+
+            <!-- ============ RESUMEN ============ -->
+            <section id="resumen" data-search="resumen ejecutivo introduccion">
+                <h2><span class="num">1</span> Resumen ejecutivo</h2>
+                <p>El sistema reemplaza las fichas físicas de la Clínica Odontológica de la UPEA por un registro digital
+                    unificado. Su objetivo principal es que <strong>ningún paciente se pierda entre
+                        especialidades</strong> y que su información viaje con él a lo largo de todo su recorrido
+                    clínico.</p>
+
+                <p>El sistema responde a la Nota Interna <code>CITE:/ODONT./Nº 172/2026</code> emitida por el
+                    Director de Carrera, Dr. Rolando Néstor Soliz Arias, y complementada por el Informe de la
+                    Dra. Ines Ponce Armaly (Jefe de Asignatura de Semiología Estomatológica). Es un sistema
+                    <strong>institucional y permanente</strong> de la UPEA, no una solución temporal.
+                </p>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h5>Historia única por paciente</h5>
+                        <p>Un solo registro digital por paciente, con múltiples historias clínicas vinculadas entre
+                            especialidades.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Roles y permisos</h5>
+                        <p>Catálogo de 15 roles con matriz de permisos editable por el administrador.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Flujo completo</h5>
+                        <p>Admisión → derivación → aprobación docente → caja → tratamiento → insumos → esterilización →
+                            radiología.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Reportes para acreditación</h5>
+                        <p>Estadísticas por especialidad, grupo etario, sexo, motivo de consulta, docente y estudiante.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h5>Integración con SHICO</h5>
+                        <p>Sincronización con el sistema institucional existente de la UPEA.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Conectividad total</h5>
+                        <p>Información en tiempo real entre cajas, radiología, insumos, esterilización y salas
+                            clínicas.</p>
+                    </div>
+                </div>
+
+                <div class="callout callout-info">
+                    <strong>Beneficios esperados según el PDF:</strong> eliminar pérdida de información, reducir
+                    tiempos de espera, evitar errores clínicos, eliminar dispersión de datos, liberar espacio físico
+                    y proteger la información sensible con backups y control de accesos.
+                </div>
+            </section>
+
+            <!-- ============ OBJETIVOS ============ -->
+            <section id="objetivos" data-search="objetivos metas proposito">
+                <h2><span class="num">2</span> Objetivos</h2>
+
+                <h3>Objetivo general</h3>
+                <p>Desarrollar un sistema web institucional que centralice la información clínica de los pacientes de
+                    la Clínica Odontológica de la UPEA, permitiendo el seguimiento continuo del paciente entre
+                    especialidades y reemplazando las fichas físicas por un registro digital confiable.</p>
+
+                <h3>Objetivos específicos (según PDF)</h3>
+                <ul>
+                    <li>Permitir que ningún paciente se pierda entre especialidades ni repita su historia al cambiar de
+                        atención.</li>
+                    <li>Digitalizar la ficha de admisión y el historial clínico de cada paciente.</li>
+                    <li>Permitir que un paciente tenga historias clínicas en múltiples especialidades, vinculadas entre
+                        sí.</li>
+                    <li>Implementar un flujo de atención que respete la práctica real: admisión, derivación, aprobación
+                        docente, cajas, tratamiento, insumos y esterilización.</li>
+                    <li>Proveer reportes estadísticos para gestión académica, investigación y acreditación.</li>
+                    <li>Controlar y verificar de forma transparente los pagos de tratamientos a través de Cajas.</li>
+                    <li>Garantizar la confidencialidad de los datos del paciente mediante control de accesos y
+                        trazabilidad.</li>
+                    <li>Integrar el sistema con el Sistema SHICO de la UPEA.</li>
+                    <li>Sistematizar y centralizar toda la información odontológica en un solo soporte tecnológico.</li>
+                </ul>
+            </section>
+
+            <!-- ============ ALCANCE ============ -->
+            <section id="alcance" data-search="alcance limites incluye no incluye">
+                <h2><span class="num">3</span> Alcance del sistema</h2>
+
+                <h3>Incluye</h3>
+                <ul>
+                    <li>Gestión de usuarios con roles y permisos individuales.</li>
+                    <li>Gestión de pacientes y fichas de admisión digitales.</li>
+                    <li>Derivación y remisión entre especialidades.</li>
+                    <li>Historias clínicas digitales por especialidad, vinculadas entre sí.</li>
+                    <li>Registro de tratamientos y sesiones de atención paso a paso.</li>
+                    <li>Control de cajas y pagos por tratamiento, con verificación transparente.</li>
+                    <li>Gestión de insumos: catálogo, solicitudes, autorizaciones y entregas.</li>
+                    <li>Control de esterilización de materiales (sobres entregados y recogidos).</li>
+                    <li>Registro de radiografías y servicios de radiología.</li>
+                    <li>Odontograma digital interactivo.</li>
+                    <li>Reportes y estadísticas para acreditación e investigación.</li>
+                    <li>Integración con el Sistema SHICO.</li>
+                </ul>
+
+                <h3>No incluye (por ahora)</h3>
+                <ul>
+                    <li>Aplicación móvil nativa.</li>
+                    <li>Firma digital certificada.</li>
+                    <li>Telemedicina o videollamadas.</li>
+                    <li>Facturación electrónica con impuestos.</li>
+                    <li>Gestión de inventario más allá del catálogo de insumos.</li>
+                </ul>
+
+                <div class="callout callout-info">
+                    <strong>Nota:</strong> el alcance puede ampliarse en fases posteriores una vez que el sistema base
+                    esté en producción y validado por la Carrera.
+                </div>
+            </section>
+
+            <!-- ============ STACK ============ -->
+            <section id="stack" data-search="stack tecnologico laravel php mysql herramientas">
+                <h2><span class="num">4</span> Stack tecnológico</h2>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Capa</th>
+                                <th>Tecnología</th>
+                                <th>Versión</th>
+                                <th>Justificación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Backend</td>
+                                <td>PHP + Laravel</td>
+                                <td>11.x</td>
+                                <td>Framework institucional, amplio soporte, ecosistema maduro</td>
+                            </tr>
+                            <tr>
+                                <td>Base de datos</td>
+                                <td>MySQL</td>
+                                <td>8.x</td>
+                                <td>Estándar en la UPEA, buen soporte de vistas y procedimientos</td>
+                            </tr>
+                            <tr>
+                                <td>Frontend</td>
+                                <td>Blade + JS nativo</td>
+                                <td>—</td>
+                                <td>Sin frameworks pesados, rápido de mantener</td>
+                            </tr>
+                            <tr>
+                                <td>Estilos</td>
+                                <td>CSS puro con variables</td>
+                                <td>—</td>
+                                <td>Sin dependencia de Tailwind ni Bootstrap</td>
+                            </tr>
+                            <tr>
+                                <td>Build</td>
+                                <td>Vite</td>
+                                <td>5.x</td>
+                                <td>Integrado con Laravel por defecto</td>
+                            </tr>
+                            <tr>
+                                <td>Autenticación</td>
+                                <td>Sesión propia (tabla sesiones)</td>
+                                <td>—</td>
+                                <td>Control de multilogin y cierre remoto</td>
+                            </tr>
+                            <tr>
+                                <td>Roles</td>
+                                <td>Tabla roles + permisos</td>
+                                <td>—</td>
+                                <td>Catálogo estático, matriz de permisos editable</td>
+                            </tr>
+                            <tr>
+                                <td>Archivos</td>
+                                <td>Storage local</td>
+                                <td>—</td>
+                                <td>Historias escaneadas, radiografías</td>
+                            </tr>
+                            <tr>
+                                <td>Reportes</td>
+                                <td>Vistas SQL + consultas Eloquent</td>
+                                <td>—</td>
+                                <td>Rendimiento y reutilización</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============ ESTRUCTURA ============ -->
+            <section id="estructura" data-search="estructura carpetas directorios organizacion backend">
+                <h2><span class="num">5</span> Estructura de carpetas</h2>
+
+                <div class="callout callout-warning">
+                    <strong>Nota:</strong> la estructura de carpetas <em>no está definida en el PDF de
+                        requerimientos</em>.
+                    La siguiente es una propuesta técnica coherente con los módulos y roles solicitados.
+                </div>
+
+                <h3>Backend (Laravel)</h3>
+                <div class="tree">
+                    <span class="folder">app/</span>
+                    ├── <span class="folder">Http/</span>
+                    │ ├── <span class="folder">Controllers/</span>
+                    │ │ ├── <span class="file">AuthController.php</span> <span class="comment"># login, logout, perfil,
+                        sesiones</span>
+                    │ │ ├── <span class="file">DashboardController.php</span> <span class="comment"># dashboard
+                        unificado</span>
+                    │ │ ├── <span class="file">AdminController.php</span> <span class="comment"># usuarios, roles,
+                        catálogos, bitácoras</span>
+                    │ │ ├── <span class="file">AdmisionController.php</span> <span class="comment"># fichas de admisión,
+                        remisiones</span>
+                    │ │ ├── <span class="file">HistoriaClinicaController.php</span> <span class="comment"># HC,
+                        archivos, autorizaciones</span>
+                    │ │ ├── <span class="file">SesionAtencionController.php</span> <span class="comment"># avance paso a
+                        paso</span>
+                    │ │ ├── <span class="file">TratamientoController.php</span> <span class="comment"># tratamientos
+                        realizados</span>
+                    │ │ ├── <span class="file">CajasController.php</span> <span class="comment"># recibos, pagos</span>
+                    │ │ ├── <span class="file">InsumosController.php</span> <span class="comment"># catálogo,
+                        solicitudes</span>
+                    │ │ ├── <span class="file">EsterilizacionController.php</span> <span class="comment"># control de
+                        sobres</span>
+                    │ │ ├── <span class="file">RadiologiaController.php</span> <span class="comment">#
+                        radiografías</span>
+                    │ │ └── <span class="file">ReporteController.php</span> <span class="comment"># reportes y
+                        exportaciones</span>
+                    │ ├── <span class="folder">Middleware/</span>
+                    │ │ ├── <span class="file">EnsureUserSession.php</span> <span class="comment"># valida sesión
+                        activa</span>
+                    │ │ ├── <span class="file">CheckRole.php</span> <span class="comment"># valida rol</span>
+                    │ │ └── <span class="file">CheckPermission.php</span> <span class="comment"># valida permiso
+                        granular</span>
+                    │ └── <span class="folder">Requests/</span> <span class="comment"># form requests por módulo</span>
+                    ├── <span class="folder">Models/</span>
+                    │ ├── <span class="file">Usuario.php</span>
+                    │ ├── <span class="file">Rol.php</span>
+                    │ ├── <span class="file">Permiso.php</span>
+                    │ ├── <span class="file">Paciente.php</span>
+                    │ ├── <span class="file">Admision.php</span>
+                    │ ├── <span class="file">Remision.php</span>
+                    │ ├── <span class="file">HistoriaClinica.php</span>
+                    │ ├── <span class="file">Tratamiento.php</span>
+                    │ ├── <span class="file">TratamientoRealizado.php</span>
+                    │ ├── <span class="file">SesionAtencion.php</span>
+                    │ ├── <span class="file">Caja.php</span>
+                    │ ├── <span class="file">Insumo.php</span>
+                    │ ├── <span class="file">InsumoSolicitado.php</span>
+                    │ ├── <span class="file">Esterilizacion.php</span>
+                    │ ├── <span class="file">Radiologia.php</span>
+                    │ ├── <span class="file">Archivo.php</span>
+                    │ └── <span class="file">Bitacora.php</span>
+                    ├── <span class="folder">Services/</span>
+                    │ ├── <span class="file">LogService.php</span> <span class="comment"># registro de bitácora</span>
+                    │ ├── <span class="file">PermisoService.php</span> <span class="comment"># consulta de permisos con
+                        caché</span>
+                    │ └── <span class="file">ReporteService.php</span> <span class="comment"># generación de
+                        reportes</span>
+                    └── <span class="folder">Providers/</span>
+                    └── <span class="file">AppServiceProvider.php</span> <span class="comment"># menú dinámico, permisos
+                        globales</span>
+                </div>
+
+                <h3>Frontend (Vistas Blade)</h3>
+                <div class="tree">
+                    <span class="folder">resources/views/</span>
+                    ├── <span class="folder">layouts/</span>
+                    │ ├── <span class="file">app.blade.php</span> <span class="comment"># layout principal</span>
+                    │ └── <span class="folder">partials/</span>
+                    │ ├── <span class="file">sidebar.blade.php</span>
+                    │ ├── <span class="file">topbar.blade.php</span>
+                    │ └── <span class="file">scripts.blade.php</span>
+                    ├── <span class="folder">admin/</span> <span class="comment"># solo admin U-TIC</span>
+                    │ ├── <span class="file">dashboard.blade.php</span>
+                    │ ├── <span class="folder">usuarios/</span>
+                    │ ├── <span class="folder">roles/</span>
+                    │ ├── <span class="folder">clinicas/</span>
+                    │ ├── <span class="folder">periodos/</span>
+                    │ ├── <span class="folder">tratamientos/</span>
+                    │ ├── <span class="folder">bitacoras/</span>
+                    │ └── <span class="folder">reportes/</span>
+                    ├── <span class="folder">app/</span> <span class="comment"># dashboard unificado + módulos</span>
+                    │ ├── <span class="file">dashboard.blade.php</span>
+                    │ ├── <span class="folder">admisiones/</span>
+                    │ ├── <span class="folder">historias/</span>
+                    │ ├── <span class="folder">sesiones/</span>
+                    │ ├── <span class="folder">tratamientos/</span>
+                    │ ├── <span class="folder">cajas/</span>
+                    │ ├── <span class="folder">insumos/</span>
+                    │ ├── <span class="folder">esterilizaciones/</span>
+                    │ ├── <span class="folder">radiologias/</span>
+                    │ └── <span class="folder">reportes/</span>
+                    ├── <span class="folder">auth/</span>
+                    │ ├── <span class="file">login.blade.php</span>
+                    │ ├── <span class="file">perfil.blade.php</span>
+                    │ └── <span class="file">configuracion.blade.php</span>
+                    └── <span class="folder">errors/</span>
+                    ├── <span class="file">403.blade.php</span>
+                    ├── <span class="file">404.blade.php</span>
+                    └── <span class="file">500.blade.php</span>
+                </div>
+
+                <h3>Base de datos</h3>
+                <div class="tree">
+                    <span class="folder">database/</span>
+                    ├── <span class="folder">migrations/</span> <span class="comment"># migraciones por módulo</span>
+                    ├── <span class="folder">seeders/</span>
+                    │ ├── <span class="file">RolesSeeder.php</span> <span class="comment"># los 15 roles base</span>
+                    │ ├── <span class="file">PermisosSeeder.php</span> <span class="comment"># catálogo de
+                        permisos</span>
+                    │ ├── <span class="file">RolPermisoSeeder.php</span> <span class="comment"># matriz inicial</span>
+                    │ ├── <span class="file">ClinicasSeeder.php</span> <span class="comment"># 14 áreas (13 +
+                        admisión)</span>
+                    │ ├── <span class="file">MotivosConsultaSeeder.php</span>
+                    │ ├── <span class="file">TratamientosSeeder.php</span>
+                    │ ├── <span class="file">PeriodoSeeder.php</span>
+                    │ └── <span class="file">UsuarioAdminSeeder.php</span> <span class="comment"># usuario admin
+                        inicial</span>
+                    └── <span class="folder">factories/</span>
+                </div>
+            </section>
+
+            <!-- ============ MODELO DE DATOS ============ -->
+            <section id="modelo-datos" data-search="base datos tablas modelo entidades relaciones">
+                <h2><span class="num">6</span> Modelo de datos</h2>
+
+                <div class="callout callout-warning">
+                    <strong>Nota:</strong> el PDF <em>no especifica un número cerrado de tablas</em>. La siguiente
+                    propuesta cubre todos los módulos solicitados.
+                </div>
+
+                <h3>Dominio de seguridad</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tabla</th>
+                                <th>Propósito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>usuarios</code></td>
+                                <td>Credenciales, perfil, tipo, estado, multilogin</td>
+                            </tr>
+                            <tr>
+                                <td><code>roles</code></td>
+                                <td>Catálogo estático de roles (15)</td>
+                            </tr>
+                            <tr>
+                                <td><code>permisos</code></td>
+                                <td>Catálogo de acciones del sistema (<code>modulo.accion</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><code>rol_permiso</code></td>
+                                <td>Matriz editable de permisos por rol</td>
+                            </tr>
+                            <tr>
+                                <td><code>usuario_rol</code></td>
+                                <td>Asignación de roles a usuarios</td>
+                            </tr>
+                            <tr>
+                                <td><code>sesiones</code></td>
+                                <td>Control de sesiones activas y multilogin</td>
+                            </tr>
+                            <tr>
+                                <td><code>bitacoras</code></td>
+                                <td>Auditoría de todas las acciones</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Dominio clínico</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tabla</th>
+                                <th>Propósito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>pacientes</code></td>
+                                <td>Datos personales del paciente</td>
+                            </tr>
+                            <tr>
+                                <td><code>admisiones</code></td>
+                                <td>Registro inicial, antecedentes, odontograma</td>
+                            </tr>
+                            <tr>
+                                <td><code>motivos_consulta</code></td>
+                                <td>Catálogo de motivos de consulta</td>
+                            </tr>
+                            <tr>
+                                <td><code>consentimientos</code></td>
+                                <td>Consentimientos informados del paciente</td>
+                            </tr>
+                            <tr>
+                                <td><code>remisiones</code></td>
+                                <td>Derivación del paciente a una especialidad</td>
+                            </tr>
+                            <tr>
+                                <td><code>historias_clinicas</code></td>
+                                <td>HC por especialidad, vinculadas por paciente</td>
+                            </tr>
+                            <tr>
+                                <td><code>tratamientos</code></td>
+                                <td>Catálogo de tratamientos por clínica</td>
+                            </tr>
+                            <tr>
+                                <td><code>tratamientos_realizados</code></td>
+                                <td>Tratamientos aplicados a un paciente</td>
+                            </tr>
+                            <tr>
+                                <td><code>sesiones_atencion</code></td>
+                                <td>Avance paso a paso del tratamiento</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Dominio operativo</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tabla</th>
+                                <th>Propósito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>clinicas</code></td>
+                                <td>Especialidades (14 áreas según PDF pág. 6)</td>
+                            </tr>
+                            <tr>
+                                <td><code>especialidades</code></td>
+                                <td>Docentes/estudiantes habilitados por clínica</td>
+                            </tr>
+                            <tr>
+                                <td><code>periodos</code></td>
+                                <td>Gestión y semestre académico</td>
+                            </tr>
+                            <tr>
+                                <td><code>cajas</code></td>
+                                <td>Recibos y pagos por tratamiento</td>
+                            </tr>
+                            <tr>
+                                <td><code>caja_detalles</code></td>
+                                <td>Detalle de conceptos por recibo</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos</code></td>
+                                <td>Stock de insumos por clínica</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos_tratamiento</code></td>
+                                <td>Tipos de insumo por clínica</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos_solicitados</code></td>
+                                <td>Solicitudes de insumos por tratamiento</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos_solicitados_detalle</code></td>
+                                <td>Detalle de cada solicitud</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos_tratamiento_usados</code></td>
+                                <td>Insumos efectivamente usados</td>
+                            </tr>
+                            <tr>
+                                <td><code>esterilizaciones</code></td>
+                                <td>Control de sobres esterilizados</td>
+                            </tr>
+                            <tr>
+                                <td><code>autorizaciones</code></td>
+                                <td>Autorización docente de esterilización</td>
+                            </tr>
+                            <tr>
+                                <td><code>radiologias</code></td>
+                                <td>Radiografías tomadas</td>
+                            </tr>
+                            <tr>
+                                <td><code>archivos</code></td>
+                                <td>Archivos adjuntos (HC, radiografías, etc.)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Dominio de integración y reportes</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tabla</th>
+                                <th>Propósito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>shico_sincronizacion</code></td>
+                                <td>Cola de sincronización con SHICO</td>
+                            </tr>
+                            <tr>
+                                <td><code>reportes</code></td>
+                                <td>Historial de reportes generados</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Vistas SQL sugeridas</h3>
+                <ul>
+                    <li><code>vista_afluencia_clinica_periodo</code> — pacientes por clínica y periodo</li>
+                    <li><code>vista_cajas_periodo</code> — totales de caja por periodo</li>
+                    <li><code>vista_pacientes_grupo_etario</code> — pacientes por grupo etario y sexo</li>
+                    <li><code>vista_motivos_consulta</code> — motivos de consulta más frecuentes</li>
+                </ul>
+            </section>
+
+            <!-- ============ ROLES ============ -->
+            <section id="roles" data-search="roles catalogo estatico perfiles usuarios">
+                <h2><span class="num">7</span> Catálogo de roles</h2>
+
+                <p>El PDF define un <strong>catálogo de 15 roles</strong> agrupados en 4 categorías. El
+                    administrador no crea roles nuevos; solo edita la matriz de permisos de cada rol existente.</p>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Rol</th>
+                                <th>Categoría</th>
+                                <th>Origen en el PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><code>admin</code></td>
+                                <td><span class="badge badge-admin">Sistema</span></td>
+                                <td>Administrador del sistema (pág. 6-7)</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><code>director</code></td>
+                                <td><span class="badge badge-director">Dirección</span></td>
+                                <td>Dirección de Carrera (pág. 2)</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><code>jefe-clinicas</code></td>
+                                <td><span class="badge badge-director">Dirección</span></td>
+                                <td>Jefe de área clínica (pág. 6, 9)</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><code>jefe-preclinica</code></td>
+                                <td><span class="badge badge-director">Dirección</span></td>
+                                <td>Jefe de área preclínica (pág. 9)</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><code>jefe-catedra</code></td>
+                                <td><span class="badge badge-director">Dirección</span></td>
+                                <td>Jefes de Cátedra (pág. 2)</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td><code>docente</code></td>
+                                <td><span class="badge badge-clinico">Clínico</span></td>
+                                <td>Docentes de asignaturas clínicas (pág. 2, 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td><code>estudiante</code></td>
+                                <td><span class="badge badge-clinico">Clínico</span></td>
+                                <td>Estudiantes de 3° a 5° año (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><code>interno</code></td>
+                                <td><span class="badge badge-clinico">Clínico</span></td>
+                                <td>Internos de odontología (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td><code>admision</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de admisión (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td><code>kardex</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de Kardex (pág. 9)</td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td><code>cajas</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de cajas (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td><code>insumos</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de insumos (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>13</td>
+                                <td><code>esterilizacion</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de esterilización (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>14</td>
+                                <td><code>radiologia</code></td>
+                                <td><span class="badge badge-operativo">Operativo</span></td>
+                                <td>Administrativo de radiología (pág. 6, 7)</td>
+                            </tr>
+                            <tr>
+                                <td>15</td>
+                                <td><code>investigacion</code></td>
+                                <td><span class="badge badge-consulta">Consulta</span></td>
+                                <td>Instituto de Investigación (pág. 9)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-success">
+                    <strong>Regla:</strong> los roles son estáticos. La matriz de permisos por rol sí es editable por el
+                    administrador (usuario U-TIC).
+                </div>
+            </section>
+
+            <!-- ============ PERMISOS ============ -->
+            <section id="permisos" data-search="permisos matriz modulo accion granular">
+                <h2><span class="num">8</span> Matriz de permisos</h2>
+
+                <h3>Convención de códigos</h3>
+                <pre><code>modulo.accion</code></pre>
+
+                <p>Acciones estándar:</p>
+                <ul>
+                    <li><code>ver</code> — listar, ver detalle, exportar</li>
+                    <li><code>crear</code> — registrar nuevo</li>
+                    <li><code>editar</code> — modificar existente</li>
+                    <li><code>eliminar</code> — anular o borrar</li>
+                    <li><code>gestionar</code> — comodín para todo (incluye autorizar, cerrar, reasignar)</li>
+                </ul>
+
+                <h3>Módulos del sistema</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Módulo</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>usuarios</code></td>
+                                <td>Gestión de cuentas</td>
+                            </tr>
+                            <tr>
+                                <td><code>roles</code></td>
+                                <td>Roles y permisos</td>
+                            </tr>
+                            <tr>
+                                <td><code>pacientes</code></td>
+                                <td>Datos de pacientes</td>
+                            </tr>
+                            <tr>
+                                <td><code>clinicas</code></td>
+                                <td>Especialidades</td>
+                            </tr>
+                            <tr>
+                                <td><code>periodos</code></td>
+                                <td>Periodos académicos</td>
+                            </tr>
+                            <tr>
+                                <td><code>tratamientos</code></td>
+                                <td>Catálogo de tratamientos</td>
+                            </tr>
+                            <tr>
+                                <td><code>admisiones</code></td>
+                                <td>Registro inicial</td>
+                            </tr>
+                            <tr>
+                                <td><code>remisiones</code></td>
+                                <td>Derivaciones</td>
+                            </tr>
+                            <tr>
+                                <td><code>historias</code></td>
+                                <td>Historias clínicas</td>
+                            </tr>
+                            <tr>
+                                <td><code>sesiones</code></td>
+                                <td>Avance de tratamientos</td>
+                            </tr>
+                            <tr>
+                                <td><code>cajas</code></td>
+                                <td>Pagos y recibos</td>
+                            </tr>
+                            <tr>
+                                <td><code>insumos</code></td>
+                                <td>Insumos y solicitudes</td>
+                            </tr>
+                            <tr>
+                                <td><code>esterilizaciones</code></td>
+                                <td>Control de esterilización</td>
+                            </tr>
+                            <tr>
+                                <td><code>radiologias</code></td>
+                                <td>Radiografías</td>
+                            </tr>
+                            <tr>
+                                <td><code>bitacoras</code></td>
+                                <td>Auditoría</td>
+                            </tr>
+                            <tr>
+                                <td><code>reportes</code></td>
+                                <td>Estadísticas y reportes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Matriz resumida (permisos por rol)</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Módulo</th>
+                                <th>admin</th>
+                                <th>dirección</th>
+                                <th>docente</th>
+                                <th>estudiante</th>
+                                <th>admisión</th>
+                                <th>kardex</th>
+                                <th>cajas</th>
+                                <th>insumos</th>
+                                <th>esteril.</th>
+                                <th>radio.</th>
+                                <th>invest.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>usuarios</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>roles</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>pacientes</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                            </tr>
+                            <tr>
+                                <td>admisiones</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>remisiones</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>historias</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>sesiones</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>tratamientos</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>cajas</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>👁</td>
+                            </tr>
+                            <tr>
+                                <td>insumos</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>👁</td>
+                            </tr>
+                            <tr>
+                                <td>esterilizaciones</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>✅</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>radiologias</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                            </tr>
+                            <tr>
+                                <td>bitacoras</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>reportes</td>
+                                <td>✅</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                                <td>👁</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top:10px; font-size:12.5px; color:var(--text-muted);">
+                        <strong>Leyenda:</strong> ✅ = gestión completa · 👁 = solo visualización · — = sin acceso
+                    </p>
+                </div>
+            </section>
+
+            <!-- ============ QUE HACE CADA ROL ============ -->
+            <section id="que-hace-cada-rol" data-search="que hace cada rol funciones responsabilidades">
+                <h2><span class="num">9</span> Qué hace cada rol</h2>
+
+                <h3>Admin (U-TIC)</h3>
+                <ul>
+                    <li>Inicia sesión en el sistema.</li>
+                    <li>Registra usuarios y asigna roles.</li>
+                    <li>Registra especialidades (clínicas).</li>
+                    <li>Designa responsables por clínica.</li>
+                    <li>Gestiona catálogos: clínicas, periodos, tratamientos, motivos de consulta.</li>
+                    <li>Edita la matriz de permisos por rol.</li>
+                    <li>Ve bitácoras y reportes globales.</li>
+                    <li>Tiene acceso total a todos los módulos.</li>
+                    <li>No crea roles nuevos (catálogo estático).</li>
+                </ul>
+
+                <h3>Director de Carrera</h3>
+                <ul>
+                    <li>Consulta reportes globales de todas las clínicas.</li>
+                    <li>Ve estadísticas por periodo, especialidad, docente y estudiante.</li>
+                    <li>Acceso de solo lectura a la mayoría de módulos.</li>
+                    <li>Valida procesos de acreditación e investigación.</li>
+                    <li>No modifica datos clínicos ni administrativos.</li>
+                </ul>
+
+                <h3>Jefe de Área Clínica</h3>
+                <ul>
+                    <li>Supervisa la operación de todas las especialidades.</li>
+                    <li>Designa docentes responsables por clínica.</li>
+                    <li>Consulta reportes de afluencia por especialidad.</li>
+                    <li>Autoriza HC en casos excepcionales.</li>
+                    <li>Coordina con la U-TIC para información de soporte (Dr. Mollericona, Cel. 76702392).</li>
+                </ul>
+
+                <h3>Jefe de Área Preclínica</h3>
+                <ul>
+                    <li>Supervisa prácticas preclínicas.</li>
+                    <li>Consulta reportes de estudiantes en formación.</li>
+                    <li>No modifica datos clínicos.</li>
+                </ul>
+
+                <h3>Jefe de Cátedra</h3>
+                <ul>
+                    <li>Supervisa a los docentes de su cátedra.</li>
+                    <li>Consulta reportes de atenciones por docente y estudiante.</li>
+                    <li>No modifica datos clínicos.</li>
+                </ul>
+
+                <h3>Docente</h3>
+                <ul>
+                    <li>Recibe pacientes derivados en línea.</li>
+                    <li>Designa paciente a estudiante o interno.</li>
+                    <li>Autoriza historias clínicas llenadas por estudiantes.</li>
+                    <li>Registra avance paso a paso del tratamiento.</li>
+                    <li>Autoriza y visualiza solicitudes de insumos.</li>
+                    <li>Autoriza y visualiza cobros en cajas.</li>
+                    <li>Visualiza esterilización del estudiante.</li>
+                    <li>Evalúa al estudiante.</li>
+                </ul>
+
+                <h3>Estudiante (3° a 5° año)</h3>
+                <ul>
+                    <li>Recibe pacientes designados por el docente.</li>
+                    <li>Llena la ficha de admisión digital bajo supervisión del docente y administrativo.</li>
+                    <li>Sube archivos de historias clínicas.</li>
+                    <li>Registra tratamientos realizados.</li>
+                    <li>Solicita insumos.</li>
+                    <li>Solicita esterilización de materiales.</li>
+                    <li>Solicita radiografías.</li>
+                    <li>Finaliza el tratamiento y el docente lo registra como culminado.</li>
+                </ul>
+
+                <h3>Interno</h3>
+                <ul>
+                    <li>Mismas funciones que el estudiante.</li>
+                    <li>Llena fichas de admisión bajo supervisión.</li>
+                    <li>Puede tener más autonomía según el periodo de rotación.</li>
+                </ul>
+
+                <h3>Admisión</h3>
+                <ul>
+                    <li>Registra el ingreso del paciente a la clínica.</li>
+                    <li>Llena la ficha de admisión digital (datos personales, antecedentes, odontograma).</li>
+                    <li>Registra el nombre del paciente en su base de datos.</li>
+                    <li>Deriva al paciente a la especialidad correspondiente.</li>
+                    <li>Gestiona remisiones.</li>
+                </ul>
+
+                <h3>Kardex</h3>
+                <ul>
+                    <li>Apoya en la gestión documental y de archivo clínico.</li>
+                    <li>Verifica la completitud de las fichas de admisión.</li>
+                    <li>Controla el archivo físico vs. digital.</li>
+                </ul>
+
+                <h3>Cajas</h3>
+                <ul>
+                    <li>Selecciona tratamientos por clínica.</li>
+                    <li>Registra nuevos recibos de pago.</li>
+                    <li>Consulta lista de recibos.</li>
+                    <li>Genera reportes de recibo y gráficos.</li>
+                    <li>Verifica pagos correspondientes a tratamientos.</li>
+                    <li>Reunión pendiente con el administrativo a cargo (según PDF pág. 6).</li>
+                </ul>
+
+                <h3>Insumos</h3>
+                <ul>
+                    <li>Registra y actualiza el catálogo de insumos.</li>
+                    <li>Recibe solicitudes de insumos de estudiantes.</li>
+                    <li>Autoriza o rechaza solicitudes.</li>
+                    <li>Registra la entrega efectiva de insumos.</li>
+                    <li>Controla stock mínimo.</li>
+                    <li>Reunión pendiente con el administrativo a cargo (según PDF pág. 6).</li>
+                </ul>
+
+                <h3>Esterilización</h3>
+                <ul>
+                    <li>Registra la entrega de sobres esterilizados.</li>
+                    <li>Registra el recojo de materiales.</li>
+                    <li>Controla cantidad de sobres por estudiante.</li>
+                    <li>Firma el control con el docente responsable.</li>
+                    <li>Reunión pendiente con el administrativo a cargo (según PDF pág. 6).</li>
+                </ul>
+
+                <h3>Radiología</h3>
+                <ul>
+                    <li>Registra las radiografías tomadas.</li>
+                    <li>Sube imágenes al sistema.</li>
+                    <li>Genera gráficos estadísticos de afluencia.</li>
+                    <li>Vincula radiografías a la historia clínica del paciente.</li>
+                    <li>Reunión pendiente con el administrativo a cargo (según PDF pág. 6).</li>
+                </ul>
+
+                <h3>Investigación (Instituto)</h3>
+                <ul>
+                    <li>Acceso de solo lectura a estadísticas anonimizadas.</li>
+                    <li>Consulta reportes por especialidad, grupo etario y sexo.</li>
+                    <li>No accede a datos personales de pacientes.</li>
+                    <li>Solicita información estadística con relación a la clínica odontológica (pág. 9).</li>
+                </ul>
+            </section>
+
+            <!-- ============ FLUJO ============ -->
+            <section id="flujo" data-search="flujo atencion paciente proceso pasos">
+                <h2><span class="num">10</span> Flujo de atención</h2>
+
+                <p>El sistema respeta el flujo real de la clínica descrito en el PDF (págs. 3, 6, 7, 8), sin forzar a
+                    docentes ni estudiantes a adaptarse a una lógica ajena.</p>
+
+                <h3>Flujo de alto nivel (según PDF pág. 7)</h3>
+                <ol class="steps">
+                    <li><strong>Inicio de sesión</strong><span>El usuario accede con sus credenciales
+                            individuales.</span></li>
+                    <li><strong>Administrador del sistema</strong><span>Registra usuarios, especialidades y designa
+                            responsables.</span></li>
+                    <li><strong>Usuario de Admisión</strong><span>Inicia, ve pacientes remitidos y remite
+                            pacientes.</span></li>
+                    <li><strong>Usuario interno/estudiante</strong><span>Ve pacientes derivados en línea, pacientes
+                            designados, llena ficha de admisión digital, sube archivos de HC, solicita esterilización,
+                            radiología y cajas.</span></li>
+                    <li><strong>Usuario docente</strong><span>Ve pacientes derivados, designa pacientes, autoriza HC,
+                            evalúa estudiante, visualiza esterilización, autoriza y visualiza cajas e insumos.</span>
+                    </li>
+                    <li><strong>Usuario de Cajas</strong><span>Selecciona tratamientos por clínica, registra nuevo
+                            tratamiento, lista recibos, registra nuevo recibo, genera reporte de recibo y
+                            gráficos.</span></li>
+                    <li><strong>Usuario de Insumos</strong><span>Registra y actualiza insumos, recibe y autoriza
+                            solicitudes.</span></li>
+                    <li><strong>Usuario de Esterilización</strong><span>Registra esterilización.</span></li>
+                    <li><strong>Usuario de Radiología</strong><span>Registra radiografías y genera gráficos
+                            estadísticos.</span></li>
+                </ol>
+
+                <h3>Flujo clínico detallado (según PDF pág. 8)</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>Paciente ingresa a Clínica de Admisión</strong>
+                        <span>Se reciben, evalúan y diagnostican por primera vez al paciente.</span>
+                    </li>
+                    <li>
+                        <strong>Interno de odontología y estudiantes llenan la ficha de admisión</strong>
+                        <span>Bajo la supervisión del docente y del administrativo de la clínica de admisión. Se deriva
+                            a la especialidad correspondiente.</span>
+                    </li>
+                    <li>
+                        <strong>Paciente se dirige a la clínica de especialidad</strong>
+                        <span>Según la derivación realizada.</span>
+                    </li>
+                    <li>
+                        <strong>Administrativo de clínica de admisión registra el nombre del paciente</strong>
+                        <span>En su base de datos.</span>
+                    </li>
+                    <li>
+                        <strong>Estudiante de 4° y 5° año recoge la ficha de admisión</strong>
+                        <span>Y se va a la clínica de especialidad.</span>
+                    </li>
+                    <li>
+                        <strong>Docente aprueba el tratamiento propuesto</strong>
+                        <span>Una vez aprobado, el paciente pasa por Cajas para cancelar el tratamiento.</span>
+                    </li>
+                    <li>
+                        <strong>Pago en Cajas</strong>
+                        <span>El paciente cancela el tratamiento aprobado. Se genera un recibo.</span>
+                    </li>
+                    <li>
+                        <strong>Registro paso a paso del avance</strong>
+                        <span>El docente registra el avance durante todo el proceso. Esto permite autorizar
+                            insumos.</span>
+                    </li>
+                    <li>
+                        <strong>Solicitud y entrega de insumos</strong>
+                        <span>El estudiante solicita, el docente autoriza, Insumos entrega.</span>
+                    </li>
+                    <li>
+                        <strong>Control de esterilización</strong>
+                        <span>Se registra entrega y recojo de sobres por estudiante.</span>
+                    </li>
+                    <li>
+                        <strong>El estudiante finaliza el tratamiento</strong>
+                        <span>El docente registra el tratamiento como culminado.</span>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- ============ MODULOS ============ -->
+            <section id="modulos" data-search="modulos funcionalidades sistema">
+                <h2><span class="num">11</span> Módulos del sistema</h2>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h5>Seguridad</h5>
+                        <p>Usuarios, roles, permisos, sesiones, bitácora.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Catálogos</h5>
+                        <p>Clínicas, periodos, tratamientos, motivos de consulta.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Admisión</h5>
+                        <p>Registro inicial, ficha digital, odontograma, derivación.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Historias clínicas</h5>
+                        <p>HC por especialidad, archivos, autorizaciones.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Tratamientos</h5>
+                        <p>Propuesta, aprobación, sesiones de atención.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Cajas</h5>
+                        <p>Recibos, pagos, reportes por periodo.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Insumos</h5>
+                        <p>Catálogo, solicitudes, autorizaciones, entregas.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Esterilización</h5>
+                        <p>Sobres entregados, recogidos, firmas.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Radiología</h5>
+                        <p>Tomas, archivos, estadísticas.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Reportes</h5>
+                        <p>Afluencia, tratamientos, cajas, insumos, radiología.</p>
+                    </div>
+                    <div class="card">
+                        <h5>Bitácora</h5>
+                        <p>Auditoría de todas las acciones.</p>
+                    </div>
+                    <div class="card">
+                        <h5>SHICO</h5>
+                        <p>Sincronización con el sistema institucional.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ REPORTES ============ -->
+            <section id="reportes" data-search="reportes estadisticas acreditacion">
+                <h2><span class="num">12</span> Reportes</h2>
+
+                <h3>Reportes obligatorios según el PDF</h3>
+                <ul>
+                    <li>Pacientes atendidos por periodo.</li>
+                    <li>Tratamientos por especialidad.</li>
+                    <li>Atenciones por docente y por estudiante.</li>
+                    <li>Cuántos pacientes acuden al año por cada clínica o especialidad.</li>
+                    <li>Cantidad de pacientes por grupo etario y sexo.</li>
+                    <li>Motivos por los que acuden los pacientes (se extrae de la ficha de admisión).</li>
+                    <li>Reporte de tratamientos y afluencia de cajas.</li>
+                    <li>Reporte de qué insumos y qué cantidad se utiliza.</li>
+                    <li>Reporte de afluencia y servicios atendidos en radiología.</li>
+                    <li>Reporte de afluencia del servicio de esterilización.</li>
+                </ul>
+
+                <h3>Áreas a reportar (según PDF pág. 6)</h3>
+                <p>Clínica de admisión, operatoria, endodoncia, periodoncia, cirugía, odontopediatría, prostodoncia
+                    fija, prostodoncia removible, radiología, integral niños, integral adultos, ortodoncia, cirugía
+                    mayor. <strong>Total: 13 especialidades + clínica de admisión = 14 áreas.</strong></p>
+
+                <h3>Formatos de salida</h3>
+                <ul>
+                    <li>Pantalla con gráficos interactivos.</li>
+                    <li>Exportación a PDF.</li>
+                    <li>Exportación a Excel/CSV.</li>
+                    <li>Filtros por periodo, especialidad, docente y estudiante.</li>
+                </ul>
+
+                <div class="callout callout-info">
+                    <strong>Reuniones pendientes:</strong> Cajas, Insumos, Radiología y Esterilización requieren
+                    reunión con el administrativo a cargo para definir los reportes exactos (PDF pág. 6).
+                </div>
+            </section>
+
+            <!-- ============ PASOS ============ -->
+            <section id="pasos" data-search="pasos seguir desarrollo implementacion">
+                <h2><span class="num">13</span> Pasos a seguir</h2>
+
+                <h3>Fase 0 — Preparación</h3>
+                <ol class="steps">
+                    <li><strong>Revisar el backup de base de datos</strong><span>Verificar tablas y vistas SQL.</span>
+                    </li>
+                    <li><strong>Aplicar ajustes a la BD</strong><span>Ampliar <code>bitacoras.tipo</code>, agregar
+                            UNIQUE a <code>pacientes.ci</code> y <code>cajas.recibo</code>.</span></li>
+                    <li><strong>Instalar dependencias</strong><span><code>composer install</code> y
+                            <code>npm install</code>.</span></li>
+                    <li><strong>Configurar <code>.env</code></strong><span>Credenciales de MySQL, APP_KEY, storage,
+                            mail.</span></li>
+                    <li><strong>Ejecutar migraciones y seeders base</strong><span>Roles, permisos, clínicas, periodos,
+                            usuario admin inicial.</span></li>
+                </ol>
+
+                <h3>Fase 1 — Núcleo de seguridad</h3>
+                <ol class="steps">
+                    <li><strong>Middleware <code>EnsureUserSession</code></strong><span>Valida contra tabla
+                            <code>sesiones</code>.</span></li>
+                    <li><strong>Middleware <code>CheckRole</code></strong><span>Valida rol del usuario contra la
+                            BD.</span></li>
+                    <li><strong>Middleware <code>CheckPermission</code></strong><span>Valida permiso granular
+                            <code>modulo.accion</code>.</span></li>
+                    <li><strong>Seeder de permisos</strong><span>16 módulos × 5 acciones = 80 permisos iniciales.</span>
+                    </li>
+                    <li><strong>Seeder de roles</strong><span>15 roles base según el PDF.</span></li>
+                    <li><strong>Seeder de matriz rol-permiso</strong><span>Asignar permisos iniciales a cada rol.</span>
+                    </li>
+                    <li><strong>AuthController</strong><span>Login, logout, perfil, sesiones múltiples.</span></li>
+                </ol>
+
+                <h3>Fase 2 — Layout y dashboard</h3>
+                <ol class="steps">
+                    <li><strong>Layout principal</strong><span><code>layouts/app.blade.php</code> con sidebar, topbar y
+                            scripts.</span></li>
+                    <li><strong>Sidebar dinámico</strong><span>Generado desde permisos del usuario.</span></li>
+                    <li><strong>Dashboard unificado</strong><span>Widgets condicionales según permisos.</span></li>
+                    <li><strong>Componentes UI</strong><span>Tablas, modales, badges, toasts, alertas.</span></li>
+                    <li><strong>Helpers JS</strong><span><code>fetchAjax</code>, <code>mostrarToast</code>,
+                            <code>recargarTablaGenerica</code>, <code>debounce</code>.</span></li>
+                </ol>
+
+                <h3>Fase 3 — Catálogos administrativos</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de usuarios</strong><span>Crear, editar, deshabilitar, asignar roles.</span></li>
+                    <li><strong>CRUD de clínicas</strong><span>14 áreas según el PDF.</span></li>
+                    <li><strong>CRUD de periodos</strong><span>Gestión y semestre.</span></li>
+                    <li><strong>CRUD de tratamientos</strong><span>Catálogo por clínica.</span></li>
+                    <li><strong>CRUD de motivos de consulta</strong><span>Para los reportes.</span></li>
+                    <li><strong>Gestión de roles y permisos</strong><span>Matriz editable.</span></li>
+                    <li><strong>Bitácoras</strong><span>Listado con filtros.</span></li>
+                </ol>
+
+                <h3>Fase 4 — Admisión y pacientes</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de pacientes</strong><span>Datos personales.</span></li>
+                    <li><strong>Ficha de admisión digital</strong><span>Todos los campos del PDF (pág. 10).</span></li>
+                    <li><strong>Odontograma</strong><span>Componente interactivo.</span></li>
+                    <li><strong>Remisiones</strong><span>Derivación a especialidades.</span></li>
+                    <li><strong>Consentimientos</strong><span>Firma del paciente.</span></li>
+                </ol>
+
+                <h3>Fase 5 — Historias clínicas</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de historias</strong><span>Por especialidad, vinculadas entre sí.</span></li>
+                    <li><strong>Subida de archivos</strong><span>PDFs e imágenes escaneadas.</span></li>
+                    <li><strong>Autorización docente</strong><span>Flujo de revisión.</span></li>
+                    <li><strong>Cierre de HC</strong><span>Con validación de tratamientos pendientes.</span></li>
+                    <li><strong>Historial unificado del paciente</strong><span>Todas las HC vinculadas.</span></li>
+                </ol>
+
+                <h3>Fase 6 — Tratamientos y sesiones</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de tratamientos realizados</strong><span>Por historia clínica.</span></li>
+                    <li><strong>Sesiones de atención</strong><span>Avance paso a paso.</span></li>
+                    <li><strong>Aprobación docente</strong><span>Del tratamiento propuesto.</span></li>
+                    <li><strong>Evaluación del estudiante</strong><span>Por parte del docente.</span></li>
+                </ol>
+
+                <h3>Fase 7 — Cajas</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de recibos</strong><span>Con detalle de conceptos.</span></li>
+                    <li><strong>Búsqueda de pacientes</strong><span>Para asociar pagos.</span></li>
+                    <li><strong>Autorización docente de cobros</strong><span>Antes de pasar a caja.</span></li>
+                    <li><strong>Reportes de caja</strong><span>Por periodo, por tratamiento.</span></li>
+                </ol>
+
+                <h3>Fase 8 — Insumos, esterilización y radiología</h3>
+                <ol class="steps">
+                    <li><strong>CRUD de insumos</strong><span>Catálogo y stock.</span></li>
+                    <li><strong>Solicitudes de insumos</strong><span>Estudiante solicita, docente autoriza, insumos
+                            entrega.</span></li>
+                    <li><strong>Control de esterilización</strong><span>Sobres entregados y recogidos.</span></li>
+                    <li><strong>Registro de radiografías</strong><span>Con archivo adjunto.</span></li>
+                </ol>
+
+                <h3>Fase 9 — Reportes</h3>
+                <ol class="steps">
+                    <li><strong>Reportes obligatorios</strong><span>Los 10 del PDF.</span></li>
+                    <li><strong>Gráficos interactivos</strong><span>Chart.js o similar.</span></li>
+                    <li><strong>Exportación PDF y Excel</strong><span>Con filtros aplicados.</span></li>
+                    <li><strong>Reportes para investigación</strong><span>Anonimizados.</span></li>
+                </ol>
+
+                <h3>Fase 10 — Integración con SHICO</h3>
+                <ol class="steps">
+                    <li><strong>Estudiar la API de SHICO</strong><span>Endpoints disponibles.</span></li>
+                    <li><strong>Servicio de sincronización</strong><span>Cola en
+                            <code>shico_sincronizacion</code>.</span></li>
+                    <li><strong>Job programado</strong><span>Reintentos y monitoreo.</span></li>
+                </ol>
+
+                <h3>Fase 11 — Pruebas y despliegue</h3>
+                <ol class="steps">
+                    <li><strong>Pruebas unitarias</strong><span>De los servicios críticos.</span></li>
+                    <li><strong>Pruebas de integración</strong><span>Del flujo completo.</span></li>
+                    <li><strong>Pruebas con usuarios reales</strong><span>Docentes, estudiantes, admisión, cajas.</span>
+                    </li>
+                    <li><strong>Capacitación</strong><span>Por rol.</span></li>
+                    <li><strong>Despliegue en producción</strong><span>Servidor UPEA.</span></li>
+                    <li><strong>Monitoreo y soporte</strong><span>Ingeniero de U-TIC asignado.</span></li>
+                </ol>
+            </section>
+
+            <!-- ============ FASES ============ -->
+            <section id="fases" data-search="fases cronograma tiempo">
+                <h2><span class="num">14</span> Fases del proyecto</h2>
+
+                <div class="callout callout-warning">
+                    <strong>Nota:</strong> el PDF <em>no define plazos ni cronograma</em>. La siguiente estimación es
+                    referencial y debe validarse con la U-TIC y la Carrera.
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fase</th>
+                                <th>Entregable</th>
+                                <th>Duración estimada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0. Preparación</td>
+                                <td>BD ajustada, entorno listo</td>
+                                <td>1 semana</td>
+                            </tr>
+                            <tr>
+                                <td>1. Seguridad</td>
+                                <td>Login, roles, permisos</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>2. Layout y dashboard</td>
+                                <td>UI base, navegación</td>
+                                <td>1 semana</td>
+                            </tr>
+                            <tr>
+                                <td>3. Catálogos</td>
+                                <td>CRUD administrativos</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>4. Admisión</td>
+                                <td>Ficha digital, remisiones</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>5. Historias clínicas</td>
+                                <td>HC, archivos, autorizaciones</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>6. Tratamientos</td>
+                                <td>Sesiones de atención</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>7. Cajas</td>
+                                <td>Recibos, reportes</td>
+                                <td>1 semana</td>
+                            </tr>
+                            <tr>
+                                <td>8. Insumos, esterilización, radiología</td>
+                                <td>Flujo operativo</td>
+                                <td>3 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>9. Reportes</td>
+                                <td>Estadísticas y exportación</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>10. SHICO</td>
+                                <td>Sincronización</td>
+                                <td>2 semanas</td>
+                            </tr>
+                            <tr>
+                                <td>11. Pruebas y despliegue</td>
+                                <td>Sistema en producción</td>
+                                <td>3 semanas</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top:10px; font-size:13px; color:var(--text-muted);">
+                        <strong>Total estimado:</strong> 25 semanas (~6 meses) con un equipo de 2 desarrolladores
+                        full-time. <em>Sujeto a validación.</em>
+                    </p>
+                </div>
+            </section>
+
+            <!-- ============ CONVENCIONES ============ -->
+            <section id="convenciones" data-search="convenciones codigo nombres estandares">
+                <h2><span class="num">15</span> Convenciones de código</h2>
+
+                <h3>Nombres</h3>
+                <ul>
+                    <li><strong>Controladores:</strong> <code>NombreController.php</code> en singular (ej:
+                        <code>PacienteController</code>).</li>
+                    <li><strong>Modelos:</strong> <code>Nombre.php</code> en singular y PascalCase.</li>
+                    <li><strong>Tablas:</strong> plural en snake_case (ej: <code>historias_clinicas</code>).</li>
+                    <li><strong>Rutas:</strong> kebab-case, agrupadas por módulo (ej: <code>admin/historias</code>).
+                    </li>
+                    <li><strong>Vistas:</strong> <code>modulo/accion.blade.php</code> (ej:
+                        <code>historias/index.blade.php</code>).</li>
+                    <li><strong>Permisos:</strong> <code>modulo.accion</code> (ej: <code>historias.crear</code>).</li>
+                </ul>
+
+                <h3>Estructura de respuesta AJAX</h3>
+                <pre><code>// Éxito
+{
+    "success": true,
+    "message": "Historia creada correctamente.",
+    "data": { ... }
+}
+
+// Error de validación
+{
+    "success": false,
+    "errors": {
+        "campo": ["mensaje de error"]
+    }
+}
+
+// Error general
+{
+    "success": false,
+    "message": "Descripción del error"
+}</code></pre>
+
+                <h3>Tablas AJAX</h3>
+                <pre><code>{
+    "filas": "&lt;tr&gt;...&lt;/tr&gt;",
+    "paginacion": "&lt;span class='info'&gt;...&lt;/span&gt;",
+    "total": 125
+}</code></pre>
+
+                <h3>Bitácora</h3>
+                <p>Cada acción crítica debe registrar:</p>
+                <pre><code>Bitacora::create([
+    'usuario_id' => session('user_id'),
+    'ip'         => request()->ip(),
+    'fecha'      => now(),
+    'tipo'       => 'CREAR_HISTORIA',
+    'datos'      => "HC {$id} creada para paciente {$pacienteId}",
+    'estado'     => 'OK',
+]);</code></pre>
+            </section>
+
+            <!-- ============ CHECKLIST ============ -->
+            <section id="checklist" data-search="checklist entrega verificacion">
+                <h2><span class="num">16</span> Checklist de entrega</h2>
+
+                <h3>Seguridad</h3>
+                <ul>
+                    <li>Login funcional con control de sesiones activas.</li>
+                    <li>Middleware <code>EnsureUserSession</code> validando cada request.</li>
+                    <li>Middleware <code>CheckRole</code> aplicado en rutas.</li>
+                    <li>Middleware <code>CheckPermission</code> aplicado por acción.</li>
+                    <li>Bitácora registrando todas las acciones críticas.</li>
+                    <li>Contraseñas hasheadas con bcrypt.</li>
+                    <li>Backups automáticos configurados.</li>
+                </ul>
+
+                <h3>Funcionalidad</h3>
+                <ul>
+                    <li>Los módulos operativos del sistema.</li>
+                    <li>Los 10 reportes obligatorios del PDF.</li>
+                    <li>Odontograma interactivo.</li>
+                    <li>Subida y descarga de archivos.</li>
+                    <li>Exportación a PDF y Excel.</li>
+                    <li>Gráficos estadísticos.</li>
+                    <li>Ficha de admisión digital completa (pág. 10).</li>
+                    <li>Control de esterilización con firma docente (pág. 11).</li>
+                    <li>Solicitud de insumos con autorización y entrega (pág. 11).</li>
+                </ul>
+
+                <h3>Integración</h3>
+                <ul>
+                    <li>Sincronización con SHICO funcionando.</li>
+                    <li>Cola de reintentos en <code>shico_sincronizacion</code>.</li>
+                </ul>
+
+                <h3>Documentación</h3>
+                <ul>
+                    <li>Manual de usuario por rol.</li>
+                    <li>Manual técnico.</li>
+                    <li>Documentación de API interna.</li>
+                    <li>Plan de respaldo y recuperación.</li>
+                </ul>
+
+                <h3>Pruebas</h3>
+                <ul>
+                    <li>Pruebas unitarias de servicios.</li>
+                    <li>Pruebas de integración del flujo completo.</li>
+                    <li>Pruebas con usuarios reales.</li>
+                    <li>Validación con la Dra. Ines Ponce Armaly (Semiología).</li>
+                    <li>Validación con el Dr. Edwing Max Mollericona Marin (Jefe de Clínicas).</li>
+                    <li>Validación con el Dr. Rolando Néstor Soliz Arias (Director).</li>
+                </ul>
+
+                <h3>Despliegue</h3>
+                <ul>
+                    <li>Servidor configurado con HTTPS.</li>
+                    <li>Backups automáticos diarios.</li>
+                    <li>Monitoreo de errores.</li>
+                    <li>Ingeniero de U-TIC asignado.</li>
+                    <li>Capacitación realizada.</li>
+                </ul>
+
+                <div class="callout callout-success">
+                    <strong>Estado:</strong> el sistema estará listo para producción cuando todos los ítems del
+                    checklist estén marcados y validados por la Carrera de Odontología.
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <button class="back-top" id="backTop" aria-label="Volver arriba">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+        </svg>
+    </button>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const links = document.querySelectorAll('.sidebar-nav a');
+            const sections = document.querySelectorAll('section[id]');
+
+            function setActive(id) {
+                links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+            }
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) setActive(entry.target.id);
+                });
+            }, { rootMargin: '-30% 0px -60% 0px' });
+
+            sections.forEach(s => observer.observe(s));
+
+            const backTop = document.getElementById('backTop');
+            window.addEventListener('scroll', () => {
+                backTop.classList.toggle('visible', window.scrollY > 400);
+            });
+            backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+            const searchInput = document.getElementById('searchInput');
+            const noResults = document.getElementById('noResults');
+
+            searchInput.addEventListener('input', function () {
+                const q = this.value.trim().toLowerCase();
+                let visible = 0;
+
+                sections.forEach(section => {
+                    const haystack = (
+                        (section.dataset.search || '') + ' ' +
+                        section.textContent
+                    ).toLowerCase();
+
+                    const match = q === '' || haystack.includes(q);
+                    section.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+
+                links.forEach(link => {
+                    const target = document.querySelector(link.getAttribute('href'));
+                    const visibleSidebar = !target || target.style.display !== 'none';
+                    link.parentElement.style.display = visibleSidebar ? '' : 'none';
+                });
+
+                noResults.style.display = visible === 0 ? 'block' : 'none';
+            });
+
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 900) {
+                        document.querySelector('.sidebar').classList.remove('open');
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
+            });
+        })();
+    </script>
+
+</body>
+
+</html>

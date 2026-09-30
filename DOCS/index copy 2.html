@@ -1,0 +1,158 @@
+
+BACKEND_ODONTOLOGIA/
+├─ .github/
+├─ .vscode/
+├─ app/
+│ ├─ Http/
+│ │ ├─ Controllers/
+│ │ │ ├─ AdminController.php
+│ │ │ ├─ AuthController copy.php
+│ │ │ ├─ AuthController.php
+│ │ │ ├─ Controller.php
+│ │ │ ├─ DocenteController.php
+│ │ │ ├─ HistoriaClinicaController.php
+│ │ │ 
+│ │ ├─ Middleware/
+│ │ ├─ Requests/
+│ │ └─ Resources/
+│ ├─ Models/
+│ │ ├─ Admision.php
+│ │ ├─ Archivo.php
+│ │ ├─ Autorizacion.php
+│ │ ├─ Bitacora.php
+│ │ ├─ Caja.php
+│ │ ├─ CajaDetalle.php
+│ │ ├─ Clinica.php
+│ │ ├─ Consentimiento.php
+│ │ ├─ Especialidad.php
+│ │ ├─ Esterilizacion.php
+│ │ ├─ hi.txt
+│ │ ├─ HistoriaClinica.php
+│ │ ├─ Insumo.php
+│ │ ├─ InsumoSolicitado.php
+│ │ ├─ InsumoSolicitadoDetalle.php
+│ │ ├─ InsumoTratamiento.php
+│ │ ├─ InsumoTratamientoUsado.php
+│ │ ├─ MotivoConsulta.php
+│ │ ├─ Paciente.php
+│ │ ├─ Periodo.php
+│ │ ├─ Permiso.php
+│ │ ├─ Radiologia.php
+│ │ ├─ Remision.php
+│ │ ├─ Rol.php
+│ │ ├─ SesionAtencion.php
+│ │ ├─ Tratamiento.php
+│ │ ├─ TratamientoRealizado.php
+│ │ └─ Usuario.php
+│ ├─ Providers/
+│ │ └─ AppServiceProvider.php
+│ └─ Services/
+│ └─ LogService.php
+├─ bootstrap/
+│ ├─ app.php
+│ └─ providers.php
+├─ config/
+│ ├─ app.php
+│ ├─ auth.php
+│ ├─ cache.php
+│ ├─ database.php
+│ ├─ filesystems.php
+│ ├─ logging.php
+│ ├─ mail.php
+│ ├─ queue.php
+│ ├─ sanctum.php
+│ ├─ services.php
+│ └─ session.php
+├─ database/
+│ ├─ factories/
+│ │ └─ UserFactory.php
+│ ├─ migrations/
+│ │ ├─ 2026_09_25_160449_create_roles_table.php
+│ │ ├─ 2026_09_25_160450_create_permisos_table.php
+│ │ ├─ 2026_09_25_160452_create_clinicas_table.php
+│ │ ├─ 2026_09_25_160453_create_periodos_table.php
+│ │ ├─ 2026_09_25_160454_create_pacientes_table.php
+│ │ ├─ 2026_09_25_160455_create_usuarios_table.php
+│ │ ├─ 2026_09_25_160456_create_rol_permiso_table.php
+│ │ ├─ 2026_09_25_160457_create_usuario_rol_table.php
+│ │ ├─ 2026_09_25_160458_create_sesiones_table.php
+│ │ ├─ 2026_09_25_160459_create_bitacoras_table.php
+│ │ ├─ 2026_09_25_160500_create_especialidades_table.php
+│ │ ├─ 2026_09_25_160501_create_motivos_consulta_table.php
+│ │ ├─ 2026_09_25_160502_create_admisiones_table.php
+│ │ ├─ 2026_09_25_160504_create_consentimientos_table.php
+│ │ ├─ 2026_09_25_160505_create_remisiones_table.php
+│ │ ├─ 2026_09_25_160506_create_historias_clinicas_table.php
+│ │ ├─ 2026_09_25_160507_create_tratamientos_table.php
+│ │ ├─ 2026_09_25_160509_create_insumos_tratamiento_table.php
+│ │ ├─ 2026_09_25_160510_create_insumos_table.php
+│ │ ├─ 2026_09_25_160511_create_tratamientos_realizados_table.php
+│ │ ├─ 2026_09_25_160513_create_sesiones_atencion_table.php
+│ │ ├─ 2026_09_25_160514_create_cajas_table.php
+│ │ ├─ 2026_09_25_160515_create_caja_detalles_table.php
+│ │ ├─ 2026_09_25_160516_create_insumos_solicitados_table.php
+│ │ ├─ 2026_09_25_160517_create_insumos_solicitados_detalle_table.php
+│ │ ├─ 2026_09_25_160518_create_insumos_tratamiento_usados_table.php
+│ │ ├─ 2026_09_25_160520_create_esterilizaciones_table.php
+│ │ ├─ 2026_09_25_160521_create_autorizaciones_table.php
+│ │ ├─ 2026_09_25_160524_create_radiologias_table.php
+│ │ ├─ 2026_09_25_160526_create_archivos_table.php
+│ │ ├─ 2026_09_25_160527_create_shico_sincronizacion_table.php
+│ │ ├─ 2026_09_25_160529_create_reportes_table.php
+│ │ ├─ 2026_09_26_204049_create_cache_table.php.php
+│ │ ├─ migraciones.txt
+│ │ ├─ odontologiadb.sql
+│ │ ├─ sql-español-roles-requerimientos.sql
+│ │ ├─ sql-original-ordenado-español.sql
+│ │ └─ sql-original-ordenado.sql
+│ ├─ seeders/
+│ └─ database.sqlite
+├─ DOCS/
+│ ├─ API.md
+│ ├─ `README.md`
+│ ├─ index copy 2.html
+│ ├─ index copy.html
+│ └─ index.html
+├─ public/
+├─ resources/
+│ ├─ css/
+│ ├─ js/
+│ └─ views/
+├─ routes/
+│ ├─ api copy.php
+│ ├─ api.php
+│ ├─ console.php
+│ └─ web.php
+├─ storage/
+├─ tests/
+│ ├─ Feature/
+│ │ ├─ AuthProfileSettingsTest.php
+│ │ ├─ CheckRoleTest.php
+│ │ └─ ExampleTest.php
+│ ├─ Unit/
+│ │ └─ ExampleTest.php
+│ └─ TestCase.php
+├─ vendor/
+├─ .editorconfig
+├─ .env
+├─ `.env.example`
+├─ .gitattributes
+├─ .gitignore
+├─ .npmrc
+├─ `.phpunit.result.cache`
+├─ `.styleci.yml`
+├─ `AGENTS.md`
+├─ artisan
+├─ `ASESTRUCTURA.TXT`
+├─ `ayuda.txt`
+├─ `boost.json`
+├─ `CHANGELOG.md`
+├─ `CLAUDE.md`
+├─ `composer.json`
+├─ `composer.lock`
+├─ `package.json`
+├─ `phpunit.xml`
+├─ `README.md`
+├─ `vite.config.js`
+└─ servera etc.
+
