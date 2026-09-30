@@ -25,21 +25,21 @@ class CatalogSeeder extends Seeder
         // 1. ROLES (15 según el PDF, págs. 6-9)
         // ═══════════════════════════════════════════════════════
         $roles = [
-            ['nombre' => 'admin',              'descripcion' => 'Administrador del sistema (U-TIC)'],
-            ['nombre' => 'subadmin',           'descripcion' => 'Subadministrador'],
-            ['nombre' => 'director',           'descripcion' => 'Director de Carrera'],
-            ['nombre' => 'jefatura-clinicas',  'descripcion' => 'Jefe de Área Clínica'],
-            ['nombre' => 'jefe-catedra',       'descripcion' => 'Jefe de Cátedra'],
-            ['nombre' => 'docente',            'descripcion' => 'Docente de asignaturas clínicas'],
-            ['nombre' => 'estudiante',         'descripcion' => 'Estudiante de 3° a 5° año'],
-            ['nombre' => 'interno',            'descripcion' => 'Interno de Odontología'],
-            ['nombre' => 'admision',           'descripcion' => 'Administrativo de Admisión'],
-            ['nombre' => 'kardex',             'descripcion' => 'Administrativo de Kardex'],
-            ['nombre' => 'cajas',              'descripcion' => 'Administrativo de Cajas'],
-            ['nombre' => 'insumos',            'descripcion' => 'Administrativo de Insumos'],
-            ['nombre' => 'esterilizacion',     'descripcion' => 'Administrativo de Esterilización'],
-            ['nombre' => 'radiologia',         'descripcion' => 'Administrativo de Radiología'],
-            ['nombre' => 'investigacion',      'descripcion' => 'Instituto de Investigación'],
+            ['name' => 'admin',              'descripcion' => 'Administrador del sistema (U-TIC)'],
+            ['name' => 'subadmin',           'descripcion' => 'Subadministrador'],
+            ['name' => 'director',           'descripcion' => 'Director de Carrera'],
+            ['name' => 'jefatura-clinicas',  'descripcion' => 'Jefe de Área Clínica'],
+            ['name' => 'jefe-catedra',       'descripcion' => 'Jefe de Cátedra'],
+            ['name' => 'docente',            'descripcion' => 'Docente de asignaturas clínicas'],
+            ['name' => 'estudiante',         'descripcion' => 'Estudiante de 3° a 5° año'],
+            ['name' => 'interno',            'descripcion' => 'Interno de Odontología'],
+            ['name' => 'admision',           'descripcion' => 'Administrativo de Admisión'],
+            ['name' => 'kardex',             'descripcion' => 'Administrativo de Kardex'],
+            ['name' => 'cajas',              'descripcion' => 'Administrativo de Cajas'],
+            ['name' => 'insumos',            'descripcion' => 'Administrativo de Insumos'],
+            ['name' => 'esterilizacion',     'descripcion' => 'Administrativo de Esterilización'],
+            ['name' => 'radiologia',         'descripcion' => 'Administrativo de Radiología'],
+            ['name' => 'investigacion',      'descripcion' => 'Instituto de Investigación'],
         ];
 
         DB::table('roles')->insert(array_map(

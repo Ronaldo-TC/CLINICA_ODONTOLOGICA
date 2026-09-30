@@ -42,7 +42,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',   // <-- Sin esto, Spatie falla
+        ],
     ],
+
+
+
 
     /*
     |--------------------------------------------------------------------------
