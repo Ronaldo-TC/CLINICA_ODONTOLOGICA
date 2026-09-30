@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('usuario_rol', function (Blueprint $table) {
             $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('rol_id')->constrained('roles')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('rol_id')->constrained('roles1')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamp('fecha_asignacion')->useCurrent();
             $table->timestamps();
             $table->primary(['usuario_id', 'rol_id']);

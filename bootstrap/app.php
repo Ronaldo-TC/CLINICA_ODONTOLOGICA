@@ -12,12 +12,21 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        // Registro del alias 'role'
+    // ->withMiddleware(function (Middleware $middleware): void {
+    //     // Registro del alias 'role'
+    //     $middleware->alias([
+    //         'auth.session' => \App\Http\Middleware\EnsureUserSession::class,
+    //         'role'         => \App\Http\Middleware\CheckRole::class,
+    //         'permiso'      => \App\Http\Middleware\CheckPermission::class,
+    //     ]);
+    // })
+
+    ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'auth.session' => \App\Http\Middleware\EnsureUserSession::class,
-            'role'         => \App\Http\Middleware\CheckRole::class,
-            'permiso'      => \App\Http\Middleware\CheckPermission::class,
+            'auth.session' => \App\Http\Middleware\EnsureUserSession::class, // tu web sigue igual
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
