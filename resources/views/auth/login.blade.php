@@ -4,461 +4,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso · Clínica Odontológica UPEA</title>
-    <style>
-        :root {
-            --teal: #087f79;
-            --teal-dark: #075d5a;
-            --ink: #18252d;
-            --muted: #718087;
-            --cyan: #06b6d4;
-            --fuchsia: #d946ef;
-            --line: #e2e8e6;
-            --surface: #ffffff;
-            --radius: 24px;
-        }
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Iniciar sesión · Clínica Odontológica UPEA</title>
 
+    <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        html,
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #087f79, #078fa0);
             min-height: 100vh;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-            color: var(--ink);
-            background: #f4f7f5;
             display: grid;
             place-items: center;
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
+            padding: 20px;
         }
 
-        /* ============================================
-           CÍRCULOS DECORATIVOS DE FONDO (ESTÁTICOS)
-           ============================================
-           Sin `filter: blur()` ni `animation`.
-           Se logra el efecto difuminado con radial-gradient
-           que se pinta en CPU, no se compone en GPU.
-        */
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .blob-cyan-1 {
-            width: 620px;
-            height: 620px;
-            top: -200px;
-            left: -180px;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(6, 182, 212, 0.18) 40%, transparent 70%);
-        }
-
-        .blob-fuchsia-1 {
-            width: 560px;
-            height: 560px;
-            bottom: -180px;
-            right: -160px;
-            background: radial-gradient(circle, rgba(217, 70, 239, 0.32) 0%, rgba(217, 70, 239, 0.16) 40%, transparent 70%);
-        }
-
-        .blob-cyan-2 {
-            width: 380px;
-            height: 380px;
-            top: 42%;
-            right: -140px;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, transparent 65%);
-        }
-
-        .blob-fuchsia-2 {
-            width: 360px;
-            height: 360px;
-            bottom: 22%;
-            left: -120px;
-            background: radial-gradient(circle, rgba(217, 70, 239, 0.22) 0%, transparent 65%);
-        }
-
-        /* ============================================
-           CONTENEDOR PRINCIPAL (sólido, sin blur)
-           ============================================ */
-        .shell {
-            position: relative;
-            z-index: 1;
-            width: min(960px, 100%);
-            min-height: 620px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            box-shadow: 0 4px 16px rgba(24, 37, 45, 0.06);
-            overflow: hidden;
-        }
-
-        /* ============================================
-           PANEL IZQUIERDO (intro)
-           ============================================ */
-        .intro {
-            padding: clamp(36px, 5vw, 64px);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: linear-gradient(160deg, #e6f5f7 0%, #f5e8f4 100%);
-            border-right: 1px solid var(--line);
-        }
-
-        .mark {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, var(--cyan), var(--fuchsia));
-            display: grid;
-            place-items: center;
-            font: 700 26px -apple-system, sans-serif;
-            color: #fff;
-        }
-
-        .eyebrow {
-            margin-bottom: 20px;
-            color: var(--teal);
-            font: 700 11px -apple-system, sans-serif;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
+        .login-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+            width: 100%;
+            max-width: 420px;
         }
 
         h1 {
-            max-width: 340px;
-            font-size: clamp(34px, 4.5vw, 52px);
-            line-height: 1.02;
-            font-weight: 300;
-            letter-spacing: -0.02em;
-            color: var(--ink);
+            font-size: 22px;
+            margin-bottom: 6px;
+            color: #075d5a;
         }
 
-        h1 strong {
-            font-weight: 600;
-            color: var(--teal);
+        p.subtitle {
+            font-size: 13px;
+            color: #60736f;
+            margin-bottom: 28px;
         }
 
-        .intro p {
-            max-width: 320px;
-            margin-top: 22px;
-            color: var(--muted);
-            font: 15px/1.6 -apple-system, sans-serif;
-        }
-
-        .note {
-            color: var(--muted);
-            font: 12px/1.5 -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .note::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-        }
-
-        /* ============================================
-           PANEL DERECHO (formulario)
-           ============================================ */
-        .form-panel {
-            padding: clamp(36px, 5vw, 64px);
+        .form-group {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            background: var(--surface);
-        }
-
-        .form-panel h2 {
-            font-size: 30px;
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            margin-bottom: 8px;
-            color: var(--ink);
-        }
-
-        .subhead {
-            margin-bottom: 32px;
-            color: var(--muted);
-            font: 14px/1.5 -apple-system, sans-serif;
+            gap: 6px;
+            margin-bottom: 16px;
         }
 
         label {
-            display: block;
-            margin: 22px 0 8px;
-            font: 700 11px -apple-system, sans-serif;
-            letter-spacing: 0.1em;
+            font-size: 11.5px;
+            font-weight: 600;
             text-transform: uppercase;
-            color: var(--ink);
+            letter-spacing: .05em;
+            color: #60736f;
         }
 
         input {
             width: 100%;
-            padding: 15px 18px;
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            outline: 0;
-            color: var(--ink);
-            font: 16px -apple-system, sans-serif;
-            background: #fff;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        input::placeholder {
-            color: rgba(24, 37, 45, 0.4);
+            padding: 12px 14px;
+            border: 1px solid #dce6e2;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s ease;
         }
 
         input:focus {
-            border-color: var(--cyan);
-            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+            border-color: #078fa0;
         }
 
-        input:-webkit-autofill {
-            -webkit-text-fill-color: var(--ink);
-            -webkit-box-shadow: 0 0 0 1000px #fff inset;
-            transition: background-color 5000s ease-in-out 0s;
+        input.is-invalid {
+            border-color: #dc2626;
         }
 
-        /* ============================================
-           CAMPO DE CONTRASEÑA CON OJO
-           ============================================ */
-        .password-wrap {
-            position: relative;
-        }
-
-        .password-wrap input {
-            padding-right: 52px;
-        }
-
-        .toggle-password {
-            position: absolute;
-            top: 50%;
-            right: 14px;
-            transform: translateY(-50%);
-            width: 34px;
-            height: 34px;
-            border: 0;
-            border-radius: 50%;
-            background: transparent;
-            color: var(--muted);
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-        }
-
-        .toggle-password:hover {
-            background: #eef3f2;
-            color: var(--teal);
-        }
-
-        .toggle-password:focus-visible {
-            outline: 2px solid var(--cyan);
-            outline-offset: 2px;
-        }
-
-        .toggle-password svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* ============================================
-           BOTÓN PRINCIPAL
-           ============================================ */
-        .btn-submit {
+        button[type="submit"] {
             width: 100%;
-            margin-top: 32px;
-            padding: 16px 18px;
+            padding: 12px;
             border: 0;
-            border-radius: 14px;
+            border-radius: 10px;
+            background: #087f79;
             color: #fff;
-            background: var(--teal);
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            font: 700 13px -apple-system, sans-serif;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            transition: background-color 0.15s ease;
-        }
-
-        .btn-submit:hover {
-            background: var(--teal-dark);
-        }
-
-        .btn-submit:active {
-            transform: scale(0.99);
-        }
-
-        /* ============================================
-           MENSAJES DE ERROR
-           ============================================ */
-        .error {
-            margin-bottom: 16px;
-            padding: 13px 16px;
-            color: #991b1b;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            border-radius: 12px;
-            font: 13px/1.4 -apple-system, sans-serif;
+            transition: background .15s ease, opacity .15s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .error::before {
-            content: '⚠';
-            font-size: 16px;
+        button[type="submit"]:hover:not(:disabled) {
+            background: #075d5a;
         }
 
-        /* ============================================
-           RESPONSIVE
-           ============================================ */
-        @media (max-width: 720px) {
-            .shell {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
+        button[type="submit"]:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
 
-            .intro {
-                min-height: 260px;
-                border-right: none;
-                border-bottom: 1px solid var(--line);
-            }
+        .alert {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            border: 1px solid transparent;
+        }
 
-            h1 {
-                font-size: 32px;
-            }
+        .alert-danger {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #7f1d1d;
+        }
 
-            .note {
-                margin-top: 24px;
-            }
+        .alert-success {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #14532d;
+        }
 
-            /* Círculos más discretos en móvil */
-            .blob-cyan-1,
-            .blob-fuchsia-1 {
-                opacity: 0.6;
-            }
+        .field-error {
+            font-size: 12px;
+            color: #dc2626;
+            margin-top: 2px;
+            min-height: 16px;
+        }
 
-            .blob-cyan-2,
-            .blob-fuchsia-2 {
-                display: none;
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            display: none;
+        }
+
+        button.loading .spinner {
+            display: block;
+        }
+
+        button.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
 
-        /* Accesibilidad */
-        @media (prefers-reduced-motion: reduce) {
-
-            *,
-            *::before,
-            *::after {
-                transition-duration: 0.01ms !important;
-            }
+        .hint {
+            text-align: center;
+            font-size: 11.5px;
+            color: #94a3b8;
+            margin-top: 24px;
         }
     </style>
 </head>
 
 <body>
-    <!-- Círculos decorativos de fondo (estáticos, sin GPU) -->
-    <div class="blob blob-cyan-1"></div>
-    <div class="blob blob-fuchsia-1"></div>
-    <div class="blob blob-cyan-2"></div>
-    <div class="blob blob-fuchsia-2"></div>
+    <div class="login-card">
+        <h1>Clínica Odontológica</h1>
+        <p class="subtitle">UPEA · UTIC — Inicia sesión para continuar</p>
 
-    <main class="shell">
-        <section class="intro">
-            <div class="mark">O</div>
-            <div>
-                <p class="eyebrow">Odontología · UPEA · UTIC</p>
-                <h1>Un espacio <strong>claro</strong> para administrar la clínica.</h1>
-                <p>Ingresa al panel administrativo para consultar y organizar la operación académica y clínica.</p>
-            </div>
-            <div class="note">Acceso protegido para personal autorizado</div>
-        </section>
+        <div id="loginAlert" style="display:none;"></div>
 
-        <section class="form-panel">
-            <h2>Iniciar sesión</h2>
-            <p class="subhead">Usa tus credenciales institucionales.</p>
+        <form id="loginForm" method="POST" action="{{ route('auth.login.post') }}" novalidate>
+            @csrf
 
-            @if ($errors->any())
-            <div class="error">{{ $errors->first() }}</div>
-            @endif
-
-            <form method="POST" action="{{ route('auth.login.submit') }}">
-                @csrf
+            <div class="form-group">
                 <label for="nombre_usuario">Usuario</label>
-                <input
-                    id="nombre_usuario"
-                    name="nombre_usuario"
-                    type="text"
-                    value="{{ old('nombre_usuario') }}"
-                    placeholder="Ingresa tu usuario"
-                    autocomplete="username"
-                    required
-                    autofocus>
+                <input type="text" name="nombre_usuario" id="nombre_usuario"
+                    value="{{ old('nombre_usuario') }}" autofocus
+                    autocomplete="username" required>
+                <span class="field-error" data-error="nombre_usuario"></span>
+            </div>
 
+            <div class="form-group">
                 <label for="contrasena">Contraseña</label>
-                <div class="password-wrap">
-                    <input
-                        id="contrasena"
-                        name="contrasena"
-                        type="password"
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                        required>
-                    <button
-                        type="button"
-                        class="toggle-password"
-                        onclick="togglePassword()"
-                        aria-label="Mostrar u ocultar contraseña"
-                        tabindex="0">
-                        <svg id="eye-closed" viewBox="0 0 24 24">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
-                        <svg id="eye-open" viewBox="0 0 24 24" style="display:none;">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                    </button>
-                </div>
+                <input type="password" name="contrasena" id="contrasena"
+                    autocomplete="current-password" required>
+                <span class="field-error" data-error="contrasena"></span>
+            </div>
 
-                <button type="submit" class="btn-submit">Entrar al panel</button>
-            </form>
-        </section>
-    </main>
+            <button type="submit" id="btnLogin">
+                <span class="btn-text">Entrar</span>
+                <span class="spinner"></span>
+            </button>
+        </form>
+
+        <p class="hint">Usuario de prueba: admin / 123</p>
+    </div>
 
     <script>
-        function togglePassword() {
-            const input = document.getElementById('contrasena');
-            const eyeOpen = document.getElementById('eye-open');
-            const eyeClosed = document.getElementById('eye-closed');
+        (function() {
+            const form = document.getElementById('loginForm');
+            const alertEl = document.getElementById('loginAlert');
+            const btn = document.getElementById('btnLogin');
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.style.display = 'block';
-                eyeClosed.style.display = 'none';
-            } else {
-                input.type = 'password';
-                eyeOpen.style.display = 'none';
-                eyeClosed.style.display = 'block';
+            function mostrarAlerta(tipo, mensaje) {
+                alertEl.style.display = 'block';
+                alertEl.className = 'alert alert-' + (tipo === 'error' ? 'danger' : 'success');
+                alertEl.textContent = mensaje;
             }
-        }
+
+            function limpiarAlerta() {
+                alertEl.style.display = 'none';
+                alertEl.textContent = '';
+            }
+
+            function limpiarErrores() {
+                form.querySelectorAll('[data-error]').forEach(el => el.textContent = '');
+                form.querySelectorAll('input').forEach(el => el.classList.remove('is-invalid'));
+            }
+
+            function pintarErrores(errors) {
+                Object.entries(errors || {}).forEach(([campo, mensajes]) => {
+                    const span = form.querySelector(`[data-error="${campo}"]`);
+                    if (span) span.textContent = Array.isArray(mensajes) ? mensajes[0] : mensajes;
+
+                    const input = form.querySelector(`[name="${campo}"]`);
+                    if (input) input.classList.add('is-invalid');
+                });
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                limpiarAlerta();
+                limpiarErrores();
+
+                btn.disabled = true;
+                btn.classList.add('loading');
+
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: new FormData(form),
+                    });
+
+                    const contentType = res.headers.get('content-type') || '';
+                    const data = contentType.includes('application/json') ?
+                        await res.json().catch(() => ({})) : {
+                            success: false,
+                            message: 'Respuesta no válida del servidor.'
+                        };
+
+                    if (res.ok && data.success) {
+                        mostrarAlerta('success', data.message || 'Bienvenido');
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/';
+                        }, 500);
+                        return;
+                    }
+
+                    if (res.status === 422 && data.errors) {
+                        pintarErrores(data.errors);
+                        mostrarAlerta('error', data.message || 'Revisa los campos.');
+                        return;
+                    }
+
+                    mostrarAlerta('error', data.message || 'Error al iniciar sesión.');
+
+                } catch (err) {
+                    mostrarAlerta('error', 'Error de red. Verifica tu conexión.');
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                }
+            });
+        })();
     </script>
 </body>
 

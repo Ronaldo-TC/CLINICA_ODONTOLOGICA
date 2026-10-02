@@ -1,0 +1,82 @@
+ANTIGUO                          →  NUEVO (Laravel)
+─────────────────────────────────────────────────────
+usertable                        →  usuarios
+  usernumber (PK)                →    id
+  userci                         →    ci
+  username                       →    nombre_usuario
+  userfullname                   →    nombre_completo
+  userpassword                   →    contrasena
+  usertype                       →    tipo (enum)
+  userenabled                    →    habilitado
+  userpermitlogin                →    permitir_login
+  userlastlogin (epoch)          →    ultimo_login (datetime)
+  updatetime (epoch)             →    updated_at (timestamp)
+
+patienttable                     →  pacientes
+  patientid                      →    id
+  patientci                      →    ci
+  patientname                    →    nombre
+  patientfatherlastname          →    apellido_paterno
+  patientmotherlastname          →    apellido_materno
+  patientgender                  →    genero
+  patientbirthdate (epoch)       →    fecha_nacimiento (date)
+
+clinicaltable                    →  clinicas
+  clinicalid                     →    id
+  clinicalmodule                 →    modulo
+  clinicalspecialty              →    especialidad
+  clinicalcourse                 →    curso
+
+patientadmissiontable            →  admisiones
+  patientadmissionid             →    id
+  patientid (FK)                 →    paciente_id
+  patientmotconsult              →    motivo_consulta
+  patientdiseasehistory          →    antecedentes
+  patientodontogram              →    odontograma (json)
+  studentid (FK)                 →    estudiante_id
+  responsibleid (FK)             →    responsable_id
+  updatetime (epoch)             →    updated_at
+
+clinichistorytable               →  historias_clinicas
+  remissionid (PK compuesto)     →    id  ⚠️ (cambiar a PK simple)
+  admissionid                    →    admision_id
+  patientid                      →    paciente_id
+  clinicalid                     →    clinica_id
+  inputfile (oid)                →    archivo_path (string)
+  inputfilehash                  →    archivo_hash
+  studentid                      →    estudiante_id
+  teacherid                      →    docente_id
+  reviewteacher (text)           →    revision_docente (json)
+  stdatetime / endatetime        →    fecha_inicio / fecha_fin
+
+treatmenttable                   →  tratamientos
+  treatmentid                    →    id
+  treatmentname                  →    nombre
+  treatmentcost                  →    costo
+  treatmentpgpercent             →    porcentaje_pg
+  clinicalid (FK)                →    clinica_id
+
+remissiontable                   →  remisiones
+  remissionid                    →    id
+  admissionid                    →    admision_id
+  patientid                      →    paciente_id
+  clinicalid                     →    clinica_id
+
+boxtable                         →  cajas
+  boxid                          →    id
+  boxreceipt                     →    numero_recibo
+  boxamount                      →    cantidad
+  boxtotalcost                   →    total
+  boxcancelled                   →    cancelado
+  boxtype                        →    tipo
+  treatmentid (FK)               →    tratamiento_id
+  clinicalid (FK)                →    clinica_id
+  userid (FK)                    →    usuario_id
+
+radiologytable                   →  radiologias
+sterilizationtable               →  esterilizaciones
+authorizationtable               →  autorizaciones
+suppliestable                    →  insumos
+suppliestreatmenttable           →  insumos_tratamiento
+suppliesrequestedtable           →  insumos_solicitados
+logtable                         →  bitacoras

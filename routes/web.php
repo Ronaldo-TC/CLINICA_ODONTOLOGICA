@@ -1,541 +1,534 @@
 <?php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CajasController;
-use App\Http\Controllers\DirectorController;
-use App\Http\Controllers\DocenteController;
-use App\Http\Controllers\EsterilizacionController;
-use App\Http\Controllers\EstudianteController;
-use App\Http\Controllers\InsumosController;
-use App\Http\Controllers\InternoController;
-use App\Http\Controllers\InvestigacionController;
-use App\Http\Controllers\JefaturaClinicasController;
-use App\Http\Controllers\JefeCatedraController;
-use App\Http\Controllers\RadiologiaController;
-use App\Http\Controllers\SubadminController;
-use App\Http\Controllers\HistoriaClinicaController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| AUTENTICACIÓN
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PacienteController;
+use App\Http\Controllers\AdmisionController;
+use App\Http\Controllers\HistoriaController;
+use App\Http\Controllers\TratamientoController;
+use App\Http\Controllers\RemisionController;
+use App\Http\Controllers\InsumoController;
+use App\Http\Controllers\EsterilizacionController;
+use App\Http\Controllers\RadiologiaController;
+use App\Http\Controllers\CajaController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\InvestigacionController;
+use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\ClinicaController;
+use App\Http\Controllers\PeriodoController;
+use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\SolicitudInsumoController;
+use App\Http\Controllers\KardexController;
+use App\Http\Controllers\NotificacionController;
 
+/* ============================================================
+   AUTENTICACIÓN
+   ============================================================ */
 
+Route::get('/login',   [AuthController::class, 'showLogin'])->name('auth.login');
+Route::post('/login',  [AuthController::class, 'loginWeb'])->name('auth.login.post');
+Route::post('/logout', [AuthController::class, 'logoutWeb'])->name('auth.logout');
 
-Route::get('/', fn() => redirect()->route('auth.login'))->name('home');
+/* ============================================================
+   RUTAS PROTEGIDAS
+   ============================================================ */
+Route::middleware(['auth.session'])->group(function () {
 
-Route::controller(AuthController::class)->group(function (): void {
-    Route::middleware('guest')->group(function (): void {
-        Route::get('/auth/login', 'showLogin')->name('auth.login');
-        Route::post('/auth/login', 'login')
-            ->middleware('throttle:5,1')
-            ->name('auth.login.submit');
+    /* ---- Dashboard ---- */
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
+
+    /* ---- Perfil y configuración ---- */
+    Route::get('/perfil',        [AuthController::class, 'perfil'])->name('auth.profile');
+    Route::get('/configuracion', [AuthController::class, 'configuracion'])->name('auth.settings');
+
+    /* ---- Notificaciones internas (bandeja + campana del topbar) ---- */
+    Route::prefix('notificaciones')->name('notificaciones.')->group(function () {
+        Route::get('/',                   [NotificacionController::class, 'index'])->name('index');
+        Route::get('/ultimas',            [NotificacionController::class, 'ultimas'])->name('ultimas');
+        Route::post('/leer-todas',        [NotificacionController::class, 'leerTodas'])->name('leer-todas');
+        Route::post('/{id}/leer',         [NotificacionController::class, 'leer'])->name('leer');
+        Route::delete('/{id}',            [NotificacionController::class, 'destroy'])->name('destroy');
     });
 
-    Route::post('/auth/logout', 'logout')
-        ->middleware('auth.session')
-        ->name('auth.logout');
+    /* ============================================================
+       PACIENTES
+       ============================================================ */
+    Route::prefix('pacientes')->name('pacientes.')->group(function () {
 
-    Route::middleware('auth.session')->group(function (): void {
-        // ─────────── PERFIL ───────────
-        Route::get('/auth/perfil', 'profile')->name('auth.profile');
-        Route::put('/auth/perfil', 'updateProfile')->name('auth.profile.update');
-        Route::delete('/auth/perfil/avatar', 'deleteAvatar')->name('auth.profile.avatar.delete');
+        Route::middleware('permission:pacientes.ver')->group(function () {
+            Route::get('/',       [PacienteController::class, 'index'])->name('index');
+            Route::get('/tabla',  [PacienteController::class, 'tabla'])->name('tabla');
+            Route::get('/{paciente}/datos', [PacienteController::class, 'datos'])->name('datos');
+            Route::get('/{paciente}', [PacienteController::class, 'show'])->name('show');
+        });
 
-        // ─────────── CONFIGURACIÓN ───────────
-        Route::get('/auth/configuracion', 'settings')->name('auth.settings');
-        Route::put('/auth/configuracion/contrasena', 'updatePassword')->name('auth.settings.password');
+        Route::middleware('permission:pacientes.crear')->group(function () {
+            Route::post('/', [PacienteController::class, 'store'])->name('store');
+        });
 
-        // ─────────── SESIONES ───────────
-        Route::post('/auth/configuracion/sesiones/cerrar-otras', 'closeOtherSessions')
-            ->name('auth.settings.sessions.close-others');
-        Route::delete('/auth/configuracion/sesiones/{session}', 'closeSession')
-            ->name('auth.settings.sessions.close');
+        Route::middleware('permission:pacientes.editar')->group(function () {
+            Route::put('/{paciente}', [PacienteController::class, 'update'])->name('update');
+            Route::post('/{paciente}/habilitar', [PacienteController::class, 'habilitar'])->name('habilitar');
+        });
+
+        Route::middleware('permission:pacientes.eliminar')->group(function () {
+            Route::delete('/{paciente}', [PacienteController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       ADMISIONES
+       ============================================================ */
+    /* ============================================================
+   ADMISIONES
+   ============================================================ */
+    Route::prefix('admisiones')->name('admisiones.')->group(function () {
+
+        Route::middleware('permission:admisiones.ver')->group(function () {
+            //  Rutas estáticas PRIMERO
+            Route::get('/',                  [AdmisionController::class, 'index'])->name('index');
+            Route::get('/tabla',             [AdmisionController::class, 'tabla'])->name('tabla');
+
+            //  Rutas de búsqueda AJAX (también estáticas)
+            Route::get('/buscar-pacientes',  [AdmisionController::class, 'buscarPacientes'])->name('buscar-pacientes');
+            Route::get('/buscar-usuarios',   [AdmisionController::class, 'buscarUsuarios'])->name('buscar-usuarios');
+            Route::get('/datos-iniciales',   [AdmisionController::class, 'datosIniciales'])->name('datos-iniciales');
+
+            //  Rutas con {admision} AL FINAL
+            Route::get('/{admision}/datos',  [AdmisionController::class, 'datos'])->name('datos');
+            Route::get('/{admision}',        [AdmisionController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:admisiones.crear')->group(function () {
+            Route::post('/', [AdmisionController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:admisiones.editar')->group(function () {
+            Route::put('/{admision}', [AdmisionController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:admisiones.eliminar')->group(function () {
+            Route::delete('/{admision}', [AdmisionController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       HISTORIAS CLÍNICAS
+       ============================================================ */
+    Route::prefix('historias')->name('historias.')->group(function () {
+
+        Route::middleware('permission:historias.ver')->group(function () {
+            Route::get('/',                  [HistoriaController::class, 'index'])->name('index');
+            Route::get('/tabla',             [HistoriaController::class, 'tabla'])->name('tabla');
+
+            Route::get('/buscar-admisiones', [HistoriaController::class, 'buscarAdmisiones'])->name('buscar-admisiones');
+            Route::get('/buscar-usuarios',   [HistoriaController::class, 'buscarUsuarios'])->name('buscar-usuarios');
+            Route::get('/datos-iniciales',   [HistoriaController::class, 'datosIniciales'])->name('datos-iniciales');
+
+            Route::get('/{historia}/datos',  [HistoriaController::class, 'datos'])->name('datos');
+
+            /* ---- Archivos adjuntos ---- */
+            Route::get('/{id}/archivos',                    [HistoriaController::class, 'archivos'])->name('archivos');
+            Route::get('/{id}/archivos/{archivo}',          [HistoriaController::class, 'descargarArchivo'])->name('archivos.descargar');
+            Route::get('/{historia}',        [HistoriaController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:historias.crear')->group(function () {
+            Route::post('/', [HistoriaController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:historias.editar')->group(function () {
+            Route::put('/{historia}', [HistoriaController::class, 'update'])->name('update');
+
+            /* ---- Archivos adjuntos (escritura) ---- */
+            Route::post('/{id}/archivos',            [HistoriaController::class, 'subirArchivo'])->name('archivos.subir');
+            Route::delete('/{id}/archivos/{archivo}', [HistoriaController::class, 'eliminarArchivo'])->name('archivos.eliminar');
+        });
+
+        Route::middleware('permission:historias.eliminar')->group(function () {
+            Route::delete('/{historia}', [HistoriaController::class, 'destroy'])->name('destroy');
+        });
+    });
+    /* ============================================================
+       TRATAMIENTOS
+       ============================================================ */
+    Route::prefix('tratamientos')->name('tratamientos.')->group(function () {
+
+        Route::middleware('permission:tratamientos.ver')->group(function () {
+            Route::get('/',      [TratamientoController::class, 'index'])->name('index');
+            Route::get('/tabla', [TratamientoController::class, 'tabla'])->name('tabla');
+            Route::get('/{tratamiento}/datos', [TratamientoController::class, 'datos'])->name('datos');
+            Route::get('/{tratamiento}', [TratamientoController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:tratamientos.crear')->group(function () {
+            Route::post('/', [TratamientoController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:tratamientos.editar')->group(function () {
+            Route::put('/{tratamiento}', [TratamientoController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:tratamientos.eliminar')->group(function () {
+            Route::delete('/{tratamiento}', [TratamientoController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       REMISIONES
+       ============================================================ */
+    Route::prefix('remisiones')->name('remisiones.')->group(function () {
+
+        Route::middleware('permission:remisiones.ver')->group(function () {
+            Route::get('/',                  [RemisionController::class, 'index'])->name('index');
+            Route::get('/tabla',             [RemisionController::class, 'tabla'])->name('tabla');
+
+            Route::get('/buscar-admisiones', [RemisionController::class, 'buscarAdmisiones'])->name('buscar-admisiones');
+            Route::get('/datos-iniciales',   [RemisionController::class, 'datosIniciales'])->name('datos-iniciales');
+
+            Route::get('/{remision}/datos',  [RemisionController::class, 'datos'])->name('datos');
+            Route::get('/{remision}',        [RemisionController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:remisiones.crear')->group(function () {
+            Route::post('/', [RemisionController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:remisiones.editar')->group(function () {
+            Route::put('/{remision}', [RemisionController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:remisiones.eliminar')->group(function () {
+            Route::delete('/{remision}', [RemisionController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       INSUMOS
+       ============================================================ */
+    /* ============================================================
+   INSUMOS — Catálogo
+   ============================================================ */
+    Route::prefix('insumos')->name('insumos.')->group(function () {
+
+        Route::middleware('permission:insumos.ver')->group(function () {
+            Route::get('/',              [InsumoController::class, 'index'])->name('index');
+            Route::get('/tabla',         [InsumoController::class, 'tabla'])->name('tabla');
+
+            Route::get('/tipos-por-clinica/{clinica}', [InsumoController::class, 'tiposPorClinica'])->name('tipos-por-clinica');
+            Route::get('/buscar-insumos/{clinica}',    [InsumoController::class, 'buscarInsumos'])->name('buscar-insumos');
+
+            Route::get('/{insumo}/datos', [InsumoController::class, 'datos'])->name('datos');
+            Route::get('/{insumo}',       [InsumoController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:insumos.crear')->group(function () {
+            Route::post('/', [InsumoController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:insumos.editar')->group(function () {
+            Route::put('/{insumo}', [InsumoController::class, 'update'])->name('update');
+            Route::post('/{insumo}/ajustar-stock', [InsumoController::class, 'ajustarStock'])->name('ajustar-stock');
+        });
+
+        Route::middleware('permission:insumos.eliminar')->group(function () {
+            Route::delete('/{insumo}', [InsumoController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+   SOLICITUDES DE INSUMOS — Flujo de aprobación
+   ============================================================ */
+    Route::prefix('solicitudes-insumos')->name('solicitudes-insumos.')->group(function () {
+
+        Route::middleware('permission:insumos.ver')->group(function () {
+            Route::get('/',                 [SolicitudInsumoController::class, 'index'])->name('index');
+            Route::get('/tabla',            [SolicitudInsumoController::class, 'tabla'])->name('tabla');
+            Route::get('/buscar-tratamientos', [SolicitudInsumoController::class, 'buscarTratamientos'])->name('buscar-tratamientos');
+            Route::get('/{id}/datos',       [SolicitudInsumoController::class, 'datos'])->name('datos');
+            Route::get('/{id}',             [SolicitudInsumoController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:insumos.crear')->group(function () {
+            Route::post('/', [SolicitudInsumoController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:insumos.editar')->group(function () {
+            Route::put('/{id}',                   [SolicitudInsumoController::class, 'update'])->name('update');
+            Route::post('/{id}/autorizar',        [SolicitudInsumoController::class, 'autorizar'])->name('autorizar');
+            Route::post('/{id}/rechazar',         [SolicitudInsumoController::class, 'rechazar'])->name('rechazar');
+        });
+
+        Route::middleware('permission:insumos.gestionar')->group(function () {
+            Route::post('/{id}/entregar', [SolicitudInsumoController::class, 'entregar'])->name('entregar');
+        });
+
+        Route::middleware('permission:insumos.eliminar')->group(function () {
+            Route::delete('/{id}', [SolicitudInsumoController::class, 'destroy'])->name('destroy');
+        });
+    });
+    /* ============================================================
+       ESTERILIZACIÓN
+       ============================================================ */
+    Route::prefix('esterilizacion')->name('esterilizacion.')->group(function () {
+
+        Route::middleware('permission:esterilizaciones.ver')->group(function () {
+            Route::get('/',                 [EsterilizacionController::class, 'index'])->name('index');
+            Route::get('/tabla',            [EsterilizacionController::class, 'tabla'])->name('tabla');
+            Route::get('/buscar-usuarios',  [EsterilizacionController::class, 'buscarUsuarios'])->name('buscar-usuarios');
+            Route::get('/datos-iniciales',  [EsterilizacionController::class, 'datosIniciales'])->name('datos-iniciales');
+
+            Route::get('/{esterilizacion}/datos', [EsterilizacionController::class, 'datos'])->name('datos');
+            Route::get('/{esterilizacion}',       [EsterilizacionController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:esterilizaciones.crear')->group(function () {
+            Route::post('/', [EsterilizacionController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:esterilizaciones.editar')->group(function () {
+            Route::put('/{esterilizacion}', [EsterilizacionController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:esterilizaciones.eliminar')->group(function () {
+            Route::delete('/{esterilizacion}', [EsterilizacionController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       RADIOLOGÍA
+       ============================================================ */
+    Route::prefix('radiologia')->name('radiologia.')->group(function () {
+
+        Route::middleware('permission:radiologias.ver')->group(function () {
+            Route::get('/',                 [RadiologiaController::class, 'index'])->name('index');
+            Route::get('/tabla',            [RadiologiaController::class, 'tabla'])->name('tabla');
+            Route::get('/buscar-pacientes', [RadiologiaController::class, 'buscarPacientes'])->name('buscar-pacientes');
+            Route::get('/buscar-cajas',     [RadiologiaController::class, 'buscarCajas'])->name('buscar-cajas');
+            Route::get('/datos-iniciales',  [RadiologiaController::class, 'datosIniciales'])->name('datos-iniciales');
+
+            Route::get('/{radiologia}/datos', [RadiologiaController::class, 'datos'])->name('datos');
+            Route::get('/{radiologia}',       [RadiologiaController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:radiologias.crear')->group(function () {
+            Route::post('/', [RadiologiaController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:radiologias.editar')->group(function () {
+            Route::put('/{radiologia}', [RadiologiaController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:radiologias.eliminar')->group(function () {
+            Route::delete('/{radiologia}', [RadiologiaController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       CAJAS
+       ============================================================ */
+    Route::prefix('cajas')->name('cajas.')->group(function () {
+
+        Route::middleware('permission:cajas.ver')->group(function () {
+            Route::get('/',              [CajaController::class, 'index'])->name('index');
+            Route::get('/tabla',         [CajaController::class, 'tabla'])->name('tabla');
+            Route::get('/{caja}/datos',  [CajaController::class, 'datos'])->name('datos');
+            Route::get('/{caja}',        [CajaController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:cajas.crear')->group(function () {
+            Route::post('/', [CajaController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:cajas.editar')->group(function () {
+            Route::put('/{caja}', [CajaController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:cajas.eliminar')->group(function () {
+            Route::delete('/{caja}', [CajaController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       REPORTES
+       ============================================================ */
+    Route::prefix('reportes')->name('reportes.')->group(function () {
+
+        Route::middleware('permission:reportes.ver')->group(function () {
+
+            Route::get('/', [ReporteController::class, 'index'])->name('index');
+
+            /* ---- Endpoints JSON de gráficos: {labels, valores, total} ---- */
+            Route::get('/pacientes-por-periodo',         [ReporteController::class, 'pacientesPorPeriodo'])->name('pacientes-por-periodo');
+            Route::get('/pacientes-por-especialidad',    [ReporteController::class, 'pacientesPorEspecialidad'])->name('pacientes-por-especialidad');
+            Route::get('/pacientes-por-edad',            [ReporteController::class, 'pacientesPorEdad'])->name('pacientes-por-edad');
+            Route::get('/pacientes-por-sexo',            [ReporteController::class, 'pacientesPorSexo'])->name('pacientes-por-sexo');
+            Route::get('/motivos-consulta',              [ReporteController::class, 'motivosConsulta'])->name('motivos-consulta');
+            Route::get('/tratamientos-por-especialidad', [ReporteController::class, 'tratamientosPorEspecialidad'])->name('tratamientos-por-especialidad');
+            Route::get('/atenciones-por-docente',        [ReporteController::class, 'atencionesPorDocente'])->name('atenciones-por-docente');
+            Route::get('/atenciones-por-estudiante',     [ReporteController::class, 'atencionesPorEstudiante'])->name('atenciones-por-estudiante');
+            Route::get('/insumos-utilizados',            [ReporteController::class, 'insumosUtilizados'])->name('insumos-utilizados');
+            Route::get('/radiografias-por-mes',          [ReporteController::class, 'radiografiasPorMes'])->name('radiografias-por-mes');
+            Route::get('/esterilizaciones-por-mes',      [ReporteController::class, 'esterilizacionesPorMes'])->name('esterilizaciones-por-mes');
+            Route::get('/pagos-por-tipo',                [ReporteController::class, 'pagosPorTipo'])->name('pagos-por-tipo');
+            Route::get('/ingresos-por-mes',              [ReporteController::class, 'ingresosPorMes'])->name('ingresos-por-mes');
+
+            /* ---- Exportaciones ----
+               CSV:  GET /reportes/exportar/csv         (?reporte=<clave> para uno solo)
+               PDF:  GET /reportes/exportar/imprimible  (vista con window.print())
+            */
+            Route::get('/exportar/csv',        [ReporteController::class, 'exportarCsv'])->name('exportar.csv');
+            Route::get('/exportar/imprimible', [ReporteController::class, 'imprimible'])->name('exportar.imprimible');
+        });
+
+        Route::middleware('permission:reportes.crear')->group(function () {
+            Route::post('/', [ReporteController::class, 'store'])->name('store');
+        });
+    });
+
+    /* ============================================================
+       KARDEX (solo lectura) — usa el permiso reportes.ver
+       ============================================================ */
+    Route::prefix('kardex')->name('kardex.')->group(function () {
+        Route::middleware('permission:reportes.ver')->group(function () {
+            // Las rutas literales van ANTES de /kardex/{id}/datos
+            Route::get('/',                [KardexController::class, 'index'])->name('index');
+            Route::get('/tabla',           [KardexController::class, 'tabla'])->name('tabla');
+            Route::get('/{id}/datos',      [KardexController::class, 'datos'])->name('datos');
+        });
+    });
+
+    /* ============================================================
+       INVESTIGACIÓN
+       ============================================================ */
+    Route::prefix('investigacion')->name('investigacion.')->group(function () {
+        // Rutas literales ANTES de cualquier /investigacion/{id}
+        Route::middleware('permission:investigacion.ver')->group(function () {
+            Route::get('/', [InvestigacionController::class, 'index'])->name('index');
+            Route::get('/tabla', [InvestigacionController::class, 'tabla'])->name('tabla');
+            Route::get('/estadisticas', [InvestigacionController::class, 'estadisticas'])->name('estadisticas');
+        });
+
+        Route::middleware('permission:investigacion.ver|investigacion.gestionar')->group(function () {
+            Route::get('/exportar', [InvestigacionController::class, 'exportar'])->name('exportar');
+        });
+    });
+
+    /* ============================================================
+       USUARIOS — Roles dinámicos (sin prefijo admin.)
+       ============================================================ */
+    Route::prefix('usuarios')->name('usuarios.')->group(function () {
+
+        Route::middleware('permission:usuarios.ver')->group(function () {
+            Route::get('/',                [UsuarioController::class, 'index'])->name('index');
+            Route::get('/tabla',           [UsuarioController::class, 'tabla'])->name('tabla');
+            Route::get('/{usuario}/datos', [UsuarioController::class, 'datos'])->name('datos');
+            Route::get('/{usuario}',       [UsuarioController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:usuarios.crear')->group(function () {
+            Route::post('/', [UsuarioController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:usuarios.editar')->group(function () {
+            Route::put('/{usuario}',              [UsuarioController::class, 'update'])->name('update');
+            Route::post('/{usuario}/habilitar',   [UsuarioController::class, 'habilitar'])->name('habilitar');
+            Route::post('/{usuario}/cambiar-rol', [UsuarioController::class, 'cambiarRol'])->name('cambiar-rol');
+        });
+
+        Route::middleware('permission:usuarios.eliminar')->group(function () {
+            Route::delete('/{usuario}', [UsuarioController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       ROLES — Gestión dinámica de roles y permisos
+       ============================================================ */
+    Route::prefix('roles')->name('roles.')->group(function () {
+
+        Route::middleware('permission:roles.ver')->group(function () {
+            Route::get('/',            [RolController::class, 'index'])->name('index');
+            Route::get('/tabla',       [RolController::class, 'tabla'])->name('tabla');
+            Route::get('/{rol}/datos', [RolController::class, 'datos'])->name('datos');
+            Route::get('/{rol}',       [RolController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:roles.crear')->group(function () {
+            Route::post('/', [RolController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:roles.editar')->group(function () {
+            Route::put('/{rol}',           [RolController::class, 'update'])->name('update');
+            Route::post('/{rol}/permisos', [RolController::class, 'syncPermisos'])->name('permisos');
+        });
+
+        Route::middleware('permission:roles.eliminar')->group(function () {
+            Route::delete('/{rol}', [RolController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       CLÍNICAS
+       ============================================================ */
+    Route::prefix('clinicas')->name('clinicas.')->group(function () {
+
+        Route::middleware('permission:clinicas.ver')->group(function () {
+            Route::get('/',              [ClinicaController::class, 'index'])->name('index');
+            Route::get('/tabla',         [ClinicaController::class, 'tabla'])->name('tabla');
+            Route::get('/{clinica}/datos', [ClinicaController::class, 'datos'])->name('datos');
+            Route::get('/{clinica}',     [ClinicaController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:clinicas.crear')->group(function () {
+            Route::post('/', [ClinicaController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:clinicas.editar')->group(function () {
+            Route::put('/{clinica}', [ClinicaController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:clinicas.eliminar')->group(function () {
+            Route::delete('/{clinica}', [ClinicaController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       PERIODOS
+       ============================================================ */
+    Route::prefix('periodos')->name('periodos.')->group(function () {
+
+        Route::middleware('permission:periodos.ver')->group(function () {
+            Route::get('/',              [PeriodoController::class, 'index'])->name('index');
+            Route::get('/tabla',         [PeriodoController::class, 'tabla'])->name('tabla');
+            Route::get('/{periodo}/datos', [PeriodoController::class, 'datos'])->name('datos');
+            Route::get('/{periodo}',     [PeriodoController::class, 'show'])->name('show');
+        });
+
+        Route::middleware('permission:periodos.crear')->group(function () {
+            Route::post('/', [PeriodoController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:periodos.editar')->group(function () {
+            Route::put('/{periodo}', [PeriodoController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:periodos.eliminar')->group(function () {
+            Route::delete('/{periodo}', [PeriodoController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /* ============================================================
+       BITÁCORAS
+       ============================================================ */
+    Route::prefix('bitacoras')->name('bitacoras.')->group(function () {
+        Route::middleware('permission:bitacoras.ver')->group(function () {
+            Route::get('/',           [BitacoraController::class, 'index'])->name('index');
+            Route::get('/tabla',      [BitacoraController::class, 'tabla'])->name('tabla');
+            Route::get('/{bitacora}', [BitacoraController::class, 'show'])->name('show');
+        });
     });
 });
-
-/*
-|--------------------------------------------------------------------------
-| ADMIN — Acceso total
-|--------------------------------------------------------------------------
-| Endpoints /tabla (AJAX) van ANTES de /{id} para que Laravel no confunda
-| "tabla" con un ID.
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function (): void {
-
-        // ─────────── DASHBOARD ───────────
-        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/stats', [AdminController::class, 'statsDashboard'])->name('dashboard.stats');
-
-        // ─────────── USUARIOS ───────────
-        Route::prefix('usuarios')->name('usuarios.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'usuarios'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaUsuarios'])->name('tabla');
-            Route::get('/crear', [AdminController::class, 'crearUsuario'])->name('crear');
-            Route::post('/', [AdminController::class, 'guardarUsuario'])->name('guardar');
-            Route::get('/{id}/editar', [AdminController::class, 'editarUsuario'])->name('editar');
-            Route::get('/{id}/json', [AdminController::class, 'usuarioJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarUsuario'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarUsuario'])->name('eliminar');
-        });
-
-        // ─────────── PACIENTES ───────────
-        Route::prefix('pacientes')->name('pacientes.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'pacientes'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaPacientes'])->name('tabla');
-            Route::get('/crear', [AdminController::class, 'crearPaciente'])->name('crear');
-            Route::post('/', [AdminController::class, 'guardarPaciente'])->name('guardar');
-            Route::get('/{id}/editar', [AdminController::class, 'editarPaciente'])->name('editar');
-            Route::get('/{id}/json', [AdminController::class, 'pacienteJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarPaciente'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarPaciente'])->name('eliminar');
-        });
-
-        // ─────────── CLÍNICAS ───────────
-        Route::prefix('clinicas')->name('clinicas.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'clinicas'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaClinicas'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarClinica'])->name('guardar');
-            Route::get('/{id}/json', [AdminController::class, 'clinicaJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarClinica'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarClinica'])->name('eliminar');
-        });
-
-        // ─────────── PERIODOS ───────────
-        Route::prefix('periodos')->name('periodos.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'periodos'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaPeriodos'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarPeriodo'])->name('guardar');
-            Route::get('/{id}/json', [AdminController::class, 'periodoJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarPeriodo'])->name('actualizar');
-            Route::patch('/{id}/toggle', [AdminController::class, 'togglePeriodo'])->name('toggle');   //
-        });
-
-        // ─────────── ROLES Y PERMISOS ───────────
-        Route::prefix('roles')->name('roles.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'roles'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaRoles'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarRol'])->name('guardar');
-            Route::get('/{id}/json', [AdminController::class, 'rolJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarRol'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarRol'])->name('eliminar');
-            Route::get('/{id}/permisos', [AdminController::class, 'permisosRol'])->name('permisos');
-            Route::post('/{id}/permisos', [AdminController::class, 'guardarPermisosRol'])->name('permisos.guardar');
-        });
-
-        // ─────────── TRATAMIENTOS ───────────
-        Route::prefix('tratamientos')->name('tratamientos.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'tratamientos'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaTratamientos'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarTratamiento'])->name('guardar');
-            Route::get('/{id}/json', [AdminController::class, 'tratamientoJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarTratamiento'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarTratamiento'])->name('eliminar');
-        });
-
-        // ─────────── CAJAS ───────────
-        Route::prefix('cajas')->name('cajas.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'cajas'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaCajas'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarCaja'])->name('guardar');
-            Route::get('/buscar-pacientes', [AdminController::class, 'buscarPacientes'])->name('buscar.pacientes');
-            Route::get('/{id}/json', [AdminController::class, 'cajaJson'])->name('json');
-        });
-
-        // ─────────── INSUMOS ───────────
-        Route::prefix('insumos')->name('insumos.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'insumos'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaInsumos'])->name('tabla');
-            Route::post('/', [AdminController::class, 'guardarInsumo'])->name('guardar');
-            Route::get('/{id}/json', [AdminController::class, 'insumoJson'])->name('json');
-            Route::put('/{id}', [AdminController::class, 'actualizarInsumo'])->name('actualizar');
-            Route::delete('/{id}', [AdminController::class, 'eliminarInsumo'])->name('eliminar');
-
-            // NUEVO: tipos de insumo por clínica
-            Route::get(
-                '/tratamientos-por-clinica/{clinicaId}',
-                [AdminController::class, 'insumoTratamientosPorClinica']
-            )->name('tratamientos.clinica');
-        });
-
-        // ─────────── HISTORIAS CLÍNICAS ───────────
-        // ─────────── HISTORIAS CLÍNICAS ───────────
-        Route::prefix('historias')->name('historias.')->group(function (): void {
-            Route::get('/',                [HistoriaClinicaController::class, 'index'])->name('index');
-            Route::get('/tabla',           [HistoriaClinicaController::class, 'tabla'])->name('tabla');
-
-            // Importante: /paciente/{id}/historial va ANTES de /{id}/json
-            Route::get(
-                '/paciente/{pacienteId}/historial',
-                [HistoriaClinicaController::class, 'historialPaciente']
-            )->name('paciente.historial');
-
-            Route::get('/{id}/json',       [HistoriaClinicaController::class, 'json'])->name('json');
-            Route::post('/guardar',        [HistoriaClinicaController::class, 'guardar'])->name('guardar');
-            Route::put('/{id}',            [HistoriaClinicaController::class, 'actualizar'])->name('actualizar');
-
-            Route::post('/{id}/archivo',   [HistoriaClinicaController::class, 'subirArchivo'])->name('archivo.subir');
-            Route::get('/{id}/archivo',    [HistoriaClinicaController::class, 'descargarArchivo'])->name('archivo.descargar');
-
-            Route::post('/{id}/autorizar', [HistoriaClinicaController::class, 'autorizar'])->name('autorizar');
-            Route::post('/{id}/revisar',   [HistoriaClinicaController::class, 'revisar'])->name('revisar');
-            Route::post('/{id}/cerrar',    [HistoriaClinicaController::class, 'cerrar'])->name('cerrar');
-            Route::post('/{id}/reasignar', [HistoriaClinicaController::class, 'reasignar'])->name('reasignar');
-        });
-
-        // ─────────── BITÁCORAS ───────────
-        Route::prefix('bitacoras')->name('bitacoras.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'bitacoras'])->name('index');
-            Route::get('/tabla', [AdminController::class, 'tablaBitacoras'])->name('tabla');
-        });
-
-        // ─────────── REPORTES ───────────
-        Route::prefix('reportes')->name('reportes.')->group(function (): void {
-            Route::get('/', [AdminController::class, 'reportes'])->name('index');
-            Route::get('/pacientes-grupo-etario', [AdminController::class, 'reportePacientesGrupoEtario'])->name('pacientes.edad');
-            Route::get('/afluencia-clinicas', [AdminController::class, 'reporteAfluenciaClinicas'])->name('afluencia');
-            Route::get('/ingresos-periodo', [AdminController::class, 'reporteIngresosPeriodo'])->name('ingresos');
-        });
-    });
-
-/*
-|--------------------------------------------------------------------------
-| SUBADMINISTRADOR
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('subadmin')
-    ->name('subadmin.')
-    ->group(function (): void {
-        Route::get('/dashboard', [SubadminController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| DIRECTOR DE CARRERA
-|--------------------------------------------------------------------------
-*/
-/*
-|--------------------------------------------------------------------------
-| DIRECTOR DE CARRERA
-|--------------------------------------------------------------------------
-| Acceso de solo lectura a todos los módulos + reportes globales.
-| No crea, no edita, no elimina. Solo consulta y exporta.
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('director')
-    ->name('director.')
-    ->group(function (): void {
-
-        // ─────────── DASHBOARD ───────────
-        Route::get('/dashboard', [DirectorController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/stats', [DirectorController::class, 'statsDashboard'])->name('dashboard.stats');
-
-        // ─────────── PACIENTES (solo lectura) ───────────
-        Route::prefix('pacientes')->name('pacientes.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'pacientes'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaPacientes'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'pacienteJson'])->name('json');
-        });
-
-        // ─────────── CLÍNICAS (solo lectura) ───────────
-        Route::prefix('clinicas')->name('clinicas.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'clinicas'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaClinicas'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'clinicaJson'])->name('json');
-        });
-
-        // ─────────── PERIODOS (solo lectura) ───────────
-        Route::prefix('periodos')->name('periodos.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'periodos'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaPeriodos'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'periodoJson'])->name('json');
-        });
-
-        // ─────────── TRATAMIENTOS (solo lectura) ───────────
-        Route::prefix('tratamientos')->name('tratamientos.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'tratamientos'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaTratamientos'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'tratamientoJson'])->name('json');
-        });
-
-        // ─────────── HISTORIAS CLÍNICAS (solo lectura) ───────────
-        Route::prefix('historias')->name('historias.')->group(function (): void {
-            Route::get('/',          [DirectorController::class, 'historias'])->name('index');
-            Route::get('/tabla',     [DirectorController::class, 'tablaHistorias'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'historiaJson'])->name('json');
-        });
-
-        // ─────────── CAJAS (solo lectura) ───────────
-        Route::prefix('cajas')->name('cajas.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'cajas'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaCajas'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'cajaJson'])->name('json');
-        });
-
-        // ─────────── INSUMOS (solo lectura) ───────────
-        Route::prefix('insumos')->name('insumos.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'insumos'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaInsumos'])->name('tabla');
-            Route::get('/{id}/json', [DirectorController::class, 'insumoJson'])->name('json');
-        });
-
-        // ─────────── ESTERILIZACIÓN (solo lectura) ───────────
-        Route::prefix('esterilizaciones')->name('esterilizaciones.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'esterilizaciones'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaEsterilizaciones'])->name('tabla');
-        });
-
-        // ─────────── RADIOLOGÍA (solo lectura) ───────────
-        Route::prefix('radiologias')->name('radiologias.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'radiologias'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaRadiologias'])->name('tabla');
-        });
-
-        // ─────────── BITÁCORAS (solo lectura) ───────────
-        Route::prefix('bitacoras')->name('bitacoras.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'bitacoras'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaBitacoras'])->name('tabla');
-        });
-
-        // ─────────── REPORTES (todos los del PDF) ───────────
-        Route::prefix('reportes')->name('reportes.')->group(function (): void {
-
-            // Panel principal de reportes
-            Route::get('/', [DirectorController::class, 'reportes'])->name('index');
-
-            // Reportes obligatorios según PDF
-            Route::get('/pacientes-periodo',      [DirectorController::class, 'reportePacientesPorPeriodo'])->name('pacientes.periodo');
-            Route::get('/tratamientos-especialidad', [DirectorController::class, 'reporteTratamientosPorEspecialidad'])->name('tratamientos.especialidad');
-            Route::get('/atenciones-docente',     [DirectorController::class, 'reporteAtencionesPorDocente'])->name('atenciones.docente');
-            Route::get('/atenciones-estudiante',  [DirectorController::class, 'reporteAtencionesPorEstudiante'])->name('atenciones.estudiante');
-            Route::get('/afluencia-clinicas',     [DirectorController::class, 'reporteAfluenciaClinicas'])->name('afluencia.clinicas');
-            Route::get('/pacientes-grupo-etario', [DirectorController::class, 'reportePacientesGrupoEtario'])->name('pacientes.edad');
-            Route::get('/pacientes-sexo',         [DirectorController::class, 'reportePacientesPorSexo'])->name('pacientes.sexo');
-            Route::get('/motivos-consulta',       [DirectorController::class, 'reporteMotivosConsulta'])->name('motivos.consulta');
-            Route::get('/cajas-periodo',          [DirectorController::class, 'reporteCajasPorPeriodo'])->name('cajas.periodo');
-            Route::get('/insumos-utilizados',     [DirectorController::class, 'reporteInsumosUtilizados'])->name('insumos.utilizados');
-            Route::get('/radiologia-afluencia',   [DirectorController::class, 'reporteRadiologiaAfluencia'])->name('radiologia.afluencia');
-            Route::get('/esterilizacion-afluencia', [DirectorController::class, 'reporteEsterilizacionAfluencia'])->name('esterilizacion.afluencia');
-
-            // Exportaciones
-            Route::get('/exportar/pdf/{reporte}',   [DirectorController::class, 'exportarPdf'])->name('exportar.pdf');
-            Route::get('/exportar/excel/{reporte}', [DirectorController::class, 'exportarExcel'])->name('exportar.excel');
-        });
-
-        // ─────────── INSTITUTO DE INVESTIGACIÓN (solo lectura anonimizada) ───────────
-        Route::prefix('investigacion')->name('investigacion.')->group(function (): void {
-            Route::get('/',        [DirectorController::class, 'investigacion'])->name('index');
-            Route::get('/tabla',   [DirectorController::class, 'tablaInvestigacion'])->name('tabla');
-            Route::get('/datos-anonimizados', [DirectorController::class, 'datosAnonimizados'])->name('datos.anonimizados');
-        });
-    });
-
-/*
-|--------------------------------------------------------------------------
-| JEFATURA DE CLÍNICAS
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('jefatura-clinicas')
-    ->name('jefatura-clinicas.')
-    ->group(function (): void {
-        Route::get('/dashboard', [JefaturaClinicasController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| JEFE DE CÁTEDRA
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('jefe-catedra')
-    ->name('jefe-catedra.')
-    ->group(function (): void {
-        Route::get('/dashboard', [JefeCatedraController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| DOCENTE
-|--------------------------------------------------------------------------
-*/
-/*
-|--------------------------------------------------------------------------
-| DOCENTE
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('docente')
-    ->name('docente.')
-    ->group(function (): void {
-
-        // ─────────── DASHBOARD ───────────
-        Route::get('/dashboard', [DocenteController::class, 'dashboard'])->name('dashboard');
-        Route::get('/dashboard/stats', [DocenteController::class, 'dashboard'])->name('dashboard.stats');
-
-        // ─────────── PACIENTES DERIVADOS ───────────
-        Route::get('/pacientes-derivados', [DocenteController::class, 'pacientesDerivados'])->name('pacientes-derivados');
-        Route::post('/designar-paciente', [DocenteController::class, 'designarPaciente'])->name('designar-paciente');
-
-        // ─────────── HISTORIAS CLÍNICAS ───────────
-        Route::get('/historias-clinicas', [DocenteController::class, 'historiasClinicas'])->name('historias-clinicas');
-        Route::get('/historia/{id}', [DocenteController::class, 'verHistoria'])->name('ver-historia');
-        Route::get('/historia/{id}/detalle', [DocenteController::class, 'getDetalleHistoria'])->name('historia.detalle');
-        Route::post('/evaluar-estudiante/{id}', [DocenteController::class, 'evaluarEstudiante'])->name('evaluar-estudiante');
-
-        // ─────────── ESTERILIZACIÓN ───────────
-        Route::get('/esterilizaciones', [DocenteController::class, 'verEsterilizaciones'])->name('esterilizaciones');
-        Route::get('/esterilizacion/estudiante/{estudianteId}', [DocenteController::class, 'verEsterilizacionEstudiante'])->name('esterilizacion.estudiante');
-        Route::post('/autorizar-esterilizacion', [DocenteController::class, 'autorizarEsterilizacion'])->name('autorizar-esterilizacion');
-
-        // ─────────── CAJAS ───────────
-        Route::get('/cajas', [DocenteController::class, 'verCajas'])->name('cajas');
-        Route::post('/autorizar-caja/{id}', [DocenteController::class, 'autorizarCaja'])->name('autorizar-caja');
-        Route::get('/caja/resumen/{pacienteId}', [DocenteController::class, 'getResumenCajaPaciente'])->name('caja.resumen');
-
-        // ─────────── INSUMOS ───────────
-        Route::get('/insumos-solicitados', [DocenteController::class, 'verInsumosSolicitados'])->name('insumos-solicitados');
-        Route::post('/autorizar-insumos/{id}', [DocenteController::class, 'autorizarInsumos'])->name('autorizar-insumos');
-        Route::get('/insumos-disponibles/{clinicaId}', [DocenteController::class, 'getInsumosDisponibles'])->name('insumos.disponibles');
-
-        // ─────────── TRATAMIENTOS / AVANCES ───────────
-        Route::post('/registrar-avance', [DocenteController::class, 'registrarAvance'])->name('registrar-avance');
-        Route::post('/finalizar-tratamiento/{id}', [DocenteController::class, 'finalizarTratamiento'])->name('finalizar-tratamiento');
-
-        // ─────────── RADIOLOGÍAS ───────────
-        Route::get('/radiologias', [DocenteController::class, 'verRadiologias'])->name('radiologias');
-
-        // ─────────── REPORTES ───────────
-        Route::get('/reportes', [DocenteController::class, 'reportes'])->name('reportes');
-
-        // ─────────── AJAX AUXILIARES ───────────
-        Route::get('/estudiantes/clinica/{clinicaId}', [DocenteController::class, 'getEstudiantesPorClinica'])->name('estudiantes.clinica');
-        Route::get('/tratamientos/clinica/{clinicaId}', [DocenteController::class, 'getTratamientosPorClinica'])->name('tratamientos.clinica');
-        Route::get('/buscar-pacientes', [DocenteController::class, 'buscarPacientes'])->name('buscar-pacientes');
-        Route::get('/notificaciones', [DocenteController::class, 'getNotificaciones'])->name('notificaciones');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| ESTUDIANTE
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('estudiante')
-    ->name('estudiante.')
-    ->group(function (): void {
-        Route::get('/dashboard', [EstudianteController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| INTERNO
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('interno')
-    ->name('interno.')
-    ->group(function (): void {
-        Route::get('/dashboard', [InternoController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| ADMISIÓN (rol requerido por el PDF de la clínica)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('admision')
-    ->name('admision.')
-    ->group(function (): void {
-        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-        // Aquí irían las rutas propias del rol admisión:
-        // Route::get('/pacientes/registrar', ...);
-        // Route::get('/pacientes/remitir',   ...);
-        // Route::get('/fichas',              ...);
-    });
-
-/*
-|--------------------------------------------------------------------------
-| CAJERO
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('cajas')
-    ->name('cajas.')
-    ->group(function (): void {
-        Route::get('/dashboard', [CajasController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| ESTERILIZACIÓN
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('esterilizacion')
-    ->name('esterilizacion.')
-    ->group(function (): void {
-        Route::get('/dashboard', [EsterilizacionController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| INSUMOS
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('insumos')
-    ->name('insumos.')
-    ->group(function (): void {
-        Route::get('/dashboard', [InsumosController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| RADIOLOGÍA
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('radiologia')
-    ->name('radiologia.')
-    ->group(function (): void {
-        Route::get('/dashboard', [RadiologiaController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| INSTITUTO DE INVESTIGACIÓN
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session', 'role'])
-    ->prefix('investigacion')
-    ->name('investigacion.')
-    ->group(function (): void {
-        Route::get('/dashboard', [InvestigacionController::class, 'index'])->name('dashboard');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| HEALTH CHECK
-|--------------------------------------------------------------------------
-*/
-Route::get('/health', fn() => response()->json([
-    'status' => 'ok',
-    'timestamp' => now()->toIso8601String(),
-    'app' => config('app.name'),
-]))->name('health');
-
-/*
-|--------------------------------------------------------------------------
-| FALLBACK 404
-|--------------------------------------------------------------------------
-*/
-Route::fallback(fn() => response()->view('errors.404', [], 404));

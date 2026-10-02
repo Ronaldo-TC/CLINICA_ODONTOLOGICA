@@ -27,10 +27,16 @@ class Caja extends Model
     ];
 
     protected $casts = [
-        'habilitada'  => 'boolean',
+        'monto'       => 'integer',
         'costo_total' => 'decimal:2',
         'cancelado'   => 'decimal:2',
+        'habilitada'  => 'boolean',
+        'ci'          => 'integer',
     ];
+
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
 
     public function tratamiento()
     {
@@ -52,8 +58,29 @@ class Caja extends Model
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
-    public function cajaDetalles()
+    public function detalles()
     {
         return $this->hasMany(CajaDetalle::class, 'caja_id');
+    }
+
+    public function radiologias()
+    {
+        return $this->hasMany(Radiologia::class, 'caja_id');
+    }
+
+    /* ============================================================
+       ACCESSORS
+       ============================================================ */
+
+    public function getSaldoAttribute(): float
+    {
+        return (float) $this->costo_total - (float) $this->cancelado;
+    }
+
+    public function getEstadoPagoAttribute(): string
+    {
+        if ($this->cancelado <= 0) return 'pendiente';
+        if ($this->cancelado >= $this->costo_total) return 'pagado';
+        return 'parcial';
     }
 }

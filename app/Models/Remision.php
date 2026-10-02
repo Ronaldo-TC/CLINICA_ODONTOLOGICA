@@ -20,6 +20,10 @@ class Remision extends Model
         'habilitado' => 'boolean',
     ];
 
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
+
     public function admision()
     {
         return $this->belongsTo(Admision::class, 'admision_id');
@@ -42,11 +46,16 @@ class Remision extends Model
 
     public function historiasClinicas()
     {
-        return $this->hasMany(HistoriaClinica::class, 'admision_id', 'admision_id');
+        return $this->hasMany(HistoriaClinica::class, 'remision_id');
     }
 
     public function insumosSolicitados()
     {
         return $this->hasMany(InsumoSolicitado::class, 'remision_id');
+    }
+
+    public function radiologias()
+    {
+        return $this->hasMany(Radiologia::class, 'remision_id');
     }
 }

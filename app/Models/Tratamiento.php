@@ -20,9 +20,17 @@ class Tratamiento extends Model
         'costo' => 'decimal:2',
     ];
 
-    //  Relación: un tratamiento pertenece a una clínica
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
+
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
+    }
+
+    public function tratamientosRealizados()
+    {
+        return $this->hasMany(TratamientoRealizado::class, 'tratamiento_id');
     }
 }

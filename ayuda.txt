@@ -1,25 +1,230 @@
-Admin (admin) - Acceso total
+# 📋 Análisis de cumplimiento — Requerimientos vs. Sistema actual
 
-Subadmin (subadmin) - Subadministrador
+He leído el PDF completo (nota interna UPEA/ODONTOLOGÍA + informe de Semiología + ficha de admisión + control de esterilización). Aquí tienes un **análisis honesto de qué cumple, qué falta y qué mejorar**.
 
-Director (director) - Director de Carrera
+---
 
-Jefatura de Clínicas (jefatura-clinicas) - Jefatura de Clínicas
+## ✅ Lo que **SÍ cumple** tu sistema actual
 
-Jefe de Cátedra (jefe-catedra) - Jefe de Cátedra
+| # | Requerimiento | Estado | Dónde |
+|---|--------------|:------:|-------|
+| 1 | **Usuarios y contraseñas individuales** | ✅ | `UsuarioController` + login + tabla `usuarios` |
+| 2 | **Niveles de control por rol** | ✅ | Spatie Permission + 15 roles |
+| 3 | **Registro inicial en Clínica de Admisión** | ✅ | `AdmisionController` |
+| 4 | **Datos personales del paciente** | ✅ | `PacienteController` |
+| 5 | **Antecedentes médicos y odontológicos** | ✅ | Campos `antecedentes`, `gmh`, `gpe`, `signos_vitales` en `admisiones` |
+| 6 | **Derivación/remisión a especialidad** | ✅ | `RemisionController` |
+| 7 | **Diagnóstico y pronóstico** | ✅ | Campos `diagnostico`, `examen` en `admisiones` |
+| 8 | **Tratamientos a realizar y realizados** | ✅ | `TratamientoController` + `TratamientoRealizado` |
+| 9 | **Fecha de cada atención** | ✅ | `SesionAtencion` + `tratamientos_realizados.fecha_inicio/fin` |
+| 10 | **Operador (estudiante) responsable** | ✅ | `admisiones.estudiante_id`, `historias_clinicas.estudiante_id` |
+| 11 | **Especialidad correspondiente** | ✅ | `clinicas` (14 áreas) + `historias_clinicas.clinica_id` |
+| 12 | **Docente que asignó trabajo** | ✅ | `historias_clinicas.docente_id`, `admisiones.responsable_id` |
+| 13 | **Historia clínica por especialidad** | ✅ | `HistoriaClinica` ligada a `admision` + `clinica` |
+| 14 | **Múltiples historias por paciente** | ✅ | Un paciente → N admisiones → N historias |
+| 15 | **Enlace con Cajas** | ✅ | `CajaController` + `cajas.tratamiento_id` |
+| 16 | **Autorización de tratamientos por docente** | ✅ | `tratamientos_realizados.estado` + `historias_clinicas.autorizado` |
+| 17 | **Registro de avance del tratamiento** | ✅ | `SesionAtencion` + `tratamientos_realizados.estado` |
+| 18 | **Autorización de insumos** | ✅ | `insumos_solicitados` + `insumos_solicitados_detalle` |
+| 19 | **Módulo de Radiología** | ✅ | `RadiologiaController` |
+| 20 | **Módulo de Esterilización** | ✅ | `EsterilizacionController` |
+| 21 | **Módulo de Kardex** | ✅ | Rol `kardex` con permisos de consulta |
+| 22 | **Bitácora de auditoría** | ✅ | `BitacoraController` |
+| 23 | **Roles específicos del PDF** | ✅ | 15 roles: admin, subadmin, director, jefatura-clinicas, jefe-catedra, docente, estudiante, interno, admision, kardex, cajas, insumos, esterilizacion, radiologia, investigacion |
+| 24 | **Múltiples clínicas del PDF** | ✅ | 14 clínicas: Admisión, Operatoria, Endodoncia, Periodoncia, Cirugía Bucal, Cirugía Mayor, Integral Niños/Adultos, Odontopediatría, Prostodoncia Fija/Removible, Ortodoncia, Radiología, Esterilización |
 
-Docente (docente) - Docente
+**Cobertura estimada: ~85% de los requerimientos funcionales.**
 
-Estudiante (estudiante) - Estudiante
+---
 
-Interno (interno) - Interno de Odontología
+## ⚠️ Lo que **falta o está incompleto**
 
-Cajero (cajas) - Cajero
+### 🔴 **Crítico** (afecta funcionalidad del flujo del PDF)
 
-Esterilización (esterilizacion) - Esterilización
+| # | Requerimiento | Estado | Acción |
+|---|--------------|:------:|--------|
+| 1 | **Módulo de Insumos con solicitudes/aprobaciones** | ⏳ Falta | `InsumoController` + vistas |
+| 2 | **Módulo de Reportes** | ⏳ Falta | `ReporteController` + vistas |
+| 3 | **Módulo de Investigación** | ⏳ Falta | `InvestigacionController` |
+| 4 | **Integración con Sistema SHICO** | ⏳ Falta | Tabla `shico_sincronizacion` existe pero sin lógica |
+| 5 | **Kardex como módulo específico** | ⚠️ Parcial | Solo tiene rol, sin controlador/vistas |
 
-Insumos (insumos) - Insumos
+### 🟡 **Importante** (mejoras de UX y flujo clínico)
 
-Radiología (radiologia) - Radiología
+| # | Requerimiento | Estado | Acción |
+|---|--------------|:------:|--------|
+| 6 | **Odontograma interactivo** | ⚠️ Parcial | Solo texto plano en `admisiones.odontograma`. Necesita UI con SVG/Canvas |
+| 7 | **Consentimiento informado digital** | ⚠️ Parcial | Tabla `consentimientos` existe, sin vistas |
+| 8 | **Subir archivos de historias clínicas** | ⚠️ Parcial | Tabla `archivos` existe, sin upload UI |
+| 9 | **Firma digital del paciente** | ⚠️ Parcial | Campo `firma` en `admisiones`, sin captura |
+| 10 | **Generación de PDF de historias** | ❌ Falta | No hay generación de PDF |
+| 11 | **Dashboard con gráficos estadísticos** | ❌ Falta | Solo métricas numéricas |
+| 12 | **Reportes de afluencia por especialidad** | ❌ Falta | Sin endpoint ni vista |
+| 13 | **Reportes por grupo etario y sexo** | ❌ Falta | Sin endpoint ni vista |
+| 14 | **Reportes de motivos de consulta** | ❌ Falta | Sin endpoint ni vista |
+| 15 | **Reporte de tratamientos por especialidad** | ❌ Falta | Sin endpoint ni vista |
+| 16 | **Reporte de insumos utilizados** | ❌ Falta | Sin endpoint ni vista |
+| 17 | **Reporte de radiología** | ❌ Falta | Sin endpoint ni vista |
+| 18 | **Reporte de esterilización** | ❌ Falta | Sin endpoint ni vista |
+| 19 | **Reporte de cajas / recibos** | ❌ Falta | Sin endpoint ni vista |
 
-Investigación (investigacion) - Instituto de Investigación
+### 🟢 **Deseable** (nice-to-have)
+
+| # | Requerimiento | Estado | Acción |
+|---|--------------|:------:|--------|
+| 20 | **Notificaciones por email/SMS** | ❌ Falta | Sin sistema de notificaciones |
+| 21 | **Búsqueda global** | ❌ Falta | Solo por módulo |
+| 22 | **Exportación a Excel/PDF** | ❌ Falta | Sin librerías |
+| 23 | **Historial de cambios por registro** | ⚠️ Parcial | Solo `bitacoras` genérica |
+| 24 | **API REST para móvil** | ❌ Falta | Sin endpoints API |
+| 25 | **Multi-idioma** | ❌ Falta | Solo español |
+| 26 | **Recuperación de contraseña** | ❌ Falta | Sin flujo de reset |
+| 27 | **Bloqueo de sesión por inactividad** | ❌ Falta | Sin middleware |
+
+---
+
+## 📊 Mapa de cobertura por área del PDF
+
+```
+┌─────────────────────────────────────────────────────┐
+│  REQUERIMIENTO DEL PDF         COBERTURA            │
+├─────────────────────────────────────────────────────┤
+│  1. Objetivos del sistema      ██████████  95%      │
+│  2. Tipos de usuarios          ██████████  100%     │
+│  3. Datos del historial        ████████░░  80%      │
+│  4. Reportes requeridos        ██░░░░░░░░  20%      │
+│  5. Flujo de atención          ███████░░░  70%      │
+│  6. Integraciones (SHICO)      █░░░░░░░░░  10%      │
+│  7. Personal de apoyo          N/A (organizativo)   │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 Prioridades para completar
+
+### 🥇 **Fase 1 — Módulos faltantes** (1-2 días)
+
+1. **`InsumoController`** completo con solicitudes/aprobaciones
+2. **`ReporteController`** con gráficos estadísticos
+3. **`InvestigacionController`** con datos anonimizados
+4. **Kardex** como módulo propio (aunque sea solo lectura)
+
+### 🥈 **Fase 2 — Odontograma interactivo** (2-3 días)
+
+El PDF muestra un odontograma detallado. Actualmente está como texto plano. Necesitas:
+
+- Componente SVG/Canvas con los 32 dientes
+- Estados por pieza: sano, caries, obturado, ausente, corona, endodoncia
+- Guardar como JSON en `admisiones.odontograma_pintado`
+- Vista de solo lectura + edición
+
+### 🥉 **Fase 3 — Reportes y gráficos** (2-3 días)
+
+Según el PDF, necesitas:
+
+```php
+// Reportes mínimos requeridos:
+- Pacientes por periodo
+- Pacientes por especialidad
+- Pacientes por grupo etario
+- Pacientes por sexo
+- Motivos de consulta más frecuentes
+- Tratamientos por especialidad
+- Atenciones por docente
+- Atenciones por estudiante
+- Insumos utilizados por clínica
+- Radiografías realizadas
+- Ciclos de esterilización
+- Pagos por tipo
+```
+
+Usa **Chart.js** o **ApexCharts** para los gráficos.
+
+### 🏅 **Fase 4 — Subida de archivos y firma** (1-2 días)
+
+- Upload de radiografías (`archivos` table)
+- Upload de historias clínicas escaneadas
+- Firma digital con `<canvas>` (librería `signature_pad`)
+- Generación de PDF con **DomPDF** o **Snappy**
+
+### 🏆 **Fase 5 — Integración SHICO** (variable)
+
+Requiere acceso a la API del sistema SHICO. Añadir:
+
+- Servicio `ShicoService` para sincronizar pacientes
+- Comando artisan `shico:sync`
+- Cola de reintentos con `shico_sincronizacion.estado`
+
+---
+
+## 🚀 Próximo paso recomendado
+
+**Dado tu estado actual (85% completado), te sugiero este orden:**
+
+### Opción A — Completar módulos faltantes (rápido)
+1. `InsumoController` + vistas (30 min)
+2. `ReporteController` + gráficos (1-2 horas)
+3. `InvestigacionController` (30 min)
+4. `KardexController` (30 min)
+
+**→ Con esto llegas al 95% de cobertura funcional.**
+
+### Opción B — Odontograma interactivo (impacto visual)
+1. Componente SVG de 32 dientes
+2. Estados interactivos
+3. Integración con `admisiones`
+4. Vista de historial de cambios
+
+**→ Esto es lo que más impresiona al Director y Jefe de Clínicas.**
+
+### Opción C — Reportes con gráficos (necesario para acreditación)
+1. `ReporteController` con 10+ tipos
+2. Chart.js integrado
+3. Exportación a PDF/Excel
+
+**→ Requisito para procesos de acreditación universitaria.**
+
+---
+
+## 💡 Mi recomendación personal
+
+**Sigue este orden:**
+
+1. **Primero:** `InsumoController` + `ReporteController` + `InvestigacionController` + `KardexController` (Fase 1) — cierra los huecos funcionales
+2. **Segundo:** Odontograma interactivo — diferenciador clave vs. sistemas genéricos
+3. **Tercero:** Reportes con gráficos — lo pide el Director explícitamente
+4. **Cuarto:** Subida de archivos + firma digital
+5. **Quinto:** Integración SHICO (cuando tengas acceso a la API)
+
+---
+
+## 📋 Preguntas para el cliente
+
+Antes de seguir, sería bueno confirmar con el **Dr. Edwing Mollericona** (Jefe de Clínicas):
+
+1. **¿El odontograma debe ser interactivo o basta con el texto actual?**
+2. **¿Qué reportes son los más urgentes para acreditación?**
+3. **¿Tienen acceso a la API de SHICO o solo la referencia?**
+4. **¿Necesitan firma digital con validez legal o solo captura?**
+5. **¿Cuántos pacientes estiman atender por semestre?** (para dimensionar)
+
+---
+
+## 🎯 ¿Por dónde seguimos?
+
+Dime qué priorizas:
+
+**A)** Continuar con **`InsumoController`** → cierra el módulo de insumos (último controlador grande pendiente)
+
+**B)** **`ReporteController`** → reportes y gráficos (lo que pide el Director)
+
+**C)** **`KardexController`** + **`InvestigacionController`** → módulos de consulta
+
+**D)** **Odontograma interactivo** → componente visual clave
+
+**E)** **Subida de archivos + firma digital** → flujo de historia clínica completo
+
+**Mi sugerencia:** vamos con **A (Insumos)** porque ya tienes el controlador a medias y es el último módulo operativo que falta. Después saltamos a **B (Reportes)** que es lo que el Director pide explícitamente.
+
+¿Cuál eliges?

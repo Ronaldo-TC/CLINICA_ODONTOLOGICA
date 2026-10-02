@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class HistoriaClinica extends Model
 {
@@ -32,43 +30,63 @@ class HistoriaClinica extends Model
     ];
 
     protected $casts = [
-        'autorizado'          => 'boolean',
-        'estado_revision'     => 'boolean',
+        'autorizado'        => 'boolean',
         'revision_cualquiera' => 'boolean',
-        'fecha_inicio'        => 'date',
-        'fecha_fin'           => 'date',
+        'estado_revision'   => 'integer',
+        'fecha_inicio'      => 'date',
+        'fecha_fin'         => 'date',
     ];
 
-    public function admision(): BelongsTo
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
+
+    public function admision()
     {
-        return $this->belongsTo(Admision::class);
+        return $this->belongsTo(Admision::class, 'admision_id');
     }
-    public function paciente(): BelongsTo
+
+    public function paciente()
     {
-        return $this->belongsTo(Paciente::class);
+        return $this->belongsTo(Paciente::class, 'paciente_id');
     }
-    public function clinica(): BelongsTo
+
+    public function clinica()
     {
-        return $this->belongsTo(Clinica::class);
+        return $this->belongsTo(Clinica::class, 'clinica_id');
     }
-    public function periodo(): BelongsTo
+
+    public function periodo()
     {
-        return $this->belongsTo(Periodo::class);
+        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
-    public function estudiante(): BelongsTo
+
+    public function estudiante()
     {
         return $this->belongsTo(Usuario::class, 'estudiante_id');
     }
-    public function docente(): BelongsTo
+
+    public function docente()
     {
         return $this->belongsTo(Usuario::class, 'docente_id');
     }
-    public function tratamientosRealizados(): HasMany
+
+    public function tratamientosRealizados()
     {
-        return $this->hasMany(TratamientoRealizado::class);
+        return $this->hasMany(TratamientoRealizado::class, 'historia_clinica_id');
     }
-    public function archivos(): HasMany
+
+    public function archivos()
     {
-        return $this->hasMany(Archivo::class);
+        return $this->hasMany(Archivo::class, 'historia_clinica_id');
+    }
+
+    /* ============================================================
+       ACCESSORS
+       ============================================================ */
+
+    public function getEstaCompletaAttribute(): bool
+    {
+        return $this->tratamientosRealizados()->count() > 0;
     }
 }

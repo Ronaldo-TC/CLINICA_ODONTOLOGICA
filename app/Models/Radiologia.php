@@ -14,6 +14,7 @@ class Radiologia extends Model
         'estado',
         'usuario_id',
         'caja_id',
+        'clinica_id',
         'paciente_id',
         'remision_id',
         'archivo_ruta',
@@ -23,6 +24,10 @@ class Radiologia extends Model
     protected $casts = [
         'fecha_toma' => 'datetime',
     ];
+
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
 
     public function usuario()
     {
@@ -34,6 +39,11 @@ class Radiologia extends Model
         return $this->belongsTo(Caja::class, 'caja_id');
     }
 
+    public function clinica()
+    {
+        return $this->belongsTo(Clinica::class, 'clinica_id');
+    }
+
     public function paciente()
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
@@ -42,5 +52,10 @@ class Radiologia extends Model
     public function remision()
     {
         return $this->belongsTo(Remision::class, 'remision_id');
+    }
+
+    public function archivos()
+    {
+        return $this->hasMany(Archivo::class, 'radiologia_id');
     }
 }

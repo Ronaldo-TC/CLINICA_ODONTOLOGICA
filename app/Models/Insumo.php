@@ -24,6 +24,7 @@ class Insumo extends Model
         'costo_unitario'    => 'decimal:2',
     ];
 
+    /* RELACIONES */
     public function insumoTratamiento()
     {
         return $this->belongsTo(InsumoTratamiento::class, 'insumo_tratamiento_id');
@@ -32,5 +33,37 @@ class Insumo extends Model
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(InsumoSolicitadoDetalle::class, 'insumo_id');
+    }
+
+    public function usados()
+    {
+        return $this->hasMany(InsumoTratamientoUsado::class, 'insumo_id');
+    }
+
+    /* ACCESSORS */
+    public function getStockBajoAttribute(): bool
+    {
+        return $this->cantidad_numerica <= $this->stock_minimo;
+    }
+
+    public function getAgotadoAttribute(): bool
+    {
+        return $this->cantidad_numerica <= 0;
+    }
+
+    public function getValorTotalAttribute(): float
+    {
+        return (float) ($this->cantidad_numerica * $this->costo_unitario);
+    }
+
+    /* SCOPES */
+    public function scopeStockBajo($q)
+    {
+        return $q->whereColumn('cantidad_numerica', '<=', 'stock_minimo');
     }
 }

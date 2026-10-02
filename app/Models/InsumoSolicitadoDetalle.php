@@ -22,7 +22,8 @@ class InsumoSolicitadoDetalle extends Model
         'fecha'               => 'date',
     ];
 
-    public function insumoSolicitado()
+    /* RELACIONES */
+    public function solicitud()
     {
         return $this->belongsTo(InsumoSolicitado::class, 'insumo_solicitado_id');
     }
@@ -30,5 +31,16 @@ class InsumoSolicitadoDetalle extends Model
     public function insumo()
     {
         return $this->belongsTo(Insumo::class, 'insumo_id');
+    }
+
+    /* ACCESSORS */
+    public function getPendienteAttribute(): float
+    {
+        return (float) ($this->cantidad_solicitada - $this->cantidad_entregada);
+    }
+
+    public function getEntregadoCompletoAttribute(): bool
+    {
+        return $this->cantidad_entregada >= $this->cantidad_solicitada;
     }
 }

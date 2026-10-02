@@ -24,9 +24,28 @@ class InsumoSolicitado extends Model
     ];
 
     protected $casts = [
+        'docente_autoriza'   => 'integer',
         'autorizado'         => 'boolean',
         'fecha_autorizacion' => 'datetime',
     ];
+
+    /* CONSTANTES DE ESTADO */
+    const ESTADO_PENDIENTE  = 'pendiente';
+    const ESTADO_AUTORIZADO = 'autorizado';
+    const ESTADO_ENTREGADO  = 'entregado';
+    const ESTADO_RECHAZADO  = 'rechazado';
+    const ESTADO_CANCELADO  = 'cancelado';
+
+    /* RELACIONES */
+    public function docente()
+    {
+        return $this->belongsTo(Usuario::class, 'docente_id');
+    }
+
+    public function estudiante()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
 
     public function insumoTratamiento()
     {
@@ -48,18 +67,24 @@ class InsumoSolicitado extends Model
         return $this->belongsTo(TratamientoRealizado::class, 'tratamiento_realizado_id');
     }
 
-    public function usuario()
-    {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
-    }
-
-    public function docente()
-    {
-        return $this->belongsTo(Usuario::class, 'docente_id');
-    }
-
     public function detalles()
     {
         return $this->hasMany(InsumoSolicitadoDetalle::class, 'insumo_solicitado_id');
+    }
+
+    /* ACCESSORS */
+    public function getPuedeAutorizarseAttribute(): bool
+    {
+        return $this->estado === self::ESTADO_PENDIENTE;
+    }
+
+    public function getPuedeEntregarseAttribute(): bool
+    {
+        return $this->estado === self::ESTADO_AUTORIZADO;
+    }
+
+    public function getPuedeRechazarseAttribute(): bool
+    {
+        return $this->estado === self::ESTADO_PENDIENTE;
     }
 }

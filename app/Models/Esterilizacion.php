@@ -23,24 +23,20 @@ class Esterilizacion extends Model
     ];
 
     protected $casts = [
-        'habilitada'    => 'boolean',
-        'fecha_entrega' => 'date',
-        'fecha_recojo'  => 'date',
+        'cantidad_sobres'   => 'integer',
+        'cantidad_paquetes' => 'integer',
+        'habilitada'        => 'boolean',
+        'fecha_entrega'     => 'date',
+        'fecha_recojo'      => 'date',
     ];
 
-    public function estudiante()
-    {
-        return $this->belongsTo(Usuario::class, 'estudiante_id');
-    }
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
 
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
-    }
-
-    public function usuario()
-    {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
     public function periodo()
@@ -48,8 +44,27 @@ class Esterilizacion extends Model
         return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
+    public function estudiante()
+    {
+        return $this->belongsTo(Usuario::class, 'estudiante_id');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
     public function autorizaciones()
     {
         return $this->hasMany(Autorizacion::class, 'esterilizacion_id');
+    }
+
+    /* ============================================================
+       ACCESSORS
+       ============================================================ */
+
+    public function getTotalPaquetesAttribute(): int
+    {
+        return (int) $this->cantidad_paquetes;
     }
 }

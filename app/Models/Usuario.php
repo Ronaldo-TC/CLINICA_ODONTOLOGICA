@@ -6,15 +6,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Usuario extends Authenticatable
 {
     use HasApiTokens, HasRoles, Notifiable;
 
-    /** Tabla real */
     protected $table = 'usuarios';
+    protected $primaryKey = 'id';
+    protected $guard_name = 'web'; // Para Spatie
 
-    /** Campos asignables */
     protected $fillable = [
         'ci',
         'nombre_usuario',
@@ -25,69 +26,63 @@ class Usuario extends Authenticatable
         'permitir_login',
         'multilogin',
         'contrasena',
-        'ip',
-        'ultimo_login',
-        'sesion',
-        'sesion_extra',
-        'ultimo_logout',
-        'ip_permitida',
         'info',
         'foto',
     ];
 
-    /** Campos ocultos */
     protected $hidden = [
         'contrasena',
         'sesion',
         'sesion_extra',
+        'remember_token',
     ];
 
-    /** Casts */
     protected function casts(): array
     {
         return [
-            'habilitado'       => 'boolean',
-            'permitir_login'   => 'boolean',
-            'multilogin'       => 'boolean',
-            'ultimo_login'     => 'datetime',
-            'ultimo_logout'    => 'datetime',
-            'contrasena'       => 'hashed',   // Laravel 10+
+            'habilitado' => 'boolean',
+            'permitir_login' => 'boolean',
+            'multilogin' => 'boolean',
+            'ultimo_login' => 'datetime',
+            'ultimo_logout' => 'datetime',
+            'contrasena' => 'hashed',
         ];
     }
 
-    /** ⚠️ Apunta a la columna correcta de password */
+    // Auth usa columna contrasena, no password
     public function getAuthPassword(): string
     {
         return $this->contrasena;
     }
 
-    /** ⚠️ Campo usado por el login */
-    public function getAuthIdentifierName(): string
+    // Accessor nuevo Laravel 10+
+    protected function initials(): Attribute
     {
-        return 'id';
+        return Attribute::make(
+            get: function () {
+                $parts = preg_split('/\s+/', trim($this->nombre_completo ?? ''));
+                if (empty($parts[0])) return 'US';
+                $first = mb_substr($parts[0], 0, 1);
+                $last = mb_substr($parts[count($parts) - 1] ?? '', 0, 1);
+                return mb_strtoupper($first . $last);
+            }
+        );
     }
 
-    /** ⚠️ Sanctum y Spatie necesitan el guard correcto */
-    protected string $guard_name = 'web';
-
-    /** Accessor útil para vistas */
-    public function getInitialsAttribute(): string
+    // Scopes útiles para tu clínica
+    public function scopeHabilitados($query)
     {
-        $parts = preg_split('/\s+/', trim($this->nombre_completo));
-        $first = mb_substr($parts[0] ?? '', 0, 1);
-        $last  = mb_substr($parts[count($parts) - 1] ?? '', 0, 1);
-
-        return mb_strtoupper($first . $last);
+        return $query->where('habilitado', true)->where('permitir_login', true);
     }
 
-    /** Relaciones útiles */
     public function especialidades()
     {
         return $this->belongsToMany(
-            \App\Models\Clinica::class,
+            Clinica::class, // o Especialidad::class si tienes ese modelo
             'especialidades',
             'usuario_id',
             'clinica_id'
-        )->withPivot(['habilitado', 'rotacion', 'responsable_admision', 'fecha_inicio']);
+        )->withPivot(['habilitado', 'rotacion', 'responsable_admision', 'fecha_inicio'])
+            ->withTimestamps();
     }
 }

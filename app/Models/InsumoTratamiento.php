@@ -19,4 +19,9 @@ class InsumoTratamiento extends Model
     {
         return $this->hasMany(Insumo::class, 'insumo_tratamiento_id');
     }
+
+    public function solicitados()
+    {
+        return $this->hasMany(InsumoSolicitado::class, 'insumo_tratamiento_id');
+    }
 }

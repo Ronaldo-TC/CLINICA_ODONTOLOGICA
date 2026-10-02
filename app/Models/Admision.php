@@ -45,9 +45,14 @@ class Admision extends Model
     ];
 
     protected $casts = [
+        'telefono'                     => 'integer',
         'consentimiento_datos'         => 'boolean',
         'consentimiento_investigacion' => 'boolean',
     ];
+
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
 
     public function paciente()
     {
@@ -74,9 +79,19 @@ class Admision extends Model
         return $this->belongsTo(Usuario::class, 'responsable_id');
     }
 
-    public function consentimientos()
+    public function clinicaEstudiante()
     {
-        return $this->hasMany(Consentimiento::class, 'admision_id');
+        return $this->belongsTo(Clinica::class, 'especialidad_estudiante');
+    }
+
+    public function clinicaResponsable()
+    {
+        return $this->belongsTo(Clinica::class, 'especialidad_responsable');
+    }
+
+    public function historiasClinicas()
+    {
+        return $this->hasMany(HistoriaClinica::class, 'admision_id');
     }
 
     public function remisiones()
@@ -84,8 +99,17 @@ class Admision extends Model
         return $this->hasMany(Remision::class, 'admision_id');
     }
 
-    public function historiasClinicas()
+    public function consentimientos()
     {
-        return $this->hasMany(HistoriaClinica::class, 'admision_id');
+        return $this->hasMany(Consentimiento::class, 'admision_id');
+    }
+
+    /* ============================================================
+       ACCESSORS
+       ============================================================ */
+
+    public function getPacienteNombreAttribute(): string
+    {
+        return $this->paciente?->nombre_completo ?? '—';
     }
 }

@@ -18,12 +18,16 @@ class Periodo extends Model
     ];
 
     protected $casts = [
-        'habilitado'   => 'boolean',
+        'gestion'      => 'integer',
+        'semestre'     => 'integer',
         'fecha_inicio' => 'date',
         'fecha_fin'    => 'date',
+        'habilitado'   => 'boolean',
     ];
 
-    // ─── Relaciones ───
+    /* ============================================================
+       RELACIONES
+       ============================================================ */
 
     public function admisiones()
     {
@@ -43,5 +47,21 @@ class Periodo extends Model
     public function esterilizaciones()
     {
         return $this->hasMany(Esterilizacion::class, 'periodo_id');
+    }
+
+    /* ============================================================
+       ACCESSORS
+       ============================================================ */
+
+    public function getNombreCompletoAttribute(): string
+    {
+        return "{$this->nombre} ({$this->gestion}-{$this->semestre})";
+    }
+
+    public function getEstaActivoAttribute(): bool
+    {
+        $hoy = now();
+        return $this->habilitado
+            && $hoy->between($this->fecha_inicio, $this->fecha_fin);
     }
 }

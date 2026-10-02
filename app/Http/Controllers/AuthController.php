@@ -2,533 +2,303 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\RedirectResponse;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Muestra el formulario de login o redirige si ya está autenticado.
-     */
-    public function showLogin(): View|RedirectResponse
+    /* ============================================================
+       MOSTRAR LOGIN
+       ============================================================ */
+    public function showLogin()
     {
-        if (session('user_id')) {
-            return $this->redirectToDashboard(session('user_role'));
+        // Si ya está autenticado por el guard web → dashboard
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
         }
 
         return view('auth.login');
     }
 
-    /**
-     * Procesa el inicio de sesión.
-     */
-    public function login(Request $request): RedirectResponse
+    /* ============================================================
+       LOGIN WEB (AJAX — devuelve JSON)
+       ============================================================ */
+    public function loginWeb(Request $request)
     {
-        $credentials = $request->validate([
-            'nombre_usuario' => ['required', 'string', 'max:20'],
-            'contrasena' => ['required', 'string'],
-        ], [
-            'nombre_usuario.required' => 'Ingresa tu usuario.',
-            'contrasena.required' => 'Ingresa tu contraseña.',
-        ]);
-
-        $user = DB::table('usuarios')
-            ->join('usuario_rol', 'usuario_rol.usuario_id', '=', 'usuarios.id')
-            ->join('roles', 'roles.id', '=', 'usuario_rol.rol_id')
-            ->where('usuarios.nombre_usuario', $credentials['nombre_usuario'])
-            ->where('usuarios.habilitado', true)
-            ->where('usuarios.permitir_login', true)
-            ->select('usuarios.*', 'roles.nombre as rol_nombre')
-            ->first();
-
-        $legacyPassword = $user && $this->isLegacyPasswordHash((string) $user->contrasena);
-
-        if (! $user || ! $this->passwordMatches($credentials['contrasena'], (string) $user->contrasena)) {
-            $this->registrarBitacora($user->id ?? null, $request->ip(), 'LOGIN_FALLIDO', 'Intento fallido de inicio de sesión');
-
-            return back()
-                ->withInput($request->only('nombre_usuario'))
-                ->withErrors(['nombre_usuario' => 'Usuario o contraseña incorrectos.']);
-        }
-
-        // Verificar IP permitida
-        if (! $this->ipEsPermitida($user->ip_permitida, $request->ip())) {
-            $this->registrarBitacora($user->id, $request->ip(), 'LOGIN_BLOQUEADO', 'IP no permitida');
-
-            return back()
-                ->withInput($request->only('nombre_usuario'))
-                ->withErrors(['nombre_usuario' => 'Tu IP no está autorizada para iniciar sesión.']);
-        }
-
-        // Regenerar sesión para prevenir fijación de sesión
-        $request->session()->regenerate();
-        $token = bin2hex(random_bytes(32));
-
-        // Guardar datos en sesión
-        $request->session()->put([
-            'user_id' => $user->id,
-            'user_username' => $user->nombre_usuario,
-            'user_name' => $user->nombre_completo,
-            'user_role' => $user->rol_nombre,
-            'user_foto' => $user->foto,
-            'user_ip' => $request->ip(),
-            'session_token' => $token,
-        ]);
-
-        DB::transaction(function () use ($user, $request, $credentials, $legacyPassword, $token): void {
-            if (! $user->multilogin) {
-                $this->cerrarSesionesAnteriores($user->id);
-            }
-
-            DB::table('sesiones')->insert([
-                'usuario_id' => $user->id,
-                'token' => $token,
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'inicio' => now(),
-                'activa' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+        try {
+            // 1. Validación
+            $request->validate([
+                'nombre_usuario' => 'required|string|max:50',
+                'contrasena'     => 'required|string',
             ]);
 
-            $updates = [
-                'ultimo_login' => now(),
-                'ip' => $request->ip(),
-                'sesion' => $request->session()->getId(),
-                'updated_at' => now(),
-            ];
+            // 2. Buscar usuario
+            $user = Usuario::where('nombre_usuario', $request->nombre_usuario)->first();
 
-            if ($legacyPassword) {
-                $updates['contrasena'] = Hash::make($credentials['contrasena']);
+            // 3. Verificar credenciales
+            if (! $user || ! Hash::check($request->contrasena, $user->contrasena)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario o contraseña incorrectos.',
+                    'errors'  => [
+                        'nombre_usuario' => ['Usuario o contraseña incorrectos.'],
+                    ],
+                ], 422);
             }
 
-            DB::table('usuarios')->where('id', $user->id)->update($updates);
-        });
+            // 4. Verificar que pueda loguearse
+            if (! $user->habilitado) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tu cuenta está deshabilitada.',
+                    'errors'  => [
+                        'nombre_usuario' => ['Tu cuenta está deshabilitada.'],
+                    ],
+                ], 422);
+            }
 
-        $this->registrarBitacora($user->id, $request->ip(), 'LOGIN', 'Inicio de sesión exitoso');
+            if (! $user->permitir_login) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permitido iniciar sesión.',
+                    'errors'  => [
+                        'nombre_usuario' => ['No tienes permitido iniciar sesión.'],
+                    ],
+                ], 422);
+            }
 
-        return $this->redirectToDashboard($user->rol_nombre);
-    }
-
-    /**
-     * Cierra la sesión del usuario.
-     */
-    public function logout(Request $request): RedirectResponse
-    {
-        $userId = session('user_id');
-        $sessionToken = $request->session()->get('session_token');
-
-        if ($userId) {
-            DB::transaction(function () use ($userId, $sessionToken): void {
+            // 5. Cerrar sesiones anteriores si NO tiene multilogin
+            if (! $user->multilogin) {
                 DB::table('sesiones')
-                    ->where('usuario_id', $userId)
-                    ->where('token', $sessionToken)
+                    ->where('usuario_id', $user->id)
                     ->where('activa', true)
                     ->update([
-                        'activa' => false,
-                        'fin' => now(),
+                        'activa'     => false,
+                        'fin'        => now(),
                         'updated_at' => now(),
                     ]);
-
-                $updates = ['ultimo_logout' => now(), 'updated_at' => now()];
-                if (! DB::table('sesiones')->where('usuario_id', $userId)->where('activa', true)->exists()) {
-                    $updates['sesion'] = '';
-                }
-
-                DB::table('usuarios')->where('id', $userId)->update($updates);
-            });
-
-            $this->registrarBitacora($userId, $request->ip(), 'LOGOUT', 'Cierre de sesión');
-        }
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('auth.login');
-    }
-
-    /**
-     * Muestra el perfil del usuario.
-     */
-    public function profile(): View|RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
-        }
-
-        // Estadísticas del usuario
-        $stats = [
-            'sesiones_activas' => DB::table('sesiones')
-                ->where('usuario_id', $user->id)
-                ->where('activa', true)
-                ->count(),
-            'ultimo_login' => $user->ultimo_login,
-            'total_sesiones' => DB::table('sesiones')
-                ->where('usuario_id', $user->id)
-                ->count(),
-        ];
-
-        return view('auth.profile', compact('user', 'stats'));
-    }
-
-    /**
-     * Actualiza el perfil del usuario.
-     */
-    public function updateProfile(Request $request): RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
-        }
-
-        $validated = $request->validate([
-            'ci' => ['required', 'string', 'max:50', Rule::unique('usuarios', 'ci')->ignore($user->id)],
-            'nombre_usuario' => ['required', 'string', 'max:20', Rule::unique('usuarios', 'nombre_usuario')->ignore($user->id)],
-            'nombre_completo' => ['required', 'string', 'max:200'],
-            'descripcion' => ['nullable', 'string', 'max:300'],
-            'ip_permitida' => ['nullable', 'string', 'max:300'],
-            'multilogin' => ['nullable', 'boolean'],
-            'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
-        ], [
-            'ci.required' => 'El CI es obligatorio.',
-            'ci.unique' => 'Ese CI ya está registrado.',
-            'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
-            'nombre_usuario.unique' => 'Ese nombre de usuario ya está en uso.',
-            'nombre_completo.required' => 'El nombre completo es obligatorio.',
-            'foto.image' => 'El archivo debe ser una imagen.',
-            'foto.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg, gif, webp.',
-            'foto.max' => 'La imagen no debe superar los 2MB.',
-        ]);
-
-        // Procesar foto de perfil
-        $fotoPath = $user->foto;
-        if ($request->hasFile('foto')) {
-            // Eliminar foto anterior si existe
-            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
-                Storage::disk('public')->delete($user->foto);
             }
 
-            // Guardar nueva foto
-            $file = $request->file('foto');
-            $filename = 'avatar_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
-            $fotoPath = $file->storeAs('avatars', $filename, 'public');
+            // 6. Crear token de sesión
+            $token = Str::random(64);
+
+            DB::table('sesiones')->insert([
+                'usuario_id'    => $user->id,
+                'token'         => $token,
+                'ip'            => $request->ip(),
+                'user_agent'    => (string) $request->userAgent(),
+                'inicio'        => now(),
+                'ultimo_acceso' => now(),
+                'activa'        => true,
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
+
+            // 7. Guardar en sesión de Laravel (lo que lee EnsureUserSession)
+            $request->session()->put('user_id', $user->id);
+            $request->session()->put('session_token', $token);
+            $request->session()->regenerate();
+
+            // 8. ⚠️ CRÍTICO: Loguear en el guard web (Spatie lo necesita)
+            Auth::guard('web')->login($user);
+
+            // 9. Actualizar último login
+            //    (NO se guarda 'sesion' porque la columna es varchar(50) y el token
+            //     es de 64 chars — el token vive únicamente en la tabla `sesiones`)
+            $user->forceFill([
+                'ultimo_login' => now(),
+                'ip'           => $request->ip(),
+            ])->save();
+
+            // 10. Respuesta JSON
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Bienvenido, ' . $user->nombre_completo,
+                'redirect' => route('dashboard'),
+                'user'     => [
+                    'id'              => $user->id,
+                    'ci'              => $user->ci,
+                    'nombre_completo' => $user->nombre_completo,
+                    'nombre_usuario'  => $user->nombre_usuario,
+                    'foto'            => $user->foto,
+                    'roles'           => $user->getRoleNames(),
+                    'permisos'        => $user->getAllPermissions()->pluck('name'),
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error del servidor. Intenta de nuevo.',
+            ], 500);
         }
+    }
 
-        DB::table('usuarios')->where('id', $user->id)->update([
-            'ci' => $validated['ci'],
-            'nombre_usuario' => $validated['nombre_usuario'],
-            'nombre_completo' => $validated['nombre_completo'],
-            'descripcion' => $validated['descripcion'] ?? null,
-            'ip_permitida' => $validated['ip_permitida'] ?? null,
-            'multilogin' => $request->boolean('multilogin'),
-            'foto' => $fotoPath,
-            'updated_at' => now(),
-        ]);
+    /* ============================================================
+       LOGOUT WEB (AJAX + fallback HTML)
+       ============================================================ */
+    public function logoutWeb(Request $request)
+    {
+        $userId = $request->session()->get('user_id');
+        $token  = $request->session()->get('session_token');
 
-        if (! $request->boolean('multilogin')) {
+        // 1. Cerrar la sesión en la tabla
+        if ($userId && $token) {
             DB::table('sesiones')
-                ->where('usuario_id', $user->id)
+                ->where('usuario_id', $userId)
+                ->where('token', $token)
                 ->where('activa', true)
-                ->where('token', '!=', $request->session()->get('session_token'))
                 ->update([
-                    'activa' => false,
-                    'fin' => now(),
+                    'activa'     => false,
+                    'fin'        => now(),
                     'updated_at' => now(),
                 ]);
         }
 
-        // Actualizar sesión
-        session()->put([
-            'user_username' => $validated['nombre_usuario'],
-            'user_name' => $validated['nombre_completo'],
-            'user_foto' => $fotoPath,
+        // 2. Actualizar ultimo_logout
+        if ($userId) {
+            Usuario::where('id', $userId)->update([
+                'ultimo_logout' => now(),
+            ]);
+        }
+
+        // 3. Logout del guard
+        Auth::guard('web')->logout();
+
+        // 4. Invalidar sesión
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // 5. Respuesta según el tipo de request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Sesión cerrada correctamente.',
+                'redirect' => route('auth.login'),
+            ]);
+        }
+
+        return redirect()->route('auth.login')
+            ->with('success', 'Sesión cerrada correctamente.');
+    }
+
+    /* ============================================================
+       PERFIL
+       ============================================================ */
+    public function perfil()
+    {
+        $user = Auth::user();
+
+        return view('auth.perfil', compact('user'));
+    }
+
+    /* ============================================================
+       CONFIGURACIÓN
+       ============================================================ */
+    public function configuracion()
+    {
+        $user = Auth::user();
+
+        return view('auth.configuracion', compact('user'));
+    }
+
+    /* ============================================================
+       API — LOGIN (Sanctum)
+       ============================================================ */
+    public function login(Request $request)
+    {
+        $request->validate([
+            'nombre_usuario' => 'required|string|max:50',
+            'contrasena'     => 'required|string',
         ]);
 
-        $this->registrarBitacora($user->id, $request->ip(), 'PERFIL_ACTUALIZADO', 'Actualización de perfil');
+        $user = Usuario::where('nombre_usuario', $request->nombre_usuario)->first();
 
-        return redirect()->route('auth.profile')->with('status', 'Tu perfil se actualizó correctamente.');
-    }
-
-    /**
-     * Elimina la foto de perfil del usuario.
-     */
-    public function deleteAvatar(Request $request): RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
+        if (! $user || ! Hash::check($request->contrasena, $user->contrasena)) {
+            throw ValidationException::withMessages([
+                'nombre_usuario' => ['Credenciales incorrectas.'],
+            ]);
         }
 
-        if ($user->foto && Storage::disk('public')->exists($user->foto)) {
-            Storage::disk('public')->delete($user->foto);
+        if (! $user->habilitado || ! $user->permitir_login) {
+            return response()->json(['message' => 'Usuario deshabilitado'], 403);
         }
 
-        DB::table('usuarios')->where('id', $user->id)->update([
-            'foto' => null,
-            'updated_at' => now(),
-        ]);
-
-        session()->forget('user_foto');
-
-        $this->registrarBitacora($user->id, $request->ip(), 'AVATAR_ELIMINADO', 'Foto de perfil eliminada');
-
-        return redirect()->route('auth.profile')->with('status', 'Foto de perfil eliminada correctamente.');
-    }
-
-    /**
-     * Muestra la configuración de seguridad.
-     */
-    public function settings(): View|RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
+        if (! $user->multilogin) {
+            $user->tokens()->delete();
         }
 
-        // Obtener sesiones activas
-        $sesionesActivas = DB::table('sesiones')
-            ->where('usuario_id', $user->id)
-            ->where('activa', true)
-            ->orderBy('inicio', 'desc')
-            ->get();
+        $user->forceFill([
+            'ultimo_login' => now(),
+            'ip'           => $request->ip(),
+        ])->save();
 
-        // Obtener bitácora reciente
-        $bitacora = DB::table('bitacoras')
-            ->where('usuario_id', $user->id)
-            ->orderBy('fecha', 'desc')
-            ->limit(10)
-            ->get();
+        $token = $user->createToken('auth-token')->plainTextToken;
 
-        return view('auth.settings', compact('user', 'sesionesActivas', 'bitacora'));
-    }
-
-    /**
-     * Actualiza la contraseña del usuario.
-     */
-    public function updatePassword(Request $request): RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
-        }
-
-        $validated = $request->validate([
-            'current_password' => ['required', 'string'],
-            'new_password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+        return response()->json([
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => [
+                'id'              => $user->id,
+                'ci'              => $user->ci,
+                'nombre_completo' => $user->nombre_completo,
+                'nombre_usuario'  => $user->nombre_usuario,
+                'foto'            => $user->foto,
+                'roles'           => $user->getRoleNames(),
+                'permisos'        => $user->getAllPermissions()->pluck('name'),
             ],
-        ], [
-            'current_password.required' => 'Ingresa tu contraseña actual.',
-            'new_password.required' => 'Ingresa una nueva contraseña.',
-            'new_password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
-            'new_password.confirmed' => 'La confirmación de contraseña no coincide.',
-            'new_password.regex' => 'La contraseña debe contener al menos una mayúscula, una minúscula y un número.',
-        ]);
-
-        if (! $this->passwordMatches($validated['current_password'], (string) $user->contrasena)) {
-            return back()->withErrors([
-                'current_password' => 'La contraseña actual no es correcta.',
-            ]);
-        }
-
-        DB::table('usuarios')->where('id', $user->id)->update([
-            'contrasena' => Hash::make($validated['new_password']),
-            'updated_at' => now(),
-        ]);
-
-        $this->registrarBitacora($user->id, $request->ip(), 'PASSWORD_CAMBIADO', 'Contraseña actualizada');
-
-        $request->session()->regenerate();
-
-        return redirect()->route('auth.settings')->with('status', 'Tu contraseña se cambió correctamente.');
-    }
-
-    /**
-     * Cierra todas las sesiones excepto la actual.
-     */
-    public function closeOtherSessions(Request $request): RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
-        }
-
-        $currentSessionToken = $request->session()->get('session_token');
-
-        DB::table('sesiones')
-            ->where('usuario_id', $user->id)
-            ->where('activa', true)
-            ->where('token', '!=', $currentSessionToken)
-            ->update([
-                'activa' => false,
-                'fin' => now(),
-                'updated_at' => now(),
-            ]);
-
-        $this->registrarBitacora($user->id, $request->ip(), 'SESIONES_CERRADAS', 'Otras sesiones cerradas');
-
-        return redirect()->route('auth.settings')->with('status', 'Se cerraron las otras sesiones correctamente.');
-    }
-
-    /**
-     * Cierra una sesión específica.
-     */
-    public function closeSession(Request $request, int $sessionId): RedirectResponse
-    {
-        $user = $this->currentUser();
-
-        if (! $user) {
-            return redirect()->route('auth.login');
-        }
-
-        DB::table('sesiones')
-            ->where('id', $sessionId)
-            ->where('usuario_id', $user->id)
-            ->where('activa', true)
-            ->update([
-                'activa' => false,
-                'fin' => now(),
-                'updated_at' => now(),
-            ]);
-
-        return redirect()->route('auth.settings')->with('status', 'Sesión cerrada correctamente.');
-    }
-
-    /**
-     * Obtiene el usuario actual.
-     */
-    private function currentUser(): ?object
-    {
-        $userId = session('user_id');
-
-        if (! $userId) {
-            return null;
-        }
-
-        return DB::table('usuarios')->where('id', $userId)->first();
-    }
-
-    /**
-     * Verifica si la contraseña coincide.
-     */
-    private function passwordMatches(string $password, string $storedPassword): bool
-    {
-        if ($this->isLegacyPasswordHash($storedPassword)) {
-            return hash_equals($storedPassword, hash('sha256', $password));
-        }
-
-        return Hash::check($password, $storedPassword);
-    }
-
-    /**
-     * Verifica si es un hash de contraseña legacy (SHA256).
-     */
-    private function isLegacyPasswordHash(string $storedPassword): bool
-    {
-        return preg_match('/\A[a-f0-9]{64}\z/i', $storedPassword) === 1;
-    }
-
-    /**
-     * Verifica si la IP está permitida.
-     */
-    private function ipEsPermitida(?string $ipPermitida, string $ipActual): bool
-    {
-        if (empty($ipPermitida)) {
-            return true;
-        }
-
-        // Soportar múltiples IPs separadas por coma
-        $ips = array_map('trim', explode(',', $ipPermitida));
-
-        foreach ($ips as $ip) {
-            if ($ip === $ipActual) {
-                return true;
-            }
-
-            // Soportar rangos CIDR
-            if (str_contains($ip, '/') && $this->ipEnRango($ipActual, $ip)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Verifica si una IP está en un rango CIDR.
-     */
-    private function ipEnRango(string $ip, string $cidr): bool
-    {
-        [$subnet, $mask] = explode('/', $cidr);
-        $mask = (int) $mask;
-
-        $ipLong = ip2long($ip);
-        $subnetLong = ip2long($subnet);
-        $maskLong = -1 << (32 - $mask);
-
-        return ($ipLong & $maskLong) === ($subnetLong & $maskLong);
-    }
-
-    /**
-     * Cierra sesiones anteriores del usuario.
-     */
-    private function cerrarSesionesAnteriores(int $userId): void
-    {
-        DB::table('sesiones')
-            ->where('usuario_id', $userId)
-            ->where('activa', true)
-            ->update([
-                'activa' => false,
-                'fin' => now(),
-                'updated_at' => now(),
-            ]);
-    }
-
-    /**
-     * Registra una entrada en la bitácora.
-     */
-    private function registrarBitacora(?int $userId, string $ip, string $tipo, string $datos): void
-    {
-        DB::table('bitacoras')->insert([
-            'usuario_id' => $userId,
-            'ip' => $ip,
-            'fecha' => now(),
-            'tipo' => $tipo,
-            'datos' => $datos,
-            'estado' => 'OK',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 
-    /**
-     * Redirige al dashboard correspondiente según el rol.
-     */
-    protected function redirectToDashboard(?string $role): RedirectResponse
+    /* ============================================================
+       API — ME
+       ============================================================ */
+    public function me(Request $request)
     {
-        $route = $role ? "{$role}.dashboard" : null;
+        $user = $request->user()->load('roles', 'permissions');
 
-        if ($route && Route::has($route)) {
-            return redirect()->route($route);
-        }
+        return response()->json([
+            'user' => [
+                'id'              => $user->id,
+                'nombre_completo' => $user->nombre_completo,
+                'nombre_usuario'  => $user->nombre_usuario,
+                'foto'            => $user->foto,
+                'roles'           => $user->getRoleNames(),
+                'permisos'        => $user->getAllPermissions()->pluck('name'),
+            ],
+        ]);
+    }
 
-        return redirect()->route('auth.login');
+    /* ============================================================
+       API — LOGOUT
+       ============================================================ */
+    public function logout(Request $request)
+    {
+        $request->user()->forceFill(['ultimo_logout' => now()])->save();
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Sesión cerrada']);
+    }
+
+    /* ============================================================
+       API — LOGOUT ALL
+       ============================================================ */
+    public function logoutAll(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Todas las sesiones cerradas']);
     }
 }
