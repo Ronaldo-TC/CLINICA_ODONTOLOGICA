@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $registros->total() }} estudios radiológicos</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="radiologia.reporte" />
         @can('radiologias.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaRadiologia">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

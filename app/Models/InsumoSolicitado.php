@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsumoSolicitado extends Model
 {
     protected $table = 'insumos_solicitados';
 
     protected $fillable = [
+        'historia_clinica_id', 'tratamiento_id', 'aprobado_por', 'fecha_aprobacion',
         'pieza',
         'insumos',
         'docente_autoriza',
@@ -18,56 +22,119 @@ class InsumoSolicitado extends Model
         'clinica_id',
         'remision_id',
         'tratamiento_realizado_id',
+        'sesion_atencion_id',
         'usuario_id',
         'estado',
         'fecha_autorizacion',
+        'fecha_solicitud',
+        'observaciones',
+        'rechazado_por',
+        'fecha_rechazo',
+        'motivo_rechazo',
     ];
 
     protected $casts = [
-        'docente_autoriza'   => 'integer',
-        'autorizado'         => 'boolean',
+        'fecha_aprobacion' => 'datetime',
+        'docente_autoriza' => 'integer',
+        'autorizado' => 'boolean',
         'fecha_autorizacion' => 'datetime',
+        'fecha_solicitud' => 'date',
+        'fecha_rechazo' => 'datetime',
     ];
 
     /* CONSTANTES DE ESTADO */
-    const ESTADO_PENDIENTE  = 'pendiente';
+    const ESTADO_PENDIENTE = 'pendiente';
+
     const ESTADO_AUTORIZADO = 'autorizado';
-    const ESTADO_ENTREGADO  = 'entregado';
-    const ESTADO_RECHAZADO  = 'rechazado';
-    const ESTADO_CANCELADO  = 'cancelado';
+
+    const ESTADO_APROBADO = 'aprobado';
+
+    const ESTADO_PARCIAL = 'parcial';
+
+    const ESTADO_ENTREGADO = 'entregado';
+
+    const ESTADO_RECHAZADO = 'rechazado';
+
+    const ESTADO_CANCELADO = 'cancelado';
 
     /* RELACIONES */
-    public function docente()
+    public function historiaClinica(): BelongsTo
+    {
+        return $this->belongsTo(HistoriaClinica::class);
+    }
+
+    public function tratamiento(): BelongsTo
+    {
+        return $this->belongsTo(Tratamiento::class);
+    }
+
+    public function encargado(): BelongsTo
+    {
+        return $this->belongsTo(Usuario::class, 'aprobado_por');
+    }
+
+    public function docente(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'docente_id');
     }
 
-    public function estudiante()
+    public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
-    public function insumoTratamiento()
+    public function insumoTratamiento(): BelongsTo
     {
         return $this->belongsTo(InsumoTratamiento::class, 'insumo_tratamiento_id');
     }
 
-    public function clinica()
+    public function clinica(): BelongsTo
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
     }
 
-    public function remision()
+    public function remision(): BelongsTo
     {
         return $this->belongsTo(Remision::class, 'remision_id');
     }
 
-    public function tratamientoRealizado()
+    public function tratamientoRealizado(): BelongsTo
     {
         return $this->belongsTo(TratamientoRealizado::class, 'tratamiento_realizado_id');
     }
 
-    public function detalles()
+    public function sesionAtencion(): BelongsTo
+    {
+        return $this->belongsTo(SesionAtencion::class);
+    }
+
+    public function entregas(): HasMany
+    {
+        return $this->hasMany(InsumoEntrega::class, 'insumo_solicitado_id');
+    }
+
+    public function consumos(): HasMany
+    {
+        return $this->hasMany(InsumoTratamientoUsado::class, 'insumo_solicitado_id');
+    }
+
+    public function scopeVisibleTo(Builder $query, Usuario $usuario): Builder
+    {
+        if ($usuario->hasAnyRole(['admin', 'subadmin', 'insumos'])) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $scope) use ($usuario): void {
+            $scope->where('usuario_id', $usuario->id);
+            if ($usuario->hasAnyRole(['docente', 'jefe-catedra'])) {
+                $scope->orWhereHas('sesionAtencion', fn (Builder $sesion) => $sesion->where('docente_id', $usuario->id))
+                    ->orWhereHas('historiaClinica', fn (Builder $historia) => $historia->where('docente_id', $usuario->id))
+                    ->orWhereHas('tratamientoRealizado.historiaClinica', fn (Builder $historia) => $historia->where('docente_id', $usuario->id));
+            }
+        });
+    }
+
+    public function detalles(): HasMany
     {
         return $this->hasMany(InsumoSolicitadoDetalle::class, 'insumo_solicitado_id');
     }
@@ -80,11 +147,11 @@ class InsumoSolicitado extends Model
 
     public function getPuedeEntregarseAttribute(): bool
     {
-        return $this->estado === self::ESTADO_AUTORIZADO;
+        return in_array($this->estado, [self::ESTADO_AUTORIZADO, self::ESTADO_APROBADO, self::ESTADO_PARCIAL], true);
     }
 
     public function getPuedeRechazarseAttribute(): bool
     {
-        return $this->estado === self::ESTADO_PENDIENTE;
+        return in_array($this->estado, [self::ESTADO_PENDIENTE, self::ESTADO_AUTORIZADO, self::ESTADO_APROBADO], true);
     }
 }

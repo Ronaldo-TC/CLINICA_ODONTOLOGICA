@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NotificacionResource;
 use App\Models\Notificacion;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
@@ -38,10 +39,10 @@ class NotificacionController extends Controller
             ->withQueryString();
 
         return view('notificaciones.index', [
-            'registros'      => $notificaciones,
-            'items'          => $notificaciones,
-            'filtro'         => $filtro,
-            'totalNoLeidas'  => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
+            'registros' => $notificaciones,
+            'items' => $notificaciones,
+            'filtro' => $filtro,
+            'totalNoLeidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
         ]);
     }
 
@@ -67,22 +68,22 @@ class NotificacionController extends Controller
             ->limit(max(1, min($limite, 20)))
             ->get()
             ->map(fn (Notificacion $n) => [
-                'id'       => $n->id,
-                'tipo'     => $n->tipo,
-                'titulo'   => $n->titulo,
-                'mensaje'  => $n->mensaje,
-                'url'      => $n->url,
-                'leida'    => $n->leida,
-                'tono'     => $n->tono,
-                'icono'    => $n->icono,
-                'fecha'    => $n->created_at?->format('d/m/Y H:i'),
-                'hace'     => $n->tiempo_relativo,
+                'id' => $n->id,
+                'tipo' => $n->tipo,
+                'titulo' => $n->titulo,
+                'mensaje' => $n->mensaje,
+                'url' => $n->url,
+                'leida' => $n->leida,
+                'tono' => $n->tono,
+                'icono' => $n->icono,
+                'fecha' => $n->created_at?->format('d/m/Y H:i'),
+                'hace' => $n->tiempo_relativo,
             ]);
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'no_leidas' => $noLeidas,
-            'items'    => $items,
+            'items' => $items,
         ]);
     }
 
@@ -109,8 +110,8 @@ class NotificacionController extends Controller
         $notificacion->marcarLeida();
 
         return response()->json([
-            'success'   => true,
-            'url'       => $notificacion->url,
+            'success' => true,
+            'url' => $notificacion->url,
             'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
         ]);
     }
@@ -130,13 +131,13 @@ class NotificacionController extends Controller
             ->delUsuario($usuario->id)
             ->noLeidas()
             ->update([
-                'leida'         => true,
+                'leida' => true,
                 'fecha_lectura' => now(),
             ]);
 
         return response()->json([
-            'success'   => true,
-            'message'   => $actualizadas > 0
+            'success' => true,
+            'message' => $actualizadas > 0
                 ? "Se marcaron {$actualizadas} notificación(es) como leídas."
                 : 'No había notificaciones pendientes.',
             'no_leidas' => 0,
@@ -165,8 +166,8 @@ class NotificacionController extends Controller
         $notificacion->delete();
 
         return response()->json([
-            'success'   => true,
-            'message'   => 'Notificación eliminada.',
+            'success' => true,
+            'message' => 'Notificación eliminada.',
             'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
         ]);
     }
@@ -174,5 +175,44 @@ class NotificacionController extends Controller
     private function usuarioActual(): ?Usuario
     {
         return auth()->user() ?? Usuario::find(session('user_id'));
+    }
+
+    public function indexApi(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+        abort_unless($usuario !== null, 401, 'No autenticado.');
+
+        $paginador = Notificacion::query()
+            ->delUsuario($usuario->id)
+            ->when($request->boolean('no_leidas'), fn ($q) => $q->noLeidas())
+            ->orderByDesc('created_at')
+            ->paginate($this->porPaginaApi($request));
+
+        return response()->json([
+            'success' => true,
+            'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
+            'data' => NotificacionResource::collection($paginador->items()),
+            'paginacion' => $this->paginacionApi($paginador),
+        ]);
+    }
+
+    public function leerApi(Request $request, int $id): JsonResponse
+    {
+        $usuario = $request->user();
+        abort_unless($usuario !== null, 401, 'No autenticado.');
+
+        $notificacion = Notificacion::query()->delUsuario($usuario->id)->find($id);
+
+        if (! $notificacion) {
+            return response()->json(['success' => false, 'message' => 'Notificación no encontrada.'], 404);
+        }
+
+        $notificacion->marcarLeida();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notificación marcada como leída.',
+            'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
+        ]);
     }
 }

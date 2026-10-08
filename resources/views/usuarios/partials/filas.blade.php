@@ -13,8 +13,18 @@
 
     <td>
         <div style="display:flex;align-items:center;gap:10px;">
-            <div class="avatar" style="width:32px;height:32px;font-size:12px;">
-                {{ strtoupper(mb_substr($usuario->nombre_completo, 0, 2)) }}
+            <div class="user-avatar-wrap">
+                <span class="avatar" aria-hidden="true" style="width:32px;height:32px;font-size:12px;">
+                    {{ $usuario->initials }}
+                </span>
+                @if ($usuario->foto)
+                <img class="avatar"
+                    src="{{ asset('storage/' . $usuario->foto) }}"
+                    alt=""
+                    loading="lazy"
+                    style="width:32px;height:32px;"
+                    onerror="this.remove();">
+                @endif
             </div>
             <span>{{ $usuario->nombre_completo }}</span>
         </div>

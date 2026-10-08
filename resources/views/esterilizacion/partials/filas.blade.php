@@ -46,7 +46,7 @@
     </td>
 
     <td>
-        <div class="actions">
+        <div class="actions"><a class="btn btn-sm btn-secondary" href="{{ route('esterilizacion.control', $est->id) }}">Firma, entrega y recojo</a>
             @can('esterilizaciones.editar')
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $est->id }}">

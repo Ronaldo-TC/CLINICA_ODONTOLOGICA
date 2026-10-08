@@ -2,13 +2,22 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Models\HistoriaClinica;
+use App\Models\Periodo;
+use App\Models\Remision;
 use App\Models\Usuario;
+use App\Services\ReporteModulo;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * HasCrudAjax
@@ -28,10 +37,19 @@ use Illuminate\Validation\ValidationException;
  * @property string $resourceName
  * @property string $pluralName
  * @property string $permissionPrefix
- * @property int    $perPage
+ * @property int $perPage
  */
 trait HasCrudAjax
 {
+    public function reporte(Request $request, ReporteModulo $reporte): Response
+    {
+        $this->authorizeAction('ver');
+
+        $reporte->validarFiltros($request);
+
+        return $reporte->generar($this->buildTablaQuery($request), $this->viewPrefix, $request);
+    }
+
     /* ============================================================
        ACCIONES GENÉRICAS
        ============================================================ */
@@ -51,7 +69,7 @@ trait HasCrudAjax
         $viewData = array_merge(
             [
                 'registros' => $registros,
-                'items'     => $registros,   // alias por comodidad
+                'items' => $registros,   // alias por comodidad
             ],
             $this->extraIndexData($request)
         );
@@ -72,12 +90,12 @@ trait HasCrudAjax
             ->withQueryString();
 
         return response()->json([
-            'filas'      => view("{$this->viewPrefix}.partials.filas", [
+            'filas' => view("{$this->viewPrefix}.partials.filas", [
                 'registros' => $registros,
-                'items'     => $registros,
+                'items' => $registros,
             ])->render(),
             'paginacion' => $registros->links()->toHtml(),
-            'total'      => $registros->total(),
+            'total' => $registros->total(),
         ]);
     }
 
@@ -93,10 +111,10 @@ trait HasCrudAjax
 
         return response()->json(array_merge(
             [
-                'success'    => true,
+                'success' => true,
                 'es_edicion' => true,
-                'registro'   => $model,
-                'id'         => $model->id,
+                'registro' => $model,
+                'id' => $model->id,
             ],
             $this->extraDatosData($model)
         ));
@@ -113,7 +131,7 @@ trait HasCrudAjax
 
         if ($this->esAjax()) {
             return response()->json([
-                'success'  => true,
+                'success' => true,
                 'registro' => $model,
             ]);
         }
@@ -130,30 +148,36 @@ trait HasCrudAjax
     public function store(Request $request): JsonResponse
     {
         $this->authorizeAction('crear');
+        $transactionLevel = DB::transactionLevel();
 
         try {
             $data = $this->validateRequest($request, null);
 
             DB::beginTransaction();
 
-            $data  = $this->beforeStore($data);
+            $data = $this->beforeStore($data);
             $model = $this->modelClass::create($data);
             $this->afterStore($model);
 
             DB::commit();
 
             return response()->json([
-                'success'  => true,
-                'message'  => "{$this->resourceName} creado correctamente.",
-                'id'       => $model->id,
+                'success' => true,
+                'message' => "{$this->resourceName} creado correctamente.",
+                'id' => $model->id,
                 'registro' => $model->fresh(),
             ], 201);
         } catch (ValidationException $e) {
-            DB::rollBack();
+            DB::rollBack($transactionLevel);
+
             return $this->errorValidacion($e);
         } catch (\Throwable $e) {
-            DB::rollBack();
+            DB::rollBack($transactionLevel);
+            if ($e instanceof HttpExceptionInterface) {
+                throw $e;
+            }
             report($e);
+
             return $this->errorServidor($e);
         }
     }
@@ -164,10 +188,11 @@ trait HasCrudAjax
     public function update(Request $request, $id): JsonResponse
     {
         $this->authorizeAction('editar');
+        $model = $this->findOrFail($id);
+        $transactionLevel = DB::transactionLevel();
 
         try {
-            $model = $this->findOrFail($id);
-            $data  = $this->validateRequest($request, $model->id);
+            $data = $this->validateRequest($request, $model->id);
 
             DB::beginTransaction();
 
@@ -178,17 +203,22 @@ trait HasCrudAjax
             DB::commit();
 
             return response()->json([
-                'success'  => true,
-                'message'  => "{$this->resourceName} actualizado correctamente.",
-                'id'       => $model->id,
+                'success' => true,
+                'message' => "{$this->resourceName} actualizado correctamente.",
+                'id' => $model->id,
                 'registro' => $model->fresh(),
             ]);
         } catch (ValidationException $e) {
-            DB::rollBack();
+            DB::rollBack($transactionLevel);
+
             return $this->errorValidacion($e);
         } catch (\Throwable $e) {
-            DB::rollBack();
+            DB::rollBack($transactionLevel);
+            if ($e instanceof HttpExceptionInterface) {
+                throw $e;
+            }
             report($e);
+
             return $this->errorServidor($e);
         }
     }
@@ -199,10 +229,10 @@ trait HasCrudAjax
     public function destroy(Request $request, $id): JsonResponse
     {
         $this->authorizeAction('eliminar');
+        $model = $this->findOrFail($id);
+        $transactionLevel = DB::transactionLevel();
 
         try {
-            $model = $this->findOrFail($id);
-
             $puede = $this->canDestroy($model);
             if (is_array($puede) && $puede[0] === false) {
                 return response()->json([
@@ -228,8 +258,12 @@ trait HasCrudAjax
                 'message' => "{$this->resourceName} eliminado correctamente.",
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
+            DB::rollBack($transactionLevel);
+            if ($e instanceof HttpExceptionInterface) {
+                throw $e;
+            }
             report($e);
+
             return $this->errorServidor($e);
         }
     }
@@ -262,17 +296,23 @@ trait HasCrudAjax
     {
         return $data;
     }
+
     protected function afterStore(Model $model): void {}
+
     protected function beforeUpdate(Model $model, array $data): array
     {
         return $data;
     }
+
     protected function afterUpdate(Model $model): void {}
+
     protected function beforeDestroy(Model $model): bool
     {
         return true;
     }
+
     protected function afterDestroy(Model $model): void {}
+
     protected function canDestroy(Model $model): array
     {
         return [true, ''];
@@ -282,10 +322,12 @@ trait HasCrudAjax
     {
         return [];
     }
+
     protected function extraDatosData(Model $model): array
     {
         return [];
     }
+
     protected function extraShowData(Model $model): array
     {
         return [];
@@ -310,7 +352,7 @@ trait HasCrudAjax
         $permiso = "{$this->permissionPrefix}.{$accion}";
 
         abort_unless(
-            $user?->can($permiso) || $user?->hasRole('admin'),
+            $user?->can($permiso) || $user?->can("{$this->permissionPrefix}.gestionar") || $user?->hasRole('admin'),
             403,
             "No tienes permiso {$permiso}"
         );
@@ -352,7 +394,7 @@ trait HasCrudAjax
         return response()->json([
             'success' => false,
             'message' => 'Revisa los campos del formulario.',
-            'errors'  => $e->errors(),
+            'errors' => $e->errors(),
         ], 422);
     }
 
@@ -365,7 +407,43 @@ trait HasCrudAjax
             'success' => false,
             'message' => app()->environment('production')
                 ? 'Ocurrió un error al procesar la solicitud.'
-                : 'Error: ' . $e->getMessage(),
+                : 'Error: '.$e->getMessage(),
         ], 500);
+    }
+
+    protected function respuestaListadoEstudiante(Request $request, string $nombreVista, array $datos): View|JsonResponse
+    {
+        $vista = view($nombreVista, $datos);
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'tabla' => $vista->fragment('tabla-estudiante'), 'total' => $datos['registros']->total()])
+            : $vista;
+    }
+
+    protected function datosListadoEstudiante(Request $request, Builder $query): array
+    {
+        $filtros = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:255'],
+            'clinica_id' => ['nullable', 'integer'],
+            'periodo_id' => ['nullable', 'integer'],
+            'estado' => ['nullable', Rule::in(['revision', 'abierta', 'pendiente', 'asignada', 'autorizada', ...['cerrada', 'finalizada', 'culminada', 'completada', 'cancelada', 'completado', 'culminado', 'cancelado']])],
+        ]);
+        if ($buscar = trim($filtros['buscar'] ?? '')) {
+            $query->whereHas('paciente', function (Builder $paciente) use ($buscar): void {
+                $paciente->where('nombre', 'like', "%{$buscar}%")->orWhere('apellido_paterno', 'like', "%{$buscar}%")
+                    ->orWhere('apellido_materno', 'like', "%{$buscar}%")->orWhere('ci', 'like', "%{$buscar}%");
+            });
+        }
+        foreach (['clinica_id', 'periodo_id', 'estado'] as $campo) {
+            if ($request->filled($campo) && ($campo !== 'clinica_id' || $query->getModel() instanceof HistoriaClinica || $query->getModel() instanceof Remision)) {
+                $query->where($campo, $filtros[$campo]);
+            }
+        }
+
+        return [
+            'registros' => $query->orderByDesc('id')->paginate(15)->withQueryString(),
+            'clinicas' => $request->user()->especialidades()->wherePivot('habilitado', true)->orderBy('especialidad')->get(),
+            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(),
+        ];
     }
 }

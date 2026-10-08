@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $registros->total() }} registros de esterilización</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="esterilizacion.reporte" />
         @can('esterilizaciones.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaEsterilizacion">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

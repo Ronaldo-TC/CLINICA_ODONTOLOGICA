@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Models\Usuario;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
@@ -16,12 +20,17 @@ class UsuarioController extends Controller
     /* ============================================================
        CONFIGURACIÓN DEL TRAIT
        ============================================================ */
-    protected string $modelClass       = Usuario::class;
-    protected string $viewPrefix       = 'usuarios';
-    protected string $resourceName     = 'Usuario';
-    protected string $pluralName       = 'Usuarios';
+    protected string $modelClass = Usuario::class;
+
+    protected string $viewPrefix = 'usuarios';
+
+    protected string $resourceName = 'Usuario';
+
+    protected string $pluralName = 'Usuarios';
+
     protected string $permissionPrefix = 'usuarios';
-    protected int    $perPage          = 15;
+
+    protected int $perPage = 15;
 
     /* ============================================================
        QUERIES
@@ -45,7 +54,7 @@ class UsuarioController extends Controller
         }
 
         if ($rol = trim((string) $request->input('rol'))) {
-            $q->whereHas('roles', fn($x) => $x->where('name', $rol));
+            $q->whereHas('roles', fn ($x) => $x->where('name', $rol));
         }
 
         if (($estado = $request->input('estado')) !== null && $estado !== '') {
@@ -69,7 +78,7 @@ class UsuarioController extends Controller
     protected function extraDatosData($model): array
     {
         return [
-            'roles'              => Role::orderBy('name')->get(),
+            'roles' => Role::orderBy('name')->get(),
             'rolesSeleccionados' => $model->roles->pluck('id')->toArray(),
         ];
     }
@@ -95,12 +104,12 @@ class UsuarioController extends Controller
                 Rule::unique('usuarios', 'nombre_usuario')->ignore($id),
             ],
             'nombre_completo' => ['required', 'string', 'max:200'],
-            'descripcion'     => ['nullable', 'string', 'max:300'],
-            'tipo'            => ['nullable', 'string', 'max:20'],
-            'info'            => ['nullable', 'string', 'max:300'],
-            'roles'           => ['nullable', 'array'],
-            'roles.*'         => ['integer', 'exists:roles,id'],
-            'contrasena'      => $id
+            'descripcion' => ['nullable', 'string', 'max:300'],
+            'tipo' => ['nullable', 'string', 'max:20'],
+            'info' => ['nullable', 'string', 'max:300'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', 'exists:roles,id'],
+            'contrasena' => $id
                 ? ['nullable', 'string', 'min:6', 'max:100']
                 : ['required', 'string', 'min:6', 'max:100'],
         ];
@@ -109,15 +118,15 @@ class UsuarioController extends Controller
     protected function validationMessages(): array
     {
         return [
-            'ci.required'               => 'La cédula es obligatoria.',
-            'ci.unique'                 => 'Ya existe un usuario con esa cédula.',
-            'nombre_usuario.required'   => 'El nombre de usuario es obligatorio.',
-            'nombre_usuario.unique'     => 'Ese nombre de usuario ya está en uso.',
+            'ci.required' => 'La cédula es obligatoria.',
+            'ci.unique' => 'Ya existe un usuario con esa cédula.',
+            'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
+            'nombre_usuario.unique' => 'Ese nombre de usuario ya está en uso.',
             'nombre_usuario.alpha_dash' => 'Solo letras, números, guion y guion bajo.',
-            'nombre_completo.required'  => 'El nombre completo es obligatorio.',
-            'contrasena.required'       => 'La contraseña es obligatoria.',
-            'contrasena.min'            => 'Mínimo 6 caracteres.',
-            'roles.*.exists'            => 'Uno de los roles seleccionados no existe.',
+            'nombre_completo.required' => 'El nombre completo es obligatorio.',
+            'contrasena.required' => 'La contraseña es obligatoria.',
+            'contrasena.min' => 'Mínimo 6 caracteres.',
+            'roles.*.exists' => 'Uno de los roles seleccionados no existe.',
         ];
     }
 
@@ -145,12 +154,12 @@ class UsuarioController extends Controller
         // ⚠️ FIX: null → '' antes de tocar la BD
         $data = $this->normalizarStrings($data);
 
-        $data['contrasena']     = Hash::make($data['contrasena']);
-        $data['habilitado']     = request()->boolean('habilitado', true) ? 1 : 0;
+        $data['contrasena'] = Hash::make($data['contrasena']);
+        $data['habilitado'] = request()->boolean('habilitado', true) ? 1 : 0;
         $data['permitir_login'] = request()->boolean('permitir_login', true) ? 1 : 0;
-        $data['multilogin']     = request()->boolean('multilogin', false) ? 1 : 0;
-        $data['sesion']         = '';
-        $data['sesion_extra']   = '';
+        $data['multilogin'] = request()->boolean('multilogin', false) ? 1 : 0;
+        $data['sesion'] = '';
+        $data['sesion_extra'] = '';
 
         // Si descripcion viene vacía, usar el nombre completo
         if (empty($data['descripcion'])) {
@@ -167,7 +176,7 @@ class UsuarioController extends Controller
         $this->syncRoles($model);
     }
 
-    protected function beforeUpdate($model, array $data): array
+    protected function beforeUpdate(Usuario $model, array $data): array
     {
         // ⚠️ FIX: null → '' antes de tocar la BD
         $data = $this->normalizarStrings($data);
@@ -178,34 +187,47 @@ class UsuarioController extends Controller
             unset($data['contrasena']);
         }
 
-        $data['habilitado']     = request()->boolean('habilitado') ? 1 : 0;
+        $data['habilitado'] = request()->boolean('habilitado') ? 1 : 0;
         $data['permitir_login'] = request()->boolean('permitir_login') ? 1 : 0;
-        $data['multilogin']     = request()->boolean('multilogin') ? 1 : 0;
+        $data['multilogin'] = request()->boolean('multilogin') ? 1 : 0;
+
+        if (! $data['habilitado'] || ! $data['permitir_login']) {
+            [$canDisable, $message] = $this->canDestroy($model);
+
+            if (! $canDisable) {
+                $field = ! $data['habilitado'] ? 'habilitado' : 'permitir_login';
+
+                throw ValidationException::withMessages([$field => $message]);
+            }
+        }
+
+        $this->assertAdminRolePreserved($model, $data['roles'] ?? []);
 
         unset($data['roles']);
 
         return $data;
     }
 
-    protected function afterUpdate($model): void
+    protected function afterUpdate(Usuario $model): void
     {
         $this->syncRoles($model);
+
+        if (! $model->habilitado || ! $model->permitir_login) {
+            $this->revokeActiveSessions($model);
+        }
     }
 
-    protected function canDestroy($model): array
+    /**
+     * @return array{bool, string}
+     */
+    protected function canDestroy(Usuario $model): array
     {
         if ($model->id === auth()->id()) {
             return [false, 'No puedes deshabilitar tu propio usuario.'];
         }
 
-        if ($model->hasRole('admin')) {
-            $adminsActivos = Usuario::where('habilitado', 1)
-                ->whereHas('roles', fn($q) => $q->where('name', 'admin'))
-                ->count();
-
-            if ($adminsActivos <= 1) {
-                return [false, 'No puedes deshabilitar al último administrador activo.'];
-            }
+        if ($this->isLastActiveAdmin($model)) {
+            return [false, 'No puedes deshabilitar al último administrador activo.'];
         }
 
         return [true, ''];
@@ -230,12 +252,14 @@ class UsuarioController extends Controller
         }
 
         $usuario->update([
-            'habilitado'     => 0,
+            'habilitado' => 0,
             'permitir_login' => 0,
-            'sesion'         => '',
-            'sesion_extra'   => '',
-            'ultimo_logout'  => now(),
+            'sesion' => '',
+            'sesion_extra' => '',
+            'ultimo_logout' => now(),
         ]);
+
+        $this->revokeActiveSessions($usuario);
 
         return response()->json([
             'success' => true,
@@ -253,9 +277,9 @@ class UsuarioController extends Controller
 
         $usuario = Usuario::findOrFail($id);
         $usuario->update([
-            'habilitado'     => 1,
+            'habilitado' => 1,
             'permitir_login' => 1,
-            'ultimo_logout'  => null,
+            'ultimo_logout' => null,
         ]);
 
         return response()->json([
@@ -264,17 +288,19 @@ class UsuarioController extends Controller
         ]);
     }
 
-    public function cambiarRol(Request $request, $id)
+    public function cambiarRol(Request $request, int|string $id): JsonResponse
     {
         $this->authorizeAction('editar');
 
-        $request->validate([
-            'roles'   => ['required', 'array'],
+        $validated = $request->validate([
+            'roles' => ['required', 'array'],
             'roles.*' => ['integer', 'exists:roles,id'],
         ]);
 
         $usuario = Usuario::findOrFail($id);
-        $nombres = Role::whereIn('id', $request->roles)->pluck('name')->toArray();
+        $this->assertAdminRolePreserved($usuario, $validated['roles']);
+
+        $nombres = Role::whereIn('id', $validated['roles'])->pluck('name')->toArray();
         $usuario->syncRoles($nombres);
 
         return response()->json([
@@ -289,8 +315,49 @@ class UsuarioController extends Controller
 
     private function syncRoles(Usuario $usuario): void
     {
-        $roles   = request()->input('roles', []);
+        $roles = request()->input('roles', []);
         $nombres = Role::whereIn('id', (array) $roles)->pluck('name')->toArray();
         $usuario->syncRoles($nombres);
+    }
+
+    private function isLastActiveAdmin(Usuario $usuario): bool
+    {
+        if (! $usuario->habilitado || ! $usuario->permitir_login || ! $usuario->hasRole('admin')) {
+            return false;
+        }
+
+        return ! Usuario::query()
+            ->where('id', '!=', $usuario->id)
+            ->where('habilitado', true)
+            ->where('permitir_login', true)
+            ->whereHas('roles', fn (Builder $query): Builder => $query->where('name', 'admin'))
+            ->exists();
+    }
+
+    /**
+     * @param  array<int, int|string>  $roleIds
+     */
+    private function assertAdminRolePreserved(Usuario $usuario, array $roleIds): void
+    {
+        if ($this->isLastActiveAdmin($usuario)
+            && ! Role::whereIn('id', $roleIds)->where('name', 'admin')->exists()) {
+            throw ValidationException::withMessages([
+                'roles' => 'No puedes retirar el rol de administrador al último administrador activo.',
+            ]);
+        }
+    }
+
+    private function revokeActiveSessions(Usuario $usuario): void
+    {
+        DB::table('sesiones')
+            ->where('usuario_id', $usuario->id)
+            ->where('activa', true)
+            ->update([
+                'activa' => false,
+                'fin' => now(),
+                'updated_at' => now(),
+            ]);
+
+        $usuario->tokens()->delete();
     }
 }

@@ -116,6 +116,11 @@
             --radius-lg: 16px;
             --radius-xl: 20px;
             --radius-full: 999px;
+
+            /* Extras */
+            --focus-ring: 0 0 0 3px rgba(8, 127, 121, 0.18);
+            --shadow-menu: 0 18px 44px rgba(24, 37, 45, 0.16);
+            --shadow-soft: 0 2px 10px rgba(24, 37, 45, 0.05);
         }
 
         html,
@@ -141,7 +146,11 @@
             line-height: 1.5;
         }
 
-        body.no-scroll {
+        body.no-scroll,
+        body.modal-open,
+        body.palette-open,
+        body.drawer-open,
+        body.has-modal {
             overflow: hidden;
             position: fixed;
             width: 100%;
@@ -183,17 +192,8 @@
         }
 
         /* ============================================================
-           SIDEBAR
+           KBD
            ============================================================ */
-        /* ============================================================
-           SHELL DE LA APLICACIÓN (sidebar + topbar) · tokens propios
-           ============================================================ */
-        :root {
-            --focus-ring: 0 0 0 3px rgba(8, 127, 121, 0.18);
-            --shadow-menu: 0 18px 44px rgba(24, 37, 45, 0.16);
-            --shadow-soft: 0 2px 10px rgba(24, 37, 45, 0.05);
-        }
-
         .kbd {
             display: inline-flex;
             align-items: center;
@@ -228,7 +228,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* ---- Marca ---- */
         .sidebar-brand {
             position: relative;
             display: flex;
@@ -305,7 +304,6 @@
             color: var(--teal);
         }
 
-        /* ---- Tarjeta de usuario ---- */
         .sidebar-user {
             display: flex;
             align-items: center;
@@ -324,8 +322,8 @@
             flex-shrink: 0;
         }
 
-        .user-avatar-wrap > *,
-        .avatar-chip > * {
+        .user-avatar-wrap>*,
+        .avatar-chip>* {
             grid-area: 1 / 1;
         }
 
@@ -382,7 +380,7 @@
             letter-spacing: 0.07em;
         }
 
-        .user-role > span:last-child {
+        .user-role>span:last-child {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -435,7 +433,6 @@
             height: 15px;
         }
 
-        /* ---- Filtro rápido ---- */
         .sidebar-tools {
             flex-shrink: 0;
             padding: 12px 16px 0;
@@ -458,7 +455,7 @@
             box-shadow: var(--focus-ring);
         }
 
-        .sidebar-filter > svg {
+        .sidebar-filter>svg {
             width: 15px;
             height: 15px;
             flex-shrink: 0;
@@ -517,7 +514,6 @@
             color: var(--muted);
         }
 
-        /* ---- Navegación ---- */
         .sidebar-nav {
             display: flex;
             flex: 1;
@@ -615,7 +611,7 @@
             background: linear-gradient(180deg, var(--cyan), var(--teal));
         }
 
-        .nav-group.is-active > .nav-item-toggle {
+        .nav-group.is-active>.nav-item-toggle {
             color: var(--teal-dark);
             font-weight: 600;
         }
@@ -639,7 +635,6 @@
             font-style: normal;
         }
 
-        /* ---- Submenús ---- */
         .nav-group {
             display: flex;
             flex-direction: column;
@@ -667,7 +662,7 @@
             height: 13px;
         }
 
-        .nav-group.is-open > .nav-item-toggle .nav-caret {
+        .nav-group.is-open>.nav-item-toggle .nav-caret {
             transform: rotate(180deg);
             color: currentColor;
         }
@@ -681,7 +676,7 @@
             border-left: 1px solid var(--line);
         }
 
-        .nav-group.is-open > .nav-children {
+        .nav-group.is-open>.nav-children {
             display: flex;
             animation: navReveal 0.18s ease both;
         }
@@ -723,7 +718,6 @@
             display: none;
         }
 
-        /* ---- Badge ---- */
         .nav-badge {
             display: inline-flex;
             align-items: center;
@@ -738,7 +732,6 @@
             font: 700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        /* ---- Pie del sidebar ---- */
         .sidebar-footer {
             display: flex;
             flex-direction: column;
@@ -903,7 +896,7 @@
             color: var(--teal);
         }
 
-        .topbar-breadcrumb > span {
+        .topbar-breadcrumb>span {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -941,7 +934,6 @@
             flex-shrink: 0;
         }
 
-        /* ---- Buscador global (disparador) ---- */
         .topbar-search-trigger {
             display: flex;
             align-items: center;
@@ -963,7 +955,7 @@
             box-shadow: var(--focus-ring);
         }
 
-        .topbar-search-trigger > svg {
+        .topbar-search-trigger>svg {
             width: 16px;
             height: 16px;
             flex-shrink: 0;
@@ -983,7 +975,6 @@
             flex-shrink: 0;
         }
 
-        /* ---- Botones de icono ---- */
         .topbar-icon-btn {
             position: relative;
             display: grid;
@@ -1050,9 +1041,6 @@
             }
         }
 
-        /* ============================================================
-           MENÚS DESPLEGABLES DEL TOPBAR
-           ============================================================ */
         .topbar-menu {
             position: relative;
         }
@@ -1312,7 +1300,7 @@
             color: var(--ink);
         }
 
-        .shortcut-list li + li {
+        .shortcut-list li+li {
             border-top: 1px dashed var(--line);
         }
 
@@ -1324,11 +1312,6 @@
         /* ============================================================
            BUSCADOR GLOBAL (command palette)
            ============================================================ */
-        body.palette-open,
-        body.drawer-open {
-            overflow: hidden;
-        }
-
         .nav-palette {
             position: fixed;
             inset: 0;
@@ -1392,7 +1375,7 @@
             border-bottom: 1px solid var(--line);
         }
 
-        .nav-palette-field > svg {
+        .nav-palette-field>svg {
             width: 20px;
             height: 20px;
             flex-shrink: 0;
@@ -1531,7 +1514,7 @@
             color: var(--muted);
         }
 
-        .nav-palette-hint > span {
+        .nav-palette-hint>span {
             display: inline-flex;
             align-items: center;
             gap: 5px;
@@ -1636,13 +1619,12 @@
             opacity: 0.85;
         }
 
-        /* Fila resaltada en la bandeja de notificaciones */
         tr.notificacion-no-leida td {
             background: rgba(7, 143, 160, 0.06);
         }
 
         /* ============================================================
-           ARCHIVOS ADJUNTOS · galería con vista previa
+           ARCHIVOS ADJUNTOS
            ============================================================ */
         .archivos-lista {
             display: grid;
@@ -1718,7 +1700,7 @@
         }
 
         /* ============================================================
-           FIRMA DIGITAL DEL PACIENTE
+           FIRMA DIGITAL
            ============================================================ */
         .firma-pad {
             padding: 12px;
@@ -1868,7 +1850,7 @@
         .metric-value {
             font: 600 34px -apple-system, BlinkMacSystemFont, sans-serif;
             letter-spacing: -0.03em;
-            color: #18252d;
+            color: var(--ink);
             margin-bottom: 6px;
             word-break: break-word;
         }
@@ -1879,7 +1861,7 @@
         }
 
         .metric-label {
-            color: #718087;
+            color: var(--muted);
             font: 600 11px -apple-system, sans-serif;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -1908,7 +1890,7 @@
 
         .welcome-eyebrow {
             margin: 0 0 12px;
-            color: #087f79;
+            color: var(--teal);
             font: 700 11px -apple-system, sans-serif;
             letter-spacing: 0.18em;
             text-transform: uppercase;
@@ -1918,19 +1900,19 @@
             margin: 0;
             font: 300 clamp(24px, 4vw, 36px) -apple-system, sans-serif;
             letter-spacing: -0.02em;
-            color: #18252d;
+            color: var(--ink);
             line-height: 1.2;
         }
 
         .welcome-title strong {
             font-weight: 600;
-            color: #087f79;
+            color: var(--teal);
         }
 
         .welcome-text {
             max-width: 560px;
             margin: 12px 0 0;
-            color: #718087;
+            color: var(--muted);
             font: 15px/1.6 -apple-system, sans-serif;
         }
 
@@ -1976,7 +1958,7 @@
             align-items: center;
             gap: 10px;
             font: 500 12.5px -apple-system, sans-serif;
-            color: #718087;
+            color: var(--muted);
         }
 
         .toolbar-dot {
@@ -2009,16 +1991,16 @@
             padding: 8px 14px;
             border-radius: 10px;
             border: 1px solid var(--line);
-            background: #fff;
-            color: #18252d;
+            background: var(--surface);
+            color: var(--ink);
             font: 600 12.5px -apple-system, sans-serif;
             cursor: pointer;
             white-space: nowrap;
         }
 
         .btn-icon:hover {
-            border-color: #06b6d4;
-            color: #087f79;
+            border-color: var(--cyan);
+            color: var(--teal);
         }
 
         .btn-icon svg {
@@ -2051,7 +2033,7 @@
             cursor: pointer;
             user-select: none;
             font: 500 12.5px -apple-system, sans-serif;
-            color: #718087;
+            color: var(--muted);
         }
 
         .auto-refresh-toggle input {
@@ -2083,7 +2065,7 @@
         }
 
         .auto-refresh-toggle input:checked+.switch-track {
-            background: #087f79;
+            background: var(--teal);
         }
 
         .auto-refresh-toggle input:checked+.switch-track .switch-thumb {
@@ -2223,7 +2205,7 @@
             border-radius: 10px;
             font: 13.5px -apple-system, sans-serif;
             color: var(--ink);
-            background: #fff;
+            background: var(--surface);
             outline: none;
             min-height: 42px;
         }
@@ -2234,7 +2216,7 @@
 
         .form-control:focus {
             border-color: var(--cyan);
-            background: #fff;
+            background: var(--surface);
         }
 
         .form-control::placeholder {
@@ -2300,16 +2282,16 @@
         }
 
         .btn-primary {
-            background: #087f79;
+            background: var(--teal);
             color: #fff;
         }
 
         .btn-primary:hover {
-            background: #075d5a;
+            background: var(--teal-dark);
         }
 
         .btn-secondary {
-            background: #fff;
+            background: var(--surface);
             color: var(--ink);
             border-color: var(--line);
         }
@@ -2320,7 +2302,7 @@
         }
 
         .btn-danger {
-            background: #dc2626;
+            background: var(--danger);
             color: #fff;
         }
 
@@ -2329,7 +2311,7 @@
         }
 
         .btn-warning {
-            background: #d97706;
+            background: var(--warning);
             color: #fff;
         }
 
@@ -2522,7 +2504,7 @@
             padding: 0 10px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--line);
-            background: #fff;
+            background: var(--surface);
             color: var(--ink);
             font: 500 13px -apple-system, sans-serif;
             text-decoration: none;
@@ -2534,8 +2516,8 @@
         }
 
         .pagination-wrap nav[role="navigation"] span[aria-current="page"]>span {
-            background: #087f79;
-            border-color: #087f79;
+            background: var(--teal);
+            border-color: var(--teal);
             color: #fff;
             font-weight: 600;
         }
@@ -2635,7 +2617,7 @@
         }
 
         /* ============================================================
-           MODALES
+           MODALES (base — usa .modal-backdrop .modal)
            ============================================================ */
         .modal-backdrop {
             position: fixed;
@@ -2663,7 +2645,7 @@
             max-width: 640px;
             max-height: calc(100vh - 40px);
             max-height: calc(100dvh - 40px);
-            background: #fff;
+            background: var(--surface);
             border-radius: var(--radius-xl);
             box-shadow: 0 24px 64px rgba(24, 37, 45, 0.28);
             display: flex;
@@ -2711,7 +2693,7 @@
             height: 34px;
             border-radius: 10px;
             border: 1px solid var(--line);
-            background: #fff;
+            background: var(--surface);
             color: var(--muted);
             cursor: pointer;
             display: grid;
@@ -2720,9 +2702,9 @@
         }
 
         .modal-close:hover {
-            background: #fef2f2;
-            border-color: #fecaca;
-            color: #dc2626;
+            background: var(--danger-bg);
+            border-color: var(--danger-border);
+            color: var(--danger);
         }
 
         .modal-close svg {
@@ -2811,9 +2793,6 @@
             max-width: 440px;
         }
 
-        /* ============================================================
-           UTILIDADES DE MODAL
-           ============================================================ */
         .req {
             color: var(--danger);
             font-weight: 700;
@@ -2845,7 +2824,7 @@
         }
 
         .checkbox-item:hover {
-            background: #fff;
+            background: var(--surface);
         }
 
         .checkbox-item input[type="checkbox"] {
@@ -2856,9 +2835,6 @@
             flex-shrink: 0;
         }
 
-        /* ============================================================
-           SWITCH ITEM
-           ============================================================ */
         .switch-item {
             display: flex;
             align-items: center;
@@ -2885,7 +2861,7 @@
         }
 
         .switch-item input[type="checkbox"]:checked+.switch-track {
-            background: #087f79;
+            background: var(--teal);
         }
 
         .switch-item input[type="checkbox"]:checked+.switch-track .switch-thumb {
@@ -2895,10 +2871,6 @@
         .switch-label {
             font: 500 13.5px -apple-system, sans-serif;
             color: var(--ink);
-        }
-
-        body.modal-open {
-            overflow: hidden;
         }
 
         /* ============================================================
@@ -2929,15 +2901,15 @@
         }
 
         .toast-success {
-            background: #16a34a;
+            background: var(--success);
         }
 
         .toast-error {
-            background: #dc2626;
+            background: var(--danger);
         }
 
         .toast-warning {
-            background: #d97706;
+            background: var(--warning);
         }
 
         .toast-info {
@@ -2948,11 +2920,11 @@
            FEEDBACK DE BÚSQUEDA DE CI
            ============================================================ */
         #ciFeedback.ok {
-            color: #16a34a;
+            color: var(--success);
         }
 
         #ciFeedback.error {
-            color: #dc2626;
+            color: var(--danger);
         }
 
         /* ============================================================
@@ -3010,7 +2982,7 @@
             align-items: center;
             gap: 6px;
             font: 500 12px -apple-system, sans-serif;
-            color: #718087;
+            color: var(--muted);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
@@ -3077,8 +3049,8 @@
         }
 
         .autocomplete-clear:hover {
-            background: #fef2f2;
-            color: #dc2626;
+            background: var(--danger-bg);
+            color: var(--danger);
         }
 
         .autocomplete-clear svg {
@@ -3097,7 +3069,7 @@
             right: 0;
             max-height: min(320px, 50vh);
             overflow-y: auto;
-            background: #fff;
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: var(--radius-md);
             box-shadow: 0 12px 32px rgba(24, 37, 45, 0.14);
@@ -3130,7 +3102,6 @@
             background: var(--surface-soft);
         }
 
-        /* Texto secundario dentro de un resultado de autocomplete */
         .autocomplete-item-extra {
             display: block;
             margin-top: 2px;
@@ -3147,6 +3118,98 @@
 
         .autocomplete-empty:hover {
             background: transparent;
+        }
+
+        .autocomplete-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4, #d946ef);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font: 700 13px -apple-system, sans-serif;
+            flex-shrink: 0;
+        }
+
+        .autocomplete-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .autocomplete-name {
+            font: 600 13.5px -apple-system, sans-serif;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-meta {
+            font: 400 11.5px -apple-system, sans-serif;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .paciente-seleccionado {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paciente-seleccionado .avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+
+        .paciente-seleccionado .info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .paciente-seleccionado .nombre {
+            font: 600 13.5px -apple-system, sans-serif;
+            color: var(--ink);
+        }
+
+        .paciente-seleccionado .detalles {
+            font: 400 12px -apple-system, sans-serif;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .paciente-seleccionado .quitar {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .paciente-seleccionado .quitar:hover {
+            background: var(--danger-bg);
+            border-color: var(--danger-border);
+            color: var(--danger);
+        }
+
+        .paciente-seleccionado .quitar svg {
+            width: 14px;
+            height: 14px;
         }
 
         /* ============================================================
@@ -3414,112 +3477,428 @@
             background: var(--surface);
         }
 
-        .autocomplete-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #06b6d4, #d946ef);
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font: 700 13px -apple-system, sans-serif;
+        /* ============================================================
+           VENTANAS MODALES DINÁMICAS (creadas por JS)
+           Compatible con: SweetAlert2, modales custom, ventanas emergentes
+           ============================================================ */
+        .modal-dynamic-backdrop,
+        .swal2-container {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 10500 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 20px !important;
+            background: rgba(24, 37, 45, 0.55) !important;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            animation: fadeInModal 0.18s ease both;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-dynamic {
+            width: 100%;
+            max-width: 640px;
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 30px 80px rgba(15, 23, 23, 0.35);
+            overflow: hidden;
+            animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .modal-dynamic.modal-dynamic--sm {
+            max-width: 440px;
+        }
+
+        .modal-dynamic.modal-dynamic--lg {
+            max-width: 900px;
+        }
+
+        .modal-dynamic.modal-dynamic--xl {
+            max-width: 1200px;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-dynamic.is-closing {
+            animation: modalOut 0.18s ease both;
+        }
+
+        @keyframes modalOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(8px) scale(0.98);
+            }
+        }
+
+        .modal-dynamic__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--line);
             flex-shrink: 0;
         }
 
-        .autocomplete-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
-
-        .autocomplete-name {
-            font: 600 13.5px -apple-system, sans-serif;
+        .modal-dynamic__title {
+            font: 600 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: var(--ink);
-            white-space: nowrap;
+            letter-spacing: -0.01em;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .autocomplete-meta {
-            font: 400 11.5px -apple-system, sans-serif;
-            color: var(--muted);
-            margin-top: 2px;
+        .modal-dynamic__body {
+            flex: 1;
+            min-height: 0;
+            padding: 22px 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            color: var(--ink);
+            font: 13.5px/1.55 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .autocomplete-empty {
-            padding: 20px;
-            text-align: center;
-            color: var(--muted);
-            font: 400 13px -apple-system, sans-serif;
-        }
-
-        .autocomplete-empty svg {
-            width: 32px;
-            height: 32px;
-            display: block;
-            margin: 0 auto 8px;
-            stroke: var(--muted);
-            opacity: 0.5;
-        }
-
-        .paciente-seleccionado {
+        .modal-dynamic__footer {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 16px 24px;
+            border-top: 1px solid var(--line);
             background: var(--surface-soft);
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           SWEETALERT2 · overrides para integrar con el tema
+           ============================================================ */
+        .swal2-popup {
+            background: var(--surface) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius-xl) !important;
+            box-shadow: 0 30px 80px rgba(15, 23, 23, 0.35) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+
+        .swal2-title {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        .swal2-html-container,
+        .swal2-content {
+            color: var(--muted) !important;
+        }
+
+        .swal2-confirm {
+            background: var(--teal) !important;
+            color: #fff !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+        }
+
+        .swal2-confirm:hover {
+            background: var(--teal-dark) !important;
+        }
+
+        .swal2-cancel {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+
+        .swal2-cancel:hover {
+            border-color: var(--cyan) !important;
+            color: var(--teal) !important;
+        }
+
+        .swal2-input,
+        .swal2-select,
+        .swal2-textarea {
+            background: var(--surface) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 10px !important;
+            padding: 10px 14px !important;
+        }
+
+        .swal2-input:focus,
+        .swal2-select:focus,
+        .swal2-textarea:focus {
+            border-color: var(--cyan) !important;
+            box-shadow: var(--focus-ring) !important;
+        }
+
+        /* ============================================================
+           TOASTIFY / notificaciones flotantes JS
+           ============================================================ */
+        .toastify {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 13px 20px !important;
+            border-radius: var(--radius-md) !important;
+            font: 600 13.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.18) !important;
+            color: #fff !important;
+            max-width: min(360px, calc(100vw - 32px)) !important;
+            z-index: 10800 !important;
+        }
+
+        .toastify.on {
+            opacity: 1 !important;
+        }
+
+        .toastify-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ============================================================
+           ALERTIFY / NOTY / similares
+           ============================================================ */
+        .ajs-dialog,
+        .noty_layout {
+            background: var(--surface) !important;
+            color: var(--ink) !important;
+            border-radius: var(--radius-lg) !important;
+            border: 1px solid var(--line) !important;
+            box-shadow: 0 20px 60px rgba(15, 23, 23, 0.3) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+
+        .ajs-header {
+            background: var(--surface-soft) !important;
+            border-bottom: 1px solid var(--line) !important;
+            font-weight: 600 !important;
+        }
+
+        .ajs-footer {
+            background: var(--surface-soft) !important;
+            border-top: 1px solid var(--line) !important;
+        }
+
+        .ajs-button {
+            background: var(--teal) !important;
+            color: #fff !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+
+        .ajs-button.ajs-cancel {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--line) !important;
+        }
+
+        /* ============================================================
+           VENTANAS EMERGENTES / IFRAMES DE MODALES
+           ============================================================ */
+        .modal-iframe-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(24, 37, 45, 0.55);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+
+        .modal-iframe {
+            width: min(1100px, 96vw);
+            height: min(780px, 92vh);
+            height: min(780px, 92dvh);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border-radius: var(--radius-xl);
             border: 1px solid var(--line);
-            border-radius: 10px;
-            margin-top: 8px;
+            box-shadow: 0 30px 80px rgba(15, 23, 23, 0.35);
+            overflow: hidden;
+            animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .modal-iframe__bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface-soft);
+        }
+
+        .modal-iframe__bar-title {
+            font: 600 13.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--ink);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .modal-iframe iframe {
+            flex: 1;
+            width: 100%;
+            border: 0;
+            background: var(--surface);
+        }
+
+        /* ============================================================
+           SPINNER GLOBAL (mientras carga una ventana/modal JS)
+           ============================================================ */
+        .spinner-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 11000;
+            display: grid;
+            place-items: center;
+            background: rgba(15, 23, 23, 0.35);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            animation: fadeInModal 0.15s ease both;
+        }
+
+        .spinner-overlay[hidden] {
+            display: none !important;
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .spinner--dark {
+            border-color: rgba(8, 127, 121, 0.2);
+            border-top-color: var(--teal);
+        }
+
+        .spinner-text {
+            margin-top: 14px;
+            color: #fff;
+            font: 600 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            text-align: center;
+        }
+
+        /* ============================================================
+           CONFIRM DIALOG (custom / estilizado)
+           ============================================================ */
+        .confirm-dialog {
+            width: min(440px, calc(100vw - 32px));
+            padding: 26px 24px 20px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 30px 80px rgba(15, 23, 23, 0.35);
+            text-align: center;
+            animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .confirm-dialog__icon {
+            display: grid;
+            place-items: center;
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .confirm-dialog__icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .confirm-dialog__title {
+            font: 600 17px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .confirm-dialog__text {
+            font: 13.5px/1.55 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+
+        .confirm-dialog__actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
             flex-wrap: wrap;
         }
 
-        .paciente-seleccionado .avatar {
-            width: 40px;
-            height: 40px;
-            font-size: 14px;
+        .confirm-dialog--danger .confirm-dialog__icon {
+            background: var(--danger-bg);
+            color: var(--danger);
         }
 
-        .paciente-seleccionado .info {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 0;
+        .confirm-dialog--success .confirm-dialog__icon {
+            background: var(--success-bg);
+            color: var(--success);
         }
 
-        .paciente-seleccionado .nombre {
-            font: 600 13.5px -apple-system, sans-serif;
-            color: var(--ink);
+        /* ============================================================
+           OVERLAY BLOQUEANTE (AJAX largos)
+           ============================================================ */
+        .ui-blocker {
+            position: fixed;
+            inset: 0;
+            z-index: 10900;
+            background: rgba(15, 23, 23, 0.25);
+            cursor: wait;
+            animation: fadeInModal 0.15s ease both;
         }
 
-        .paciente-seleccionado .detalles {
-            font: 400 12px -apple-system, sans-serif;
-            color: var(--muted);
-            margin-top: 2px;
-        }
-
-        .paciente-seleccionado .quitar {
-            width: 28px;
-            height: 28px;
-            border-radius: var(--radius-sm);
-            border: 1px solid transparent;
-            background: transparent;
-            color: var(--muted);
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-        }
-
-        .paciente-seleccionado .quitar:hover {
-            background: #fef2f2;
-            border-color: #fecaca;
-            color: #dc2626;
-        }
-
-        .paciente-seleccionado .quitar svg {
-            width: 14px;
-            height: 14px;
+        .ui-blocker[hidden] {
+            display: none !important;
         }
 
         /* ============================================================
@@ -3548,7 +3927,6 @@
                 grid-template-columns: 1fr;
             }
 
-            /* ---- Sidebar como drawer ---- */
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -3599,7 +3977,6 @@
                 padding: 10px 14px;
             }
 
-            /* El buscador se convierte en un botón compacto */
             .topbar-search-trigger {
                 width: 40px;
                 height: 40px;
@@ -3636,7 +4013,6 @@
                 gap: 8px;
             }
 
-            /* La paleta se comporta como hoja inferior */
             .nav-palette-panel {
                 width: 100%;
                 max-height: 82vh;
@@ -3779,6 +4155,80 @@
                 right: -6px;
                 min-width: min(260px, calc(100vw - 28px));
             }
+
+            /* Modales dinámicos en móvil (bottom sheet) */
+            .modal-dynamic-backdrop,
+            .swal2-container {
+                padding: 0 !important;
+                align-items: flex-end !important;
+            }
+
+            .modal-dynamic {
+                max-width: 100%;
+                max-height: 92vh;
+                max-height: 92dvh;
+                border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+                animation: sheetIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+            }
+
+            .modal-dynamic__header,
+            .modal-dynamic__body {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .modal-dynamic__footer {
+                padding: 14px 18px;
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+            .modal-dynamic__footer .btn {
+                width: 100%;
+            }
+
+            .modal-iframe-backdrop {
+                padding: 0;
+                align-items: stretch;
+            }
+
+            .modal-iframe {
+                width: 100%;
+                height: 100%;
+                max-height: 100dvh;
+                border-radius: 0;
+            }
+
+            .confirm-dialog {
+                width: 100%;
+                max-width: 100%;
+                border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+                padding: 24px 20px 20px;
+            }
+
+            .confirm-dialog__actions {
+                flex-direction: column-reverse;
+            }
+
+            .confirm-dialog__actions .btn {
+                width: 100%;
+            }
+
+            .swal2-popup {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+                margin: 0 !important;
+            }
+
+            .toastify {
+                bottom: 16px !important;
+                right: 16px !important;
+                left: 16px !important;
+                max-width: none !important;
+                text-align: center;
+                justify-content: center;
+            }
         }
 
         @media (max-width: 480px) {
@@ -3902,6 +4352,23 @@
                 height: 30px;
                 font-size: 12px;
                 padding: 0 8px;
+            }
+
+            .modal-dynamic__body {
+                padding: 16px 14px;
+            }
+
+            .modal-dynamic__header {
+                padding: 14px 16px;
+            }
+
+            .confirm-dialog__icon {
+                width: 48px;
+                height: 48px;
+            }
+
+            .confirm-dialog__title {
+                font-size: 15.5px;
             }
         }
 
@@ -4069,13 +4536,17 @@
         :root[data-theme="dark"] .card,
         :root[data-theme="dark"] .stat-card,
         :root[data-theme="dark"] .modal,
-        :root[data-theme="dark"] .modal-close {
+        :root[data-theme="dark"] .modal-close,
+        :root[data-theme="dark"] .modal-dynamic,
+        :root[data-theme="dark"] .modal-iframe,
+        :root[data-theme="dark"] .confirm-dialog {
             background-color: var(--surface);
             border-color: var(--surface-border);
         }
 
         :root[data-theme="dark"] .topbar-dropdown,
         :root[data-theme="dark"] .modal,
+        :root[data-theme="dark"] .modal-dynamic,
         :root[data-theme="dark"] .form-control:focus {
             background-color: var(--surface-raised);
         }
@@ -4097,6 +4568,9 @@
         :root[data-theme="dark"] .card-header,
         :root[data-theme="dark"] .modal-header,
         :root[data-theme="dark"] .modal-footer,
+        :root[data-theme="dark"] .modal-dynamic__header,
+        :root[data-theme="dark"] .modal-dynamic__footer,
+        :root[data-theme="dark"] .modal-iframe__bar,
         :root[data-theme="dark"] .pagination-wrap,
         :root[data-theme="dark"] .checkbox-grid,
         :root[data-theme="dark"] .nav-palette-hint,
@@ -4213,17 +4687,54 @@
             border-color: var(--cyan);
             color: var(--teal-dark);
         }
+
+        :root[data-theme="dark"] .swal2-popup {
+            background: var(--surface-raised) !important;
+            border-color: var(--surface-border) !important;
+        }
+
+        :root[data-theme="dark"] .swal2-input,
+        :root[data-theme="dark"] .swal2-select,
+        :root[data-theme="dark"] .swal2-textarea {
+            background: var(--control-bg) !important;
+            border-color: var(--surface-border) !important;
+        }
+
+        :root[data-theme="dark"] .spinner-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        :root[data-theme="dark"] .ui-blocker {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* ============================================================
+           PRINT · ocultar overlays y modales al imprimir
+           ============================================================ */
+        @media print {
+
+            .modal-dynamic-backdrop,
+            .modal-backdrop,
+            .swal2-container,
+            .toastify,
+            .spinner-overlay,
+            .ui-blocker,
+            .toast,
+            .sidebar-backdrop {
+                display: none !important;
+            }
+        }
     </style>
 
     @stack('styles')
 </head>
 
 <body>
-    {{-- Fondo oscuro del drawer lateral (móvil / tablet) --}}
-    <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
-
     <div class="app">
         @include('layouts.partials.sidebar')
+
+        {{-- Mantener el fondo dentro del contexto de apilamiento del sidebar. --}}
+        <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
 
         <div class="main-wrapper">
             @include('layouts.partials.topbar')
@@ -4284,6 +4795,114 @@
             </main>
         </div>
     </div>
+
+    {{-- ============================================================
+         HELPER GLOBAL: window.Modal
+         Permite abrir/cerrar ventanas modales dinámicas desde JS
+         ============================================================ --}}
+    <script>
+        window.Modal = (() => {
+            function open({
+                title,
+                body,
+                footer,
+                size = 'md',
+                onClose,
+                onOpen
+            } = {}) {
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-dynamic-backdrop';
+                backdrop.innerHTML = `
+                    <div class="modal-dynamic modal-dynamic--${size}" role="dialog" aria-modal="true">
+                        <div class="modal-dynamic__header">
+                            <h3 class="modal-dynamic__title"></h3>
+                            <button class="modal-close" aria-label="Cerrar">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="modal-dynamic__body"></div>
+                        <div class="modal-dynamic__footer"></div>
+                    </div>`;
+
+                backdrop.querySelector('.modal-dynamic__title').textContent = title || '';
+
+                const bodyEl = backdrop.querySelector('.modal-dynamic__body');
+                if (typeof body === 'string') bodyEl.innerHTML = body;
+                else if (body instanceof Node) bodyEl.appendChild(body);
+
+                const footerEl = backdrop.querySelector('.modal-dynamic__footer');
+                if (typeof footer === 'string') footerEl.innerHTML = footer;
+                else if (footer instanceof Node) footerEl.appendChild(footer);
+
+                function close() {
+                    backdrop.querySelector('.modal-dynamic').classList.add('is-closing');
+                    setTimeout(() => {
+                        backdrop.remove();
+                        document.body.classList.remove('has-modal');
+                        onClose?.();
+                    }, 180);
+                }
+
+                backdrop.querySelector('.modal-close').addEventListener('click', close);
+                backdrop.addEventListener('click', (e) => {
+                    if (e.target === backdrop) close();
+                });
+                document.addEventListener('keydown', function esc(e) {
+                    if (e.key === 'Escape') {
+                        close();
+                        document.removeEventListener('keydown', esc);
+                    }
+                });
+
+                document.body.appendChild(backdrop);
+                document.body.classList.add('has-modal');
+                onOpen?.(backdrop);
+                return {
+                    close,
+                    root: backdrop
+                };
+            }
+
+            /* Confirm dialog estilizado */
+            function confirm({
+                title = '¿Estás seguro?',
+                text = '',
+                confirmText = 'Confirmar',
+                cancelText = 'Cancelar',
+                variant = 'warning'
+            } = {}) {
+                return new Promise((resolve) => {
+                    const m = open({
+                        title,
+                        size: 'sm',
+                        body: `<div class="confirm-dialog confirm-dialog--${variant}" style="box-shadow:none;border:0;padding:0">
+                            <div class="confirm-dialog__icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                            <div class="confirm-dialog__title">${title}</div>
+                            <div class="confirm-dialog__text">${text}</div>
+                        </div>`,
+                        footer: `
+                            <button class="btn btn-secondary" data-cancel>${cancelText}</button>
+                            <button class="btn btn-${variant === 'danger' ? 'danger' : variant === 'success' ? 'primary' : 'warning'}" data-confirm>${confirmText}</button>
+                        `,
+                        onClose: () => resolve(false),
+                    });
+                    m.root.querySelector('[data-cancel]').addEventListener('click', () => m.close());
+                    m.root.querySelector('[data-confirm]').addEventListener('click', () => {
+                        m.root.removeEventListener('click', () => {});
+                        resolve(true);
+                        m.close();
+                    });
+                });
+            }
+
+            return {
+                open,
+                confirm
+            };
+        })();
+    </script>
 
     @include('layouts.partials.scripts')
     @stack('scripts')

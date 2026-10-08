@@ -3,9 +3,13 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Insumo;
+use App\Models\InsumoTratamiento;
+use App\Models\Notificacion;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
+use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
 /**
@@ -13,6 +17,7 @@ use Tests\TestCase;
  */
 class ApiV1Test extends TestCase
 {
+    use CreatesClinicalCase;
     use DatabaseTransactions;
 
     private function admin(): ?Usuario
@@ -34,8 +39,8 @@ class ApiV1Test extends TestCase
 
         $res = $this->postJson('/api/v1/login', [
             'nombre_usuario' => $usuario->nombre_usuario,
-            'contrasena'     => 'Secreta123',
-            'device_name'    => 'phpunit',
+            'contrasena' => 'Secreta123',
+            'device_name' => 'phpunit',
         ]);
 
         $res->assertOk();
@@ -55,8 +60,8 @@ class ApiV1Test extends TestCase
 
         $respuesta = $this->postJson('/api/v1/login', [
             'nombre_usuario' => $admin->nombre_usuario,
-            'contrasena'     => 'Secreta123',
-            'device_name'    => 'pixel-8',
+            'contrasena' => 'Secreta123',
+            'device_name' => 'pixel-8',
         ]);
 
         $respuesta->assertOk();
@@ -78,7 +83,7 @@ class ApiV1Test extends TestCase
 
         $this->postJson('/api/v1/login', [
             'nombre_usuario' => $admin->nombre_usuario,
-            'contrasena'     => 'incorrecta',
+            'contrasena' => 'incorrecta',
         ])->assertStatus(401);
     }
 
@@ -87,6 +92,13 @@ class ApiV1Test extends TestCase
         foreach (['/api/v1/me', '/api/v1/dashboard', '/api/v1/pacientes', '/api/v1/notificaciones'] as $url) {
             $this->getJson($url)->assertStatus(401);
         }
+    }
+
+    public function test_login_v1_preserves_the_validation_response(): void
+    {
+        $this->postJson('/api/v1/login', [])
+            ->assertUnprocessable()->assertJsonPath('success', false)
+            ->assertJsonValidationErrors(['nombre_usuario', 'contrasena']);
     }
 
     public function test_me_dashboard_y_notificaciones_con_token(): void
@@ -136,26 +148,83 @@ class ApiV1Test extends TestCase
             ->assertJsonStructure(['success', 'data', 'paginacion']);
     }
 
+    public function test_student_cannot_write_teacher_review(): void
+    {
+        $case = $this->clinicalCase();
+        $this->actingAs($case['student'])->postJson('/api/v1/historias', ['historia_clinica_id' => $case['history']->id, 'revision_docente' => 'Autorización falsa'])->assertForbidden();
+        $this->assertNotSame('Autorización falsa', $case['history']->fresh()->revision_docente);
+    }
+
+    public function test_assigned_teacher_can_record_review_through_the_history_module(): void
+    {
+        $case = $this->clinicalCase();
+        $case['teacher']->givePermissionTo('historias.editar');
+
+        $this->actingAs($case['teacher'])->postJson('/api/v1/historias', [
+            'historia_clinica_id' => $case['history']->id,
+            'revision_docente' => 'Revisión del docente asignado',
+        ])->assertOk()->assertJsonPath('data.id', $case['history']->id);
+
+        $this->assertDatabaseHas('historias_clinicas', [
+            'id' => $case['history']->id, 'revision_docente' => 'Revisión del docente asignado',
+        ]);
+    }
+
+    public function test_student_cannot_read_another_students_history_through_the_api(): void
+    {
+        $case = $this->clinicalCase();
+        $otherCase = $this->clinicalCase();
+
+        $this->actingAs($case['student'])->getJson('/api/v1/historias/'.$otherCase['history']->id)->assertNotFound();
+        $this->getJson('/api/v1/historias/'.$case['history']->id)
+            ->assertOk()->assertJsonPath('data.id', $case['history']->id);
+    }
+
+    public function test_api_notification_read_preserves_user_isolation(): void
+    {
+        $user = $this->clinicalUser('estudiante');
+        $otherUser = $this->clinicalUser('estudiante');
+        $own = Notificacion::create(['usuario_id' => $user->id, 'tipo' => Notificacion::TIPO_SOLICITUD_CREADA, 'titulo' => 'Aviso propio', 'leida' => false]);
+        $other = Notificacion::create(['usuario_id' => $otherUser->id, 'tipo' => Notificacion::TIPO_SOLICITUD_CREADA, 'titulo' => 'Aviso ajeno', 'leida' => false]);
+
+        $this->actingAs($user)->postJson('/api/v1/notificaciones/'.$own->id.'/leer')
+            ->assertOk()->assertJsonPath('success', true);
+        $this->postJson('/api/v1/notificaciones/'.$other->id.'/leer')->assertNotFound();
+
+        $this->assertTrue($own->fresh()->leida);
+        $this->assertFalse($other->fresh()->leida);
+    }
+
     public function test_crear_solicitud_por_api(): void
     {
+        $case = $this->approvedProgress();
         $token = $this->token();
 
         if (! $token) {
             $this->markTestSkipped('No hay usuario admin');
         }
 
-        // Se necesita un insumo con su clínica y tipo
-        $insumo = Insumo::query()->first();
-
-        if (! $insumo) {
-            $this->markTestSkipped('No hay insumos en la base');
-        }
+        $clinica = $case['clinic'];
+        $tipo = InsumoTratamiento::create([
+            'nombre' => 'Tipo de prueba API',
+            'descripcion' => 'Generado por test',
+            'clinica_id' => $clinica->id,
+        ]);
+        $insumo = Insumo::create([
+            'nombre' => 'Insumo de prueba API',
+            'cantidad_numerica' => 10,
+            'cantidad' => 'unidades',
+            'insumo_tratamiento_id' => $tipo->id,
+            'clinica_id' => $clinica->id,
+        ]);
 
         $respuesta = $this->postJson('/api/v1/solicitudes-insumos', [
-            'clinica_id'            => $insumo->clinica_id,
+            'clinica_id' => $insumo->clinica_id,
             'insumo_tratamiento_id' => $insumo->insumo_tratamiento_id,
-            'pieza'                 => 11,
-            'detalles'              => [
+            'pieza' => 11,
+            'tratamiento_realizado_id' => $case['realized']->id,
+            'sesion_atencion_id' => $case['session']->id,
+            'detalles' => [
                 ['insumo_id' => $insumo->id, 'cantidad_solicitada' => 1],
             ],
         ], ['Authorization' => "Bearer {$token}"]);
@@ -163,6 +232,11 @@ class ApiV1Test extends TestCase
         $respuesta->assertStatus(201);
         $respuesta->assertJsonPath('success', true);
         $respuesta->assertJsonStructure(['data' => ['id', 'estado', 'detalles']]);
+        $this->assertDatabaseHas('insumos_solicitados_detalle', [
+            'insumo_solicitado_id' => $respuesta->json('data.id'),
+            'insumo_id' => $insumo->id,
+            'cantidad_solicitada' => 1,
+        ]);
     }
 
     public function test_crear_solicitud_valida_los_datos(): void
@@ -175,7 +249,7 @@ class ApiV1Test extends TestCase
 
         $this->postJson('/api/v1/solicitudes-insumos', [
             'clinica_id' => 999999,
-            'detalles'   => [],
+            'detalles' => [],
         ], ['Authorization' => "Bearer {$token}"])
             ->assertStatus(422)
             ->assertJsonPath('success', false)
@@ -193,7 +267,7 @@ class ApiV1Test extends TestCase
         $token = $this->token($admin);
         $this->assertNotEmpty($token);
 
-        $antes = \Laravel\Sanctum\PersonalAccessToken::query()
+        $antes = PersonalAccessToken::query()
             ->where('tokenable_id', $admin->id)
             ->count();
         $this->assertGreaterThan(0, $antes);
@@ -203,7 +277,7 @@ class ApiV1Test extends TestCase
             ->assertJsonPath('success', true);
 
         // El token se elimina de la base: ya no puede autenticar
-        $despues = \Laravel\Sanctum\PersonalAccessToken::query()
+        $despues = PersonalAccessToken::query()
             ->where('tokenable_id', $admin->id)
             ->count();
 
@@ -222,27 +296,27 @@ class ApiV1Test extends TestCase
 
         $t1 = $this->postJson('/api/v1/login', [
             'nombre_usuario' => $admin->nombre_usuario,
-            'contrasena'     => 'Secreta123',
-            'device_name'    => 'dispositivo-1',
+            'contrasena' => 'Secreta123',
+            'device_name' => 'dispositivo-1',
         ])->json('data.access_token');
 
         $t2 = $this->postJson('/api/v1/login', [
             'nombre_usuario' => $admin->nombre_usuario,
-            'contrasena'     => 'Secreta123',
-            'device_name'    => 'dispositivo-2',
+            'contrasena' => 'Secreta123',
+            'device_name' => 'dispositivo-2',
         ])->json('data.access_token');
 
         $this->assertNotEmpty($t1);
         $this->assertNotEmpty($t2);
 
-        $this->assertSame(2, \Laravel\Sanctum\PersonalAccessToken::query()
+        $this->assertSame(2, PersonalAccessToken::query()
             ->where('tokenable_id', $admin->id)
             ->count());
 
         $this->postJson('/api/v1/logout-all', [], ['Authorization' => "Bearer {$t2}"])
             ->assertOk();
 
-        $this->assertSame(0, \Laravel\Sanctum\PersonalAccessToken::query()
+        $this->assertSame(0, PersonalAccessToken::query()
             ->where('tokenable_id', $admin->id)
             ->count(), 'logout-all debe revocar todos los tokens');
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Insumo extends Model
 {
@@ -20,11 +21,18 @@ class Insumo extends Model
 
     protected $casts = [
         'cantidad_numerica' => 'decimal:2',
-        'stock_minimo'      => 'decimal:2',
-        'costo_unitario'    => 'decimal:2',
+        'stock_minimo' => 'decimal:2',
+        'costo_unitario' => 'decimal:2',
     ];
 
     /* RELACIONES */
+    public function tratamientos(): BelongsToMany
+    {
+        return $this->belongsToMany(Tratamiento::class, 'insumo_tratamiento', 'insumo_id', 'tratamiento_id')
+            ->withPivot('cantidad')
+            ->withTimestamps();
+    }
+
     public function insumoTratamiento()
     {
         return $this->belongsTo(InsumoTratamiento::class, 'insumo_tratamiento_id');

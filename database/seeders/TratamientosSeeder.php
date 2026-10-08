@@ -15,7 +15,7 @@ class TratamientosSeeder extends Seeder
 {
     public function run(): void
     {
-        $now      = now();
+        $now = now();
         $clinicas = DB::table('clinicas')->pluck('id', 'especialidad');
 
         $catalogo = [
@@ -52,19 +52,21 @@ class TratamientosSeeder extends Seeder
 
             foreach ($tratamientos as $t) {
                 $rows[] = [
-                    'nombre'        => $t['nombre'],
-                    'costo'         => $t['costo'],
+                    'nombre' => $t['nombre'],
+                    'costo' => $t['costo'],
                     'porcentaje_pg' => null,
-                    'descripcion'   => '',
-                    'clinica_id'    => $clinicas[$especialidad],
-                    'created_at'    => $now,
-                    'updated_at'    => $now,
+                    'descripcion' => '',
+                    'clinica_id' => $clinicas[$especialidad],
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }
 
-        if ($rows) {
-            DB::table('tratamientos')->insert($rows);
+        foreach ($rows as $row) {
+            if (! DB::table('tratamientos')->where('clinica_id', $row['clinica_id'])->where('nombre', $row['nombre'])->exists()) {
+                DB::table('tratamientos')->insert($row);
+            }
         }
     }
 }

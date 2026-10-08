@@ -24,10 +24,19 @@
             {{-- FOTO DE PERFIL --}}
             <div class="form-group" style="text-align: center; margin-bottom: 30px;">
                 <div style="position: relative; display: inline-block;">
+                    <span aria-hidden="true"
+                        style="display: grid; place-items: center; width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--fuchsia)); color: #fff; font-size: 42px; font-weight: 700; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        {{ $user->initials }}
+                    </span>
                     <img id="avatar-preview"
-                        src="{{ $user->foto ? asset('storage/' . $user->foto) : 'https://ui-avatars.com/api/?name='.urlencode($user->nombre_completo).'&background=random&size=150' }}"
+                        @if ($user->foto)
+                        src="{{ asset('storage/' . $user->foto) }}"
+                        @else
+                        hidden
+                        @endif
                         alt="Foto de perfil"
-                        style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        style="position: absolute; inset: 0; width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+                        onerror="this.hidden = true;">
 
                     <label for="foto"
                         title="Cambiar foto de perfil"
@@ -37,7 +46,7 @@
                             <circle cx="12" cy="13" r="4"></circle>
                         </svg>
                     </label>
-                    <input type="file" id="foto" name="foto" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                    <input type="file" id="foto" name="foto" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
                 </div>
 
                 <p style="margin-top: 10px; font-size: 12px; color: #666;">
@@ -154,22 +163,27 @@
 
 {{-- Script para previsualización de imagen --}}
 <script>
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('avatar-preview').src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
+    document.getElementById('foto')?.addEventListener('change', function() {
+        const file = this.files?.[0];
+        if (!file) return;
 
-    document.getElementById('foto')?.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file && file.size > 2 * 1024 * 1024) {
+        if (file.size > 2 * 1024 * 1024) {
             alert('La imagen no debe superar los 2MB');
             this.value = '';
+            return;
         }
+
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            const preview = document.getElementById('avatar-preview');
+            preview.src = reader.result;
+            preview.hidden = false;
+        });
+        reader.addEventListener('error', () => {
+            alert('No se pudo leer la imagen seleccionada.');
+            this.value = '';
+        });
+        reader.readAsDataURL(file);
     });
 </script>
 @endsection

@@ -34,11 +34,11 @@
     </td>
 
     <td>
-        {{ $admision->estudiante?->nombre_completo ?? '—' }}
+        {{ $admision->area_derivada ?: 'Sin áreas derivadas' }}
     </td>
 
     <td>
-        {{ $admision->responsable?->nombre_completo ?? '—' }}
+        {{ $admision->registradoPor?->nombre_completo ?? $admision->estudiante?->nombre_completo ?? '—' }}
     </td>
 
     <td>
@@ -47,13 +47,14 @@
 
     <td>
         <div class="actions">
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.ficha-pdf', ['admision' => $admision->id, 'formato' => 'pdf']) }}">PDF de la ficha</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', ['admision' => $admision->id, 'formato' => 'pdf']) }}">PDF del paciente</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', $admision->id) }}" target="_blank" rel="noopener">Reporte del paciente</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $admision->id) }}">Ver ficha</a>
             @can('admisiones.editar')
-            <button type="button"
-                class="btn btn-sm btn-secondary"
-                data-action="editar"
-                data-id="{{ $admision->id }}">
+            <a href="{{ route('admisiones.edit', $admision->id) }}" class="btn btn-sm btn-secondary">
                 Editar
-            </button>
+            </a>
             @endcan
 
             @can('admisiones.eliminar')

@@ -10,7 +10,8 @@
         <span id="crud-total-label">{{ $registros->total() }} remisiones registradas</span>
     </div>
     <div class="toolbar-actions">
-        @can('remisiones.crear')
+        <x-boton-reporte ruta="remisiones.reporte" />
+        @canany(['remisiones.crear', 'remisiones.gestionar'])
         <button type="button" class="btn btn-primary" id="btnNuevaRemision">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -19,13 +20,13 @@
             </svg>
             Nueva Remisión
         </button>
-        @endcan
+        @endcanany
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h2>Remisiones entre Clínicas</h2>
+        <h2>Remisiones por especialidad</h2>
         <div class="card-header-actions">
             <span class="tabla-status" id="crud-status">
                 <span class="dot"></span>
@@ -35,40 +36,59 @@
     </div>
 
     <div class="card-body" style="padding-bottom: 14px;">
-        <div class="form-grid">
+        <form method="GET" action="{{ route('remisiones.index') }}" class="form-grid" id="formFiltrosRemisiones">
             <div class="form-group">
-                <label>Buscar</label>
-                <input type="text" id="filtro-buscar" class="form-control"
+                <label for="filtro-buscar">Buscar</label>
+                <input type="text" id="filtro-buscar" name="buscar" value="{{ request('buscar') }}" class="form-control"
                     placeholder="Paciente o CI..." autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label>Clínica</label>
-                <select id="filtro-clinica" class="form-control">
-                    <option value="">Todas las clínicas</option>
+                <label for="filtro-clinica">Especialidad destino</label>
+                <select id="filtro-clinica" name="clinica_id" class="form-control">
+                    <option value="">Todas las especialidades</option>
                     @foreach ($clinicas as $c)
-                    <option value="{{ $c->id }}">{{ $c->especialidad }}</option>
+                    <option value="{{ $c->id }}" @selected((string) request('clinica_id') === (string) $c->id)>{{ $c->especialidad }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Periodo</label>
-                <select id="filtro-periodo" class="form-control">
+                <label for="filtro-periodo">Periodo</label>
+                <select id="filtro-periodo" name="periodo_id" class="form-control">
                     <option value="">Todos</option>
                     @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}">{{ $p->gestion }}-{{ $p->semestre }}</option>
+                    <option value="{{ $p->id }}" @selected((string) request('periodo_id') === (string) $p->id)>{{ $p->nombre_completo }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="filtro-flujo">Estado de atención</label>
+                <select id="filtro-flujo" name="flujo_estado" class="form-control">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente" @selected(request('flujo_estado') === 'pendiente')>Pendiente de asignación</option>
+                    <option value="asignada" @selected(request('flujo_estado') === 'asignada')>Asignada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="filtro-estado">Activación</label>
+                <select id="filtro-estado" name="estado" class="form-control">
+                    <option value="">Todas</option>
+                    <option value="1" @selected((string) request('estado') === '1')>Habilitadas</option>
+                    <option value="0" @selected((string) request('estado') === '0')>Inhabilitadas</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">Buscar</button>
                 <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
                     Limpiar
                 </button>
             </div>
-        </div>
+        </form>
     </div>
 
     <div class="table-wrap">
@@ -77,8 +97,10 @@
                 <tr>
                     <th>#</th>
                     <th>Paciente</th>
-                    <th>Clínica destino</th>
+                    <th>Especialidad destino</th>
                     <th>Periodo</th>
+                    <th>Docente</th>
+                    <th>Estudiante</th>
                     <th>Historias</th>
                     <th>Insumos</th>
                     <th>Estado</th>
@@ -86,12 +108,12 @@
                 </tr>
             </thead>
             <tbody id="tbodyRemisiones">
-                @include('remisiones.partials.filas')
+                @include('remisiones.partials.filas', ['items' => $items])
             </tbody>
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->withQueryString()->links() }}</div>
 </div>
 
 @include('remisiones.partials.modal')
@@ -107,10 +129,8 @@
 
         const URLS = {
             tabla: @json(route('remisiones.tabla')),
-            store: @json(route('remisiones.store')),
-            datos: (id) => `/remisiones/${id}/datos`,
-            update: (id) => `/remisiones/${id}`,
-            destroy: (id) => `/remisiones/${id}`,
+            datos: (id) => @json(route('remisiones.datos', ['remision' => '__ID__'])).replace('__ID__', encodeURIComponent(id)),
+            destroy: (id) => @json(route('remisiones.destroy', ['remision' => '__ID__'])).replace('__ID__', encodeURIComponent(id)),
         };
 
         const $tbody = document.getElementById('tbodyRemisiones');
@@ -122,10 +142,12 @@
         const $filtroBuscar = document.getElementById('filtro-buscar');
         const $filtroClinica = document.getElementById('filtro-clinica');
         const $filtroPeriodo = document.getElementById('filtro-periodo');
+        const $filtroFlujo = document.getElementById('filtro-flujo');
+        const $filtroEstado = document.getElementById('filtro-estado');
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
 
         let debounceTimer = null;
-        let cargando = false;
+        let tablaAbortController = null;
 
         function toast(type, message) {
             const colores = {
@@ -176,8 +198,9 @@
         }
 
         async function cargarTabla(page = 1) {
-            if (cargando) return;
-            cargando = true;
+            tablaAbortController?.abort();
+            const abortController = new AbortController();
+            tablaAbortController = abortController;
 
             setStatus('loading', 'Cargando...');
             $tbody?.classList.add('loading');
@@ -186,6 +209,8 @@
             if ($filtroBuscar?.value.trim()) params.set('buscar', $filtroBuscar.value.trim());
             if ($filtroClinica?.value) params.set('clinica_id', $filtroClinica.value);
             if ($filtroPeriodo?.value) params.set('periodo_id', $filtroPeriodo.value);
+            if ($filtroFlujo?.value) params.set('flujo_estado', $filtroFlujo.value);
+            if ($filtroEstado?.value !== '') params.set('estado', $filtroEstado.value);
             if (page > 1) params.set('page', page);
 
             try {
@@ -195,10 +220,12 @@
                         'Accept': 'application/json'
                     },
                     credentials: 'same-origin',
+                    signal: abortController.signal,
                 });
 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
+                if (tablaAbortController !== abortController) return;
 
                 $tbody.innerHTML = data.filas || '';
                 $pagWrap.innerHTML = data.paginacion || '';
@@ -206,15 +233,17 @@
 
                 setStatus('idle');
             } catch (err) {
+                if (err.name === 'AbortError') return;
                 console.error('[Remisiones] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="8">
+                <tr><td colspan="10">
                     <div class="empty-state"><p>Error al cargar remisiones.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');
             } finally {
-                $tbody?.classList.remove('loading');
-                cargando = false;
+                if (tablaAbortController === abortController) {
+                    $tbody?.classList.remove('loading');
+                }
             }
         }
 
@@ -224,11 +253,19 @@
         });
         $filtroClinica?.addEventListener('change', () => cargarTabla(1));
         $filtroPeriodo?.addEventListener('change', () => cargarTabla(1));
+        $filtroFlujo?.addEventListener('change', () => cargarTabla(1));
+        $filtroEstado?.addEventListener('change', () => cargarTabla(1));
+        document.getElementById('formFiltrosRemisiones')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            cargarTabla(1);
+        });
 
         $btnLimpiar?.addEventListener('click', () => {
             $filtroBuscar.value = '';
             $filtroClinica.value = '';
             $filtroPeriodo.value = '';
+            $filtroFlujo.value = '';
+            $filtroEstado.value = '';
             cargarTabla(1);
         });
 

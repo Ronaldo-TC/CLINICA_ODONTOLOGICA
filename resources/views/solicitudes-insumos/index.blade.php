@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $stats['pendientes'] + $stats['autorizadas'] + $stats['entregadas'] }} solicitudes</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="solicitudes-insumos.reporte" />
         <a href="{{ route('insumos.index') }}" class="btn btn-secondary">📦 Ver Catálogo</a>
         @can('insumos.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaSolicitud">
@@ -80,7 +81,9 @@
                     <option value="">Todos</option>
                     <option value="pendiente">Pendientes</option>
                     <option value="autorizado">Autorizadas</option>
+                    <option value="aprobado">Aprobadas por Insumos</option>
                     <option value="entregado">Entregadas</option>
+                    <option value="parcial">Entrega parcial</option>
                     <option value="rechazado">Rechazadas</option>
                 </select>
             </div>
@@ -125,6 +128,7 @@
 </div>
 
 @include('solicitudes-insumos.partials.modal')
+@include('solicitudes-insumos.partials.modal-designado')
 @include('solicitudes-insumos.partials.modal-entregar')
 
 @endsection
@@ -144,6 +148,7 @@
             update: (id) => `${BASE}/${id}`,
             destroy: (id) => `${BASE}/${id}`,
             autorizar: (id) => `${BASE}/${id}/autorizar`,
+            aprobar: (id) => `${BASE}/${id}/aprobar`,
             rechazar: (id) => `${BASE}/${id}/rechazar`,
             entregar: (id) => `${BASE}/${id}/entregar`,
         };
@@ -269,7 +274,11 @@
             }
 
             if (e.target.closest('#btnNuevaSolicitud')) {
+                @if(auth()->user()->hasAnyRole(['estudiante', 'interno']))
+                SolicitudDesignado.abrir();
+                @else
                 SolicitudModal.abrirCrear();
+                @endif
                 return;
             }
 
@@ -288,6 +297,9 @@
                     break;
                 case 'autorizar':
                     await accion(id, 'autorizar', '¿Autorizar esta solicitud?');
+                    break;
+                case 'aprobar':
+                    await accion(id, 'aprobar', '¿Aprobar esta solicitud en Insumos?');
                     break;
                 case 'rechazar':
                     await rechazar(id);
@@ -309,7 +321,11 @@
                     credentials: 'same-origin',
                 });
                 const data = await res.json();
-                SolicitudModal.abrirEdicion(data);
+                if (data.registro.historia_clinica_id && !data.registro.sesion_atencion_id) {
+                    SolicitudDesignado.abrir(data.registro.historia_clinica_id, data);
+                } else {
+                    SolicitudModal.abrirEdicion(data);
+                }
                 setStatus('idle');
             } catch (err) {
                 toast('error', 'No se pudo cargar.');

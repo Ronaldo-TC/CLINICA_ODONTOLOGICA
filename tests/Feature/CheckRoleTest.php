@@ -2,81 +2,81 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use Tests\UsesAuthDatabase;
 
 class CheckRoleTest extends TestCase
 {
-    public function test_role_permissions_control_read_and_write_access_to_user_routes(): void
+    use UsesAuthDatabase {
+        setUp as protected setUpAuthDatabase;
+    }
+
+    protected function setUp(): void
     {
-        Schema::create('roles', function (Blueprint $table): void {
-            $table->id();
-            $table->string('nombre');
-            $table->boolean('habilitado');
+        $this->setUpAuthDatabase();
+
+        Route::middleware(['web', 'auth.session', 'role:subadmin|admin'])->group(function (): void {
+            Route::get('/permission-check/users', fn (): string => 'ok')->middleware('permission:usuarios.ver');
+            Route::post('/permission-check/users', fn (): string => 'ok')->middleware('permission:usuarios.editar');
         });
-        Schema::create('usuario_rol', function (Blueprint $table): void {
-            $table->unsignedBigInteger('usuario_id');
-            $table->unsignedBigInteger('rol_id');
-        });
-        Schema::create('permisos', function (Blueprint $table): void {
-            $table->id();
-            $table->string('codigo');
-            $table->string('modulo');
-        });
-        Schema::create('rol_permiso', function (Blueprint $table): void {
-            $table->unsignedBigInteger('rol_id');
-            $table->unsignedBigInteger('permiso_id');
-            $table->boolean('habilitado');
-        });
+    }
 
-        DB::table('roles')->insert([
-            ['id' => 10, 'nombre' => 'subadmin', 'habilitado' => true],
-            ['id' => 11, 'nombre' => 'admin', 'habilitado' => true],
-        ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => 20,
-            'rol_id' => 10,
-        ]);
-        DB::table('permisos')->insert([
-            ['id' => 1, 'codigo' => 'usuarios.ver', 'modulo' => 'usuarios'],
-            ['id' => 2, 'codigo' => 'usuarios.gestionar', 'modulo' => 'usuarios'],
-        ]);
-        DB::table('rol_permiso')->insert([
-            'rol_id' => 10,
-            'permiso_id' => 1,
-            'habilitado' => true,
-        ]);
+    public function test_assigned_role_permission_allows_read_access(): void
+    {
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'subadmin', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::create(['name' => 'usuarios.ver', 'guard_name' => 'web']));
+        $user->assignRole($role);
 
-        Route::middleware(['web', 'role'])->get('/admin/usuarios/permission-check', fn() => 'ok');
-        Route::middleware(['web', 'role'])->post('/admin/usuarios/permission-check', fn() => 'ok');
-        Route::middleware(['web', 'role'])->get('/admin/roles/permission-check', fn() => 'ok');
-        $session = ['user_id' => 20, 'user_role' => 'subadmin'];
-        $this->withSession($session)->get('/admin/usuarios/permission-check')->assertOk();
-        $this->withSession($session)->post('/admin/usuarios/permission-check')->assertRedirect(route('auth.login'));
-        $this->withSession($session)->get('/admin/roles/permission-check')->assertRedirect(route('auth.login'));
-        $this->withSession($session)->get('/auth/login')->assertRedirect('/subadmin/dashboard');
+        $this->actingAs($user)->getJson('/permission-check/users')->assertOk();
+    }
 
-        DB::table('rol_permiso')->insert([
-            'rol_id' => 10,
-            'permiso_id' => 2,
-            'habilitado' => true,
-        ]);
-        $this->withSession($session)->post('/admin/usuarios/permission-check')->assertOk();
+    public function test_read_permission_alone_returns_403_for_write_access(): void
+    {
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'subadmin', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::create(['name' => 'usuarios.ver', 'guard_name' => 'web']));
+        $user->assignRole($role);
 
-        DB::table('rol_permiso')->where('permiso_id', 1)->update(['habilitado' => false]);
-        $this->withSession($session)->get('/admin/usuarios/permission-check')->assertOk();
+        $this->actingAs($user)->postJson('/permission-check/users')->assertForbidden();
+    }
 
-        DB::table('rol_permiso')->where('permiso_id', 2)->update(['habilitado' => false]);
-        $this->withSession($session)->get('/admin/usuarios/permission-check')->assertRedirect(route('auth.login'));
+    public function test_assigned_write_permission_allows_write_access(): void
+    {
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'subadmin', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::create(['name' => 'usuarios.editar', 'guard_name' => 'web']));
+        $user->assignRole($role);
 
-        DB::table('roles')->where('id', 10)->update(['habilitado' => false]);
-        $this->withSession($session)->get('/subadmin/dashboard')->assertRedirect(route('auth.login'));
+        $this->actingAs($user)->postJson('/permission-check/users')->assertOk();
+    }
 
-        $this->withSession(['user_id' => 21, 'user_role' => 'admin'])
-            ->get('/admin/roles/permission-check')
-            ->assertRedirect(route('auth.login'));
+    public function test_permission_returns_403_for_a_role_outside_the_allowed_roles(): void
+    {
+        $user = $this->createUser();
+        $user->assignRole(Role::create(['name' => 'estudiante', 'guard_name' => 'web']));
+        $user->givePermissionTo(Permission::create(['name' => 'usuarios.ver', 'guard_name' => 'web']));
+
+        $this->actingAs($user)->getJson('/permission-check/users')->assertForbidden();
+    }
+
+    public function test_revoked_role_permission_returns_403_for_read_access(): void
+    {
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'subadmin', 'guard_name' => 'web']);
+        $permission = Permission::create(['name' => 'usuarios.ver', 'guard_name' => 'web']);
+        $role->givePermissionTo($permission);
+        $user->assignRole($role);
+        $role->revokePermissionTo($permission);
+
+        $this->actingAs($user)->getJson('/permission-check/users')->assertForbidden();
+    }
+
+    public function test_unauthenticated_access_redirects_to_login(): void
+    {
+        $this->get('/permission-check/users')->assertRedirect(route('auth.login'));
     }
 }

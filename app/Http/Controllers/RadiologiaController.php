@@ -3,24 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasCrudAjax;
+use App\Models\Archivo;
 use App\Models\Caja;
 use App\Models\Clinica;
 use App\Models\Paciente;
 use App\Models\Radiologia;
 use App\Models\Remision;
-use App\Models\Usuario;
+use App\Services\AccesoClinico;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RadiologiaController extends Controller
 {
     use HasCrudAjax;
 
-    protected string $modelClass       = Radiologia::class;
-    protected string $viewPrefix       = 'radiologia';
-    protected string $resourceName     = 'Radiología';
-    protected string $pluralName       = 'Radiologías';
+    protected string $modelClass = Radiologia::class;
+
+    protected string $viewPrefix = 'radiologia';
+
+    protected string $resourceName = 'Radiología';
+
+    protected string $pluralName = 'Radiologías';
+
     protected string $permissionPrefix = 'radiologias';
-    protected int    $perPage          = 15;
+
+    protected int $perPage = 15;
 
     /* ============================================================
        QUERIES
@@ -28,7 +42,7 @@ class RadiologiaController extends Controller
 
     protected function buildIndexQuery(Request $request)
     {
-        return Radiologia::query()
+        return AccesoClinico::radiologias(Radiologia::query(), $request->user())
             ->with([
                 'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
                 'clinica:id,especialidad,modulo',
@@ -82,7 +96,7 @@ class RadiologiaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'estados'  => Radiologia::query()
+            'estados' => Radiologia::query()
                 ->select('estado')
                 ->whereNotNull('estado')
                 ->distinct()
@@ -107,14 +121,13 @@ class RadiologiaController extends Controller
         return [
             'descripcion' => ['required', 'string', 'max:100'],
             'observacion' => ['nullable', 'string', 'max:100'],
-            'estado'      => ['required', 'string', 'max:50'],
-            'usuario_id'  => ['required', 'integer', 'exists:usuarios,id'],
-            'caja_id'     => ['required', 'integer', 'exists:cajas,id'],
-            'clinica_id'  => ['required', 'integer', 'exists:clinicas,id'],
+            'estado' => ['required', 'string', 'max:50'],
+            'usuario_id' => ['nullable', 'integer', 'exists:usuarios,id'],
+            'caja_id' => ['required', 'integer', 'exists:cajas,id'],
+            'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
             'paciente_id' => ['nullable', 'integer', 'exists:pacientes,id'],
             'remision_id' => ['nullable', 'integer', 'exists:remisiones,id'],
-            'archivo_ruta' => ['nullable', 'string', 'max:500'],
-            'fecha_toma'  => ['nullable', 'date'],
+            'fecha_toma' => ['nullable', 'date'],
         ];
     }
 
@@ -122,10 +135,10 @@ class RadiologiaController extends Controller
     {
         return [
             'descripcion.required' => 'La descripción es obligatoria.',
-            'estado.required'      => 'El estado es obligatorio.',
-            'usuario_id.required'  => 'Debe asignar un responsable.',
-            'caja_id.required'     => 'Debe asignar una caja.',
-            'clinica_id.required'  => 'Debe seleccionar una clínica.',
+            'estado.required' => 'El estado es obligatorio.',
+            'usuario_id.required' => 'Debe asignar un responsable.',
+            'caja_id.required' => 'Debe asignar una caja.',
+            'clinica_id.required' => 'Debe seleccionar una clínica.',
         ];
     }
 
@@ -140,24 +153,72 @@ class RadiologiaController extends Controller
                 $data[$col] = '';
             }
         }
+
         return $data;
     }
 
     protected function beforeStore(array $data): array
     {
+        $data = $this->vincularPaciente($data);
         $data = $this->normalizarStrings($data);
-        $data['usuario_id'] = $data['usuario_id'] ?? auth()->id();
+        $data['usuario_id'] = request()->user()->id;
+        $data['observacion'] ??= '';
+
         return $data;
     }
 
     protected function beforeUpdate($model, array $data): array
     {
+        if ($model->archivos()->exists()) {
+            foreach (['paciente_id', 'caja_id', 'clinica_id', 'remision_id'] as $campo) {
+                if (array_key_exists($campo, $data) && (int) $data[$campo] !== (int) $model->{$campo}) {
+                    throw ValidationException::withMessages([$campo => 'El estudio tiene imágenes y no puede reasignarse a otro caso.']);
+                }
+            }
+        }
+        $data = $this->vincularPaciente($data);
+        unset($data['usuario_id']);
+
         return $this->normalizarStrings($data);
+    }
+
+    private function vincularPaciente(array $data): array
+    {
+        $caja = Caja::findOrFail($data['caja_id']);
+        if ($caja->paciente_id) {
+            if (! empty($data['paciente_id']) && (int) $data['paciente_id'] !== (int) $caja->paciente_id) {
+                throw ValidationException::withMessages(['paciente_id' => 'El paciente debe corresponder al recibo seleccionado.']);
+            }
+            $data['paciente_id'] = $caja->paciente_id;
+            $data['periodo_id'] = $caja->periodo_id;
+            $data['remision_id'] = $caja->remision_id;
+        }
+        if (empty($data['paciente_id'])) {
+            throw ValidationException::withMessages(['paciente_id' => 'Seleccione el paciente del estudio.']);
+        }
+        if (! empty($data['remision_id'])) {
+            $remision = Remision::findOrFail($data['remision_id']);
+            if ((int) $remision->paciente_id !== (int) $data['paciente_id']) {
+                throw ValidationException::withMessages(['remision_id' => 'La remisión debe corresponder al paciente del estudio.']);
+            }
+            $data['periodo_id'] = $remision->periodo_id;
+        }
+
+        return $data;
     }
 
     protected function canDestroy($model): array
     {
+        if ($model->archivos()->exists()) {
+            return [false, 'El estudio tiene imágenes clínicas y debe conservarse.'];
+        }
+
         return [true, ''];
+    }
+
+    protected function findOrFail($id): Model
+    {
+        return AccesoClinico::radiologias(Radiologia::query(), request()->user())->findOrFail($id);
     }
 
     /* ============================================================
@@ -181,10 +242,10 @@ class RadiologiaController extends Controller
             ->orderBy('nombre')
             ->limit(20)
             ->get(['id', 'ci', 'nombre', 'apellido_paterno', 'apellido_materno'])
-            ->map(fn($p) => [
-                'id'        => $p->id,
-                'texto'     => $p->nombre_completo,
-                'extra'     => $p->ci ? "CI: {$p->ci}" : '',
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'texto' => $p->nombre_completo,
+                'extra' => $p->ci ? "CI: {$p->ci}" : '',
                 'iniciales' => $p->iniciales,
             ]);
 
@@ -206,10 +267,10 @@ class RadiologiaController extends Controller
             ->orderByDesc('id')
             ->limit(20)
             ->get(['id', 'recibo', 'paciente_nombre_completo', 'costo_total'])
-            ->map(fn($c) => [
-                'id'    => $c->id,
-                'texto' => 'Recibo #' . ($c->recibo ?: $c->id) . ' - ' . ($c->paciente_nombre_completo ?: 'Sin paciente'),
-                'extra' => 'Costo: ' . number_format($c->costo_total, 2) . ' Bs',
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'texto' => 'Recibo #'.($c->recibo ?: $c->id).' - '.($c->paciente_nombre_completo ?: 'Sin paciente'),
+                'extra' => 'Costo: '.number_format($c->costo_total, 2).' Bs',
             ]);
 
         return response()->json($cajas);
@@ -221,7 +282,82 @@ class RadiologiaController extends Controller
 
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
-                ->map(fn($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
+                ->map(fn ($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
         ]);
+    }
+
+    public function visor(Request $request, int $radiologia): View
+    {
+        $registro = $this->radiologiaVisible($request, $radiologia);
+        $archivos = $registro->archivos()->orderBy('id')->get();
+
+        return view('radiologia.visor', ['registro' => $registro, 'archivos' => $archivos, 'imagenes' => $archivos->map(fn (Archivo $archivo): array => [
+            'id' => $archivo->id, 'nombre' => $archivo->nombre_original, 'dicom' => $archivo->extension === 'dcm',
+            'url' => route('radiologia.archivos.ver', [$registro->id, $archivo->id]),
+        ])]);
+    }
+
+    public function guardarArchivos(Request $request, int $radiologia): RedirectResponse
+    {
+        $registro = $this->radiologiaVisible($request, $radiologia);
+        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin', 'radiologia']) && ($request->user()->can('radiologias.editar') || $request->user()->can('radiologias.gestionar')), 403);
+        $request->validate(['archivos' => ['required', 'array', 'min:1', 'max:200'], 'archivos.*' => ['required', 'file', 'max:51200']]);
+        $preparados = [];
+        foreach ($request->file('archivos') as $indice => $file) {
+            $inicio = file_get_contents($file->getRealPath(), false, null, 0, 132);
+            $dicom = strlen($inicio) >= 132 && substr($inicio, 128, 4) === 'DICM';
+            $tipo = $file->getMimeType();
+            if (! $dicom && ! in_array($tipo, ['image/jpeg', 'image/png'], true)) {
+                throw ValidationException::withMessages(['archivos.'.$indice => 'Seleccione imágenes JPG/PNG o archivos DICOM Part 10 (.dcm).']);
+            }
+            $preparados[] = [$file, $dicom ? 'dcm' : ($tipo === 'image/png' ? 'png' : 'jpg')];
+        }
+        $guardados = [];
+        try {
+            DB::transaction(function () use ($registro, $request, $preparados, &$guardados): void {
+                foreach ($preparados as [$file, $extension]) {
+                    $hash = hash_file('sha256', $file->getRealPath());
+                    if ($registro->archivos()->where('hash', $hash)->exists()) {
+                        continue;
+                    }
+                    $nombre = Str::uuid().'.'.$extension;
+                    $ruta = 'radiologias/'.$registro->id.'/'.$nombre;
+                    $guardados[] = $ruta;
+                    if (! Storage::disk('local')->putFileAs('radiologias/'.$registro->id, $file, $nombre)) {
+                        throw new \RuntimeException('No se pudo guardar el estudio.');
+                    }
+                    $registro->archivos()->create([
+                        'paciente_id' => $registro->paciente_id, 'remision_id' => $registro->remision_id,
+                        'nombre_original' => mb_substr(basename($file->getClientOriginalName()), 0, 200),
+                        'nombre_guardado' => $nombre, 'ruta' => $ruta, 'extension' => $extension,
+                        'tamano_bytes' => $file->getSize(), 'tipo' => $extension === 'dcm' ? 'application/dicom' : $file->getMimeType(),
+                        'hash' => $hash, 'usuario_id' => $request->user()->id, 'clinica_id' => $registro->clinica_id,
+                    ]);
+                }
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('local')->delete($guardados);
+            throw $exception;
+        }
+
+        return back()->with('success', 'Archivos del estudio guardados.');
+    }
+
+    public function archivo(Request $request, int $radiologia, int $archivo): BinaryFileResponse
+    {
+        $registro = $this->radiologiaVisible($request, $radiologia);
+        $documento = $registro->archivos()->findOrFail($archivo);
+        abort_unless(str_starts_with($documento->ruta, 'radiologias/'.$registro->id.'/') && Storage::disk('local')->exists($documento->ruta), 404);
+
+        return response()->file(Storage::disk('local')->path($documento->ruta), [
+            'Content-Type' => $documento->tipo, 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff',
+        ])->setPrivate();
+    }
+
+    private function radiologiaVisible(Request $request, int $id): Radiologia
+    {
+        $registro = AccesoClinico::radiologias(Radiologia::query(), $request->user())->findOrFail($id);
+
+        return $registro->load(['paciente', 'clinica']);
     }
 }

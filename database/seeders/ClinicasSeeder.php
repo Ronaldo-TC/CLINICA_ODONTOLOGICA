@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * ClinicasSeeder
  *
- * 14 áreas clínicas según PDF pág. 6.
+ * Catálogo de áreas clínicas y módulos de atención.
  * Alineado con la tabla `clinicas` del BACKUP_LG.SQL.
  */
 class ClinicasSeeder extends Seeder
@@ -32,13 +32,14 @@ class ClinicasSeeder extends Seeder
             ['modulo' => 'Clínicas de Rehabilitación',  'especialidad' => 'Ortodoncia',             'curso' => 4],
             ['modulo' => 'Servicios de Apoyo',          'especialidad' => 'Radiología',             'curso' => 0],
             ['modulo' => 'Servicios de Apoyo',          'especialidad' => 'Esterilización',         'curso' => 0],
+            ['modulo' => 'Admisión',                    'especialidad' => 'Historia Clínica',       'curso' => 1],
+            ['modulo' => 'Clínicas Quirúrgicas',        'especialidad' => 'Quirófano',               'curso' => 5],
         ];
 
-        $rows = array_map(
-            fn(array $c): array => $c + ['created_at' => $now, 'updated_at' => $now],
-            $clinicas
-        );
-
-        DB::table('clinicas')->insert($rows);
+        foreach ($clinicas as $clinica) {
+            if (! DB::table('clinicas')->where('especialidad', $clinica['especialidad'])->exists()) {
+                DB::table('clinicas')->insert($clinica + ['created_at' => $now, 'updated_at' => $now]);
+            }
+        }
     }
 }

@@ -50,6 +50,28 @@
     </td>
 
     <td>
+        @canany(['cajas.ver', 'cajas.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#cajas">Ver recibos</a>
+        @else
+            <small>Sin acceso</small>
+        @endcanany
+    </td>
+    <td>
+        @canany(['insumos.ver', 'insumos.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#insumos">Ver solicitudes</a>
+        @else
+            <small>Sin acceso</small>
+        @endcanany
+    </td>
+    <td>
+        @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#esterilizaciones">Ver controles</a>
+        @else
+            <small>Sin acceso</small>
+        @endcanany
+    </td>
+
+    <td>
         @if ($historia->autorizado)
         <span class="badge badge-success">Autorizado</span>
         @elseif ($historia->estado_revision)
@@ -61,6 +83,7 @@
 
     <td>
         <div class="actions">
+            @if(!$historia->autorizado) @canany(['historias.autorizar','historias.gestionar'])<form method="POST" action="{{ route('historias.autorizar', $historia->id) }}">@csrf<button class="btn btn-sm btn-primary">Autorizar historia</button></form>@endcanany @endif
             <button type="button"
                 class="btn btn-sm btn-secondary"
                 data-action="archivos"
@@ -92,7 +115,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="9">
+    <td colspan="12">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

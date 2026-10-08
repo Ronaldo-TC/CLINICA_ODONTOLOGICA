@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SesionAtencion extends Model
 {
@@ -16,25 +17,33 @@ class SesionAtencion extends Model
         'docente_id',
         'observacion_docente',
         'autorizado',
+        'autorizado_por',
+        'fecha_autorizacion',
     ];
 
     protected $casts = [
-        'fecha'      => 'date',
+        'fecha' => 'date',
         'autorizado' => 'boolean',
+        'fecha_autorizacion' => 'datetime',
     ];
 
-    public function tratamientoRealizado()
+    public function tratamientoRealizado(): BelongsTo
     {
         return $this->belongsTo(TratamientoRealizado::class, 'tratamiento_realizado_id');
     }
 
-    public function estudiante()
+    public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'estudiante_id');
     }
 
-    public function docente()
+    public function docente(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'docente_id');
+    }
+
+    public function autorizador(): BelongsTo
+    {
+        return $this->belongsTo(Usuario::class, 'autorizado_por');
     }
 }

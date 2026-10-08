@@ -245,7 +245,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
     </div>
 
     {{-- ================= TARJETA DE USUARIO ================= --}}
-    <!-- @if ($user)
+    @if ($user)
         <div class="sidebar-user">
             <span class="user-avatar-wrap">
                 @if ($avatarUrl)
@@ -275,7 +275,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
                 </a>
             @endif
         </div>
-    @endif -->
+    @endif
 
     {{-- ================= FILTRO RÁPIDO ================= --}}
     <!-- @if ($searchable > 0)

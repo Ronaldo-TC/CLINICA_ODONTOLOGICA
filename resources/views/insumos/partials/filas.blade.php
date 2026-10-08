@@ -1,7 +1,13 @@
 @forelse ($items as $insumo)
 <tr data-id="{{ $insumo->id }}">
     <td><strong>{{ $insumo->nombre }}</strong></td>
-    <td><span class="badge badge-info">{{ $insumo->insumoTratamiento?->nombre ?? '—' }}</span></td>
+    <td>
+        @forelse ($insumo->tratamientos as $tratamiento)
+            <span class="badge badge-info">{{ $tratamiento->nombre }}</span>
+        @empty
+            <span class="badge badge-warning">Sin tratamiento asignado</span>
+        @endforelse
+    </td>
     <td>{{ $insumo->clinica?->especialidad ?? '—' }}</td>
     <td>
         <strong>{{ number_format($insumo->cantidad_numerica, 2) }}</strong>
@@ -21,18 +27,18 @@
     </td>
     <td>
         <div class="actions">
-            @can('insumos.editar')
+            @canany(['insumos.editar', 'insumos.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $insumo->id }}">Editar</button>
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="ajustar" data-id="{{ $insumo->id }}"
                 data-nombre="{{ $insumo->nombre }}">± Stock</button>
-            @endcan
-            @can('insumos.eliminar')
+            @endcanany
+            @canany(['insumos.eliminar', 'insumos.gestionar'])
             <button type="button" class="btn btn-sm btn-danger"
                 data-action="eliminar" data-id="{{ $insumo->id }}"
                 data-nombre="{{ $insumo->nombre }}">Eliminar</button>
-            @endcan
+            @endcanany
         </div>
     </td>
 </tr>

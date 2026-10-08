@@ -17,6 +17,7 @@
             </div>
 
             <div class="modal-body">
+                <div class="form-group"><label>Docente supervisor</label><select name="docente_id" required class="form-control"><option value="">Seleccione...</option>@foreach($docentes as $docente)<option value="{{ $docente->id }}">{{ $docente->nombre_completo }}</option>@endforeach</select><span class="form-error" data-error-for="docente_id"></span></div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="est-clinica">Clínica <span class="req">*</span></label>
@@ -179,6 +180,7 @@
 
                 $form.clinica_id.value = e.clinica_id ?? '';
                 $form.periodo_id.value = e.periodo_id ?? '';
+                $form.docente_id.value = e.docente_id ?? '';
                 $form.cantidad_sobres.value = e.cantidad_sobres ?? 0;
                 $form.cantidad_paquetes.value = e.cantidad_paquetes ?? 0;
                 $form.info.value = e.info ?? '';

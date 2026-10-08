@@ -4,7 +4,10 @@
 <div class="modal-backdrop" id="modalInsumo">
     <div class="modal modal-lg" role="dialog" aria-modal="true"
         aria-labelledby="modalInsumoTitulo">
-        <form id="formInsumo" novalidate>
+        <form id="formInsumo" novalidate
+            data-store="{{ route('insumos.store') }}"
+            data-update="{{ route('insumos.update', '__INSUMO__') }}"
+            data-tratamientos="{{ route('insumos.tratamientos-por-clinica', '__CLINICA__') }}">
             @csrf
             <input type="hidden" name="_method" id="formMethod" value="POST">
             <input type="hidden" name="insumo_id" id="formInsumoId" value="">
@@ -23,17 +26,6 @@
 
             <div class="modal-body">
                 <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
-                    {{-- Nombre --}}
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="nombre">
-                            Nombre del insumo <span class="req">*</span>
-                        </label>
-                        <input type="text" id="nombre" name="nombre"
-                            class="form-control" required maxlength="100"
-                            placeholder="Ej: Resina compuesta A2">
-                        <span class="form-error" data-error-for="nombre"></span>
-                    </div>
-
                     {{-- Clínica --}}
                     <div class="form-group">
                         <label for="clinica_id">
@@ -48,16 +40,28 @@
                         <span class="form-error" data-error-for="clinica_id"></span>
                     </div>
 
-                    {{-- Tipo de insumo --}}
+                    {{-- Tratamiento de la clínica --}}
                     <div class="form-group">
-                        <label for="insumo_tratamiento_id">
-                            Tipo de insumo <span class="req">*</span>
+                        <label for="insumo-tratamiento">
+                            Insumo para el tratamiento <span class="req">*</span>
                         </label>
-                        <select id="insumo_tratamiento_id" name="insumo_tratamiento_id"
-                            class="form-control" required>
+                        <select id="insumo-tratamiento" name="tratamiento_id"
+                            class="form-control" required disabled>
                             <option value="">Primero seleccione una clínica</option>
                         </select>
-                        <span class="form-error" data-error-for="insumo_tratamiento_id"></span>
+                        <span class="form-error" data-error-for="tratamiento_id"></span>
+                        <small id="insumo-tratamientos-actuales" style="color:var(--muted);"></small>
+                    </div>
+
+                    {{-- Nombre --}}
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="nombre">
+                            Nombre del insumo <span class="req">*</span>
+                        </label>
+                        <input type="text" id="nombre" name="nombre"
+                            class="form-control" required maxlength="100"
+                            placeholder="Ej: Resina compuesta A2">
+                        <span class="form-error" data-error-for="nombre"></span>
                     </div>
 
                     {{-- Cantidad numérica --}}
@@ -73,10 +77,10 @@
 
                     {{-- Unidad --}}
                     <div class="form-group">
-                        <label for="cantidad">Unidad de medida</label>
+                        <label for="cantidad">Medida Volumétrica</label>
                         <input type="text" id="cantidad" name="cantidad"
                             class="form-control" maxlength="100"
-                            placeholder="Ej: cajas, frascos, unidades">
+                            placeholder="Ej: ml, cm³, gramos, unidades">
                         <span class="form-error" data-error-for="cantidad"></span>
                     </div>
 
@@ -130,219 +134,5 @@
 </div>
 
 @push('scripts')
-<script>
-    (() => {
-        'use strict';
-
-        const CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
-        const $modal = document.getElementById('modalInsumo');
-        const $form = document.getElementById('formInsumo');
-        const $titulo = document.getElementById('modalInsumoTitulo');
-        const $method = document.getElementById('formMethod');
-        const $id = document.getElementById('formInsumoId');
-        const $btnGuardar = document.getElementById('btnGuardarInsumo');
-        const $btnText = document.getElementById('btnGuardarInsumoText');
-        const $errorBox = document.getElementById('formInsumoError');
-        const $errorTxt = document.getElementById('formInsumoErrorText');
-        const $clinica = document.getElementById('clinica_id');
-        const $tipo = document.getElementById('insumo_tratamiento_id');
-
-        // ─── Abrir modal (crear) ──────────────────────────────────
-        document.getElementById('btnNuevoInsumo')?.addEventListener('click', () => {
-            resetForm();
-            $titulo.textContent = 'Nuevo Insumo';
-            $method.value = 'POST';
-            $btnText.textContent = 'Registrar Insumo';
-            openModal();
-        });
-
-        // ─── Cerrar modal ─────────────────────────────────────────
-        $modal?.addEventListener('click', (e) => {
-            if (e.target.closest('[data-modal-close]')) closeModal();
-            if (e.target === $modal) closeModal();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && $modal.classList.contains('open')) closeModal();
-        });
-
-        // ─── Cargar tipos de insumo según clínica ─────────────────
-        $clinica?.addEventListener('change', async () => {
-            const clinicaId = $clinica.value;
-            const currentTipo = $tipo.dataset.selected || '';
-
-            $tipo.innerHTML = '<option value="">Cargando...</option>';
-            $tipo.disabled = true;
-
-            if (!clinicaId) {
-                $tipo.innerHTML = '<option value="">Primero seleccione una clínica</option>';
-                $tipo.disabled = false;
-                return;
-            }
-
-            try {
-                const res = await fetch(`/insumos/tipos-por-clinica/${clinicaId}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                });
-
-                if (!res.ok) throw new Error();
-
-                const tipos = await res.json();
-
-                $tipo.innerHTML = '<option value="">Seleccione un tipo...</option>';
-                tipos.forEach((t) => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id;
-                    opt.textContent = t.nombre;
-                    if (String(t.id) === String(currentTipo)) opt.selected = true;
-                    $tipo.appendChild(opt);
-                });
-            } catch (err) {
-                console.error(err);
-                $tipo.innerHTML = '<option value="">Error al cargar tipos</option>';
-            } finally {
-                $tipo.disabled = false;
-            }
-        });
-
-        // ─── Submit del formulario ────────────────────────────────
-        $form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            clearErrors();
-
-            const id = $id.value;
-            const isEdit = !!id;
-            const url = isEdit ? `/insumos/${id}` : @json(route('insumos.store'));
-            const method = isEdit ? 'PUT' : 'POST';
-
-            // Construir FormData con _method si es edición
-            const formData = new FormData($form);
-            if (isEdit) formData.set('_method', 'PUT');
-
-            setLoading(true);
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST', // Laravel interpreta _method
-                    headers: {
-                        'X-CSRF-TOKEN': CSRF,
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: formData,
-                    credentials: 'same-origin',
-                });
-
-                const data = await res.json();
-
-                if (res.status === 422) {
-                    mostrarErrores(data.errors || {});
-                    throw new Error(data.message || 'Revisa los campos.');
-                }
-
-                if (!res.ok || !data.success) {
-                    throw new Error(data.message || 'Error al guardar.');
-                }
-
-                // Éxito
-                closeModal();
-                window.InsumosLista?.toast('success', data.message || 'Guardado correctamente.');
-                window.dispatchEvent(new Event('insumo:guardado'));
-            } catch (err) {
-                if (Object.keys(collectErrors()).length === 0) {
-                    $errorTxt.textContent = err.message || 'Error inesperado.';
-                    $errorBox.style.display = 'flex';
-                }
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        // ─── API pública del modal ────────────────────────────────
-        window.InsumosModal = {
-            abrirEdicion(data) {
-                resetForm();
-                $titulo.textContent = 'Editar Insumo';
-                $method.value = 'PUT';
-                $btnText.textContent = 'Actualizar Insumo';
-                $id.value = data.id;
-
-                // Llenar campos
-                $form.nombre.value = data.nombre ?? '';
-                $form.cantidad_numerica.value = data.cantidad_numerica ?? '';
-                $form.cantidad.value = data.cantidad ?? '';
-                $form.stock_minimo.value = data.stock_minimo ?? '';
-                $form.costo_unitario.value = data.costo_unitario ?? '';
-
-                // Clínica primero
-                $clinica.value = data.clinica_id ?? '';
-                $tipo.dataset.selected = data.insumo_tratamiento_id ?? '';
-
-                // Disparar carga de tipos
-                $clinica.dispatchEvent(new Event('change'));
-
-                openModal();
-            },
-        };
-
-        // ─── Helpers ──────────────────────────────────────────────
-        function openModal() {
-            $modal.classList.add('open');
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => $form.nombre?.focus(), 100);
-        }
-
-        function closeModal() {
-            $modal.classList.remove('open');
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-        }
-
-        function resetForm() {
-            $form.reset();
-            $id.value = '';
-            $method.value = 'POST';
-            clearErrors();
-            $errorBox.style.display = 'none';
-        }
-
-        function clearErrors() {
-            document.querySelectorAll('[data-error-for]').forEach((el) => el.textContent = '');
-            document.querySelectorAll('.form-control').forEach((el) => el.classList.remove('is-invalid'));
-            $errorBox.style.display = 'none';
-        }
-
-        function mostrarErrores(errors) {
-            Object.entries(errors).forEach(([field, messages]) => {
-                const $err = document.querySelector(`[data-error-for="${field}"]`);
-                if ($err) $err.textContent = Array.isArray(messages) ? messages[0] : messages;
-
-                const $input = $form.querySelector(`[name="${field}"]`);
-                if ($input) $input.classList.add('is-invalid');
-            });
-
-            $errorTxt.textContent = 'Corrige los errores marcados en rojo.';
-            $errorBox.style.display = 'flex';
-        }
-
-        function collectErrors() {
-            const errors = {};
-            document.querySelectorAll('[data-error-for]').forEach((el) => {
-                if (el.textContent.trim()) errors[el.dataset.errorFor] = el.textContent;
-            });
-            return errors;
-        }
-
-        function setLoading(loading) {
-            $btnGuardar.disabled = loading;
-            $btnText.textContent = loading ?
-                'Guardando...' :
-                ($id.value ? 'Actualizar Insumo' : 'Registrar Insumo');
-        }
-    })();
-</script>
+<script src="{{ asset('js/insumo-registro.js') }}" defer></script>
 @endpush

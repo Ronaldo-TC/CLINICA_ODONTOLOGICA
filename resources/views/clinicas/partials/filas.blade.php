@@ -30,6 +30,11 @@
 
     <td>
         <div class="actions">
+            @canany(['tratamientos.ver', 'tratamientos.gestionar'])
+            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.index', ['clinica_id' => $clinica->id]) }}">
+                Tratamientos
+            </a>
+            @endcanany
             @can('clinicas.editar')
             <button type="button"
                 class="btn btn-sm btn-secondary"

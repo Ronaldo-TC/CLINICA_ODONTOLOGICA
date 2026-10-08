@@ -10,18 +10,34 @@ return new class extends Migration
     {
         Schema::create('insumos_solicitados', function (Blueprint $table) {
             $table->id();
-            $table->integer('pieza');
+
+            $table->foreignId('remision_id')
+                ->nullable()
+                ->constrained('remisiones')
+                ->nullOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreignId('usuario_id')
+                ->constrained('usuarios')
+                ->restrictOnDelete();
+
+            $table->foreignId('clinica_id')->nullable()->constrained('clinicas')->nullOnDelete();
+            $table->foreignId('insumo_tratamiento_id')->nullable()->constrained('insumos_tratamiento')->nullOnDelete();
+            $table->foreignId('tratamiento_realizado_id')->nullable()->constrained('tratamientos_realizados')->nullOnDelete();
+            $table->foreignId('sesion_atencion_id')->nullable()->constrained('sesiones_atencion')->nullOnDelete();
+            $table->foreignId('docente_id')->nullable()->constrained('usuarios')->nullOnDelete();
+            $table->unsignedSmallInteger('pieza')->default(0);
             $table->text('insumos')->nullable();
-            $table->integer('docente_autoriza')->default(0);
-            $table->foreignId('docente_id')->nullable()->constrained('usuarios')->nullOnDelete()->cascadeOnUpdate();
+            $table->boolean('docente_autoriza')->default(false);
             $table->boolean('autorizado')->default(false);
-            $table->foreignId('insumo_tratamiento_id')->constrained('insumos_tratamiento')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('remision_id')->constrained('remisiones')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('tratamiento_realizado_id')->nullable()->constrained('tratamientos_realizados')->nullOnDelete()->cascadeOnUpdate();
-            $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->nullOnDelete()->cascadeOnUpdate();
-            $table->string('estado', 20)->default('pendiente');
             $table->timestamp('fecha_autorizacion')->nullable();
+            $table->foreignId('rechazado_por')->nullable()->constrained('usuarios')->nullOnDelete();
+            $table->timestamp('fecha_rechazo')->nullable();
+            $table->text('motivo_rechazo')->nullable();
+            $table->string('estado', 20)->default('pendiente');
+
+            $table->date('fecha_solicitud')->useCurrent();
+            $table->text('observaciones')->nullable();
             $table->timestamps();
         });
     }

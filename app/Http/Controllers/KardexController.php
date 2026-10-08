@@ -36,12 +36,17 @@ class KardexController extends Controller
     /* ============================================================
        CONFIGURACIÓN DEL TRAIT
        ============================================================ */
-    protected string $modelClass       = Paciente::class;
-    protected string $viewPrefix       = 'kardex';
-    protected string $resourceName     = 'Kardex';
-    protected string $pluralName       = 'Kardex';
+    protected string $modelClass = Paciente::class;
+
+    protected string $viewPrefix = 'kardex';
+
+    protected string $resourceName = 'Kardex';
+
+    protected string $pluralName = 'Kardex';
+
     protected string $permissionPrefix = 'reportes';
-    protected int    $perPage          = 15;
+
+    protected int $perPage = 15;
 
     /* ============================================================
        EXPRESIONES SQL REUTILIZABLES (subconsultas correlacionadas)
@@ -63,8 +68,8 @@ class KardexController extends Controller
     protected function sqlTotalTratamientos(): string
     {
         return '(SELECT COUNT(*) FROM tratamientos_realizados tra'
-            . ' WHERE tra.historia_clinica_id IN ('
-            . 'SELECT h.id FROM historias_clinicas h WHERE h.paciente_id = pacientes.id))';
+            .' WHERE tra.historia_clinica_id IN ('
+            .'SELECT h.id FROM historias_clinicas h WHERE h.paciente_id = pacientes.id))';
     }
 
     /**
@@ -73,26 +78,32 @@ class KardexController extends Controller
     protected function sqlCajasPorDetalle(): string
     {
         return '(SELECT cd.caja_id FROM caja_detalles cd'
-            . ' WHERE cd.tratamiento_realizado_id IN ('
-            . 'SELECT tr.id FROM tratamientos_realizados tr'
-            . ' WHERE tr.historia_clinica_id IN ('
-            . 'SELECT h2.id FROM historias_clinicas h2 WHERE h2.paciente_id = pacientes.id)))';
+            .' WHERE cd.tratamiento_realizado_id IN ('
+            .'SELECT tr.id FROM tratamientos_realizados tr'
+            .' WHERE tr.historia_clinica_id IN ('
+            .'SELECT h2.id FROM historias_clinicas h2 WHERE h2.paciente_id = pacientes.id)))';
     }
 
     /** Total pagado (`cancelado`) de las cajas del paciente. */
     protected function sqlTotalPagado(): string
     {
         return '(SELECT COALESCE(SUM(caj.cancelado), 0) FROM cajas caj'
-            . ' WHERE caj.id IN ' . $this->sqlCajasPorDetalle()
-            . ' OR caj.ci = pacientes.ci)';
+            .' WHERE '.$this->sqlCajasDelPaciente().')';
     }
 
     /** Costo total facturado de las cajas del paciente. */
     protected function sqlTotalCosto(): string
     {
         return '(SELECT COALESCE(SUM(caj.costo_total), 0) FROM cajas caj'
-            . ' WHERE caj.id IN ' . $this->sqlCajasPorDetalle()
-            . ' OR caj.ci = pacientes.ci)';
+            .' WHERE '.$this->sqlCajasDelPaciente().')';
+    }
+
+    /** La relación directa prevalece; los recibos antiguos se enlazan por detalle o CI exacto. */
+    protected function sqlCajasDelPaciente(): string
+    {
+        return '(caj.paciente_id = pacientes.id OR (caj.paciente_id IS NULL AND ('
+            .'caj.id IN '.$this->sqlCajasPorDetalle()
+            .' OR (caj.ci > 0 AND CAST(caj.ci AS CHAR) = pacientes.ci))))';
     }
 
     /**
@@ -102,10 +113,10 @@ class KardexController extends Controller
     protected function sqlConMovimientos(): string
     {
         return '(COALESCE(kardex_pacientes.total_admisiones, 0)'
-            . ' + COALESCE(kardex_pacientes.total_historias, 0)'
-            . ' + COALESCE(kardex_pacientes.total_tratamientos, 0)'
-            . ' + COALESCE(kardex_pacientes.total_costo, 0)'
-            . ' + COALESCE(kardex_pacientes.total_pagado, 0)) > 0';
+            .' + COALESCE(kardex_pacientes.total_historias, 0)'
+            .' + COALESCE(kardex_pacientes.total_tratamientos, 0)'
+            .' + COALESCE(kardex_pacientes.total_costo, 0)'
+            .' + COALESCE(kardex_pacientes.total_pagado, 0)) > 0';
     }
 
     /* ============================================================
@@ -121,11 +132,11 @@ class KardexController extends Controller
     {
         $sub = Paciente::query()
             ->select('pacientes.*')
-            ->selectRaw($this->sqlTotalAdmisiones() . ' AS total_admisiones')
-            ->selectRaw($this->sqlTotalHistorias() . ' AS total_historias')
-            ->selectRaw($this->sqlTotalTratamientos() . ' AS total_tratamientos')
-            ->selectRaw($this->sqlTotalCosto() . ' AS total_costo')
-            ->selectRaw($this->sqlTotalPagado() . ' AS total_pagado');
+            ->selectRaw($this->sqlTotalAdmisiones().' AS total_admisiones')
+            ->selectRaw($this->sqlTotalHistorias().' AS total_historias')
+            ->selectRaw($this->sqlTotalTratamientos().' AS total_tratamientos')
+            ->selectRaw($this->sqlTotalCosto().' AS total_costo')
+            ->selectRaw($this->sqlTotalPagado().' AS total_pagado');
 
         return Paciente::query()
             ->fromSub($sub, 'kardex_pacientes')
@@ -187,7 +198,7 @@ class KardexController extends Controller
     protected function extraIndexData(Request $request): array
     {
         return [
-            'stats'    => $this->metricas(),
+            'stats' => $this->metricas(),
             'periodos' => Periodo::query()
                 ->orderByDesc('gestion')
                 ->orderByDesc('semestre')
@@ -206,13 +217,13 @@ class KardexController extends Controller
     {
         $pacientesConMovimientos = (int) $this->buildIndexQuery(request())->count();
 
-        $sumaCosto   = (float) Caja::query()->sum('costo_total');
-        $sumaPagado  = (float) Caja::query()->sum('cancelado');
+        $sumaCosto = (float) Caja::query()->sum('costo_total');
+        $sumaPagado = (float) Caja::query()->sum('cancelado');
 
         return [
-            'pacientes'          => $pacientesConMovimientos,
-            'total_pagado'       => $sumaPagado,
-            'saldo_pendiente'    => max(0, $sumaCosto - $sumaPagado),
+            'pacientes' => $pacientesConMovimientos,
+            'total_pagado' => $sumaPagado,
+            'saldo_pendiente' => max(0, $sumaCosto - $sumaPagado),
             'total_tratamientos' => (int) TratamientoRealizado::query()->count(),
         ];
     }
@@ -224,23 +235,23 @@ class KardexController extends Controller
     {
         $fila = DB::table('pacientes')
             ->where('pacientes.id', $pacienteId)
-            ->selectRaw($this->sqlTotalAdmisiones() . ' AS total_admisiones')
-            ->selectRaw($this->sqlTotalHistorias() . ' AS total_historias')
-            ->selectRaw($this->sqlTotalTratamientos() . ' AS total_tratamientos')
-            ->selectRaw($this->sqlTotalCosto() . ' AS total_costo')
-            ->selectRaw($this->sqlTotalPagado() . ' AS total_pagado')
+            ->selectRaw($this->sqlTotalAdmisiones().' AS total_admisiones')
+            ->selectRaw($this->sqlTotalHistorias().' AS total_historias')
+            ->selectRaw($this->sqlTotalTratamientos().' AS total_tratamientos')
+            ->selectRaw($this->sqlTotalCosto().' AS total_costo')
+            ->selectRaw($this->sqlTotalPagado().' AS total_pagado')
             ->first();
 
-        $costo  = (float) ($fila->total_costo ?? 0);
+        $costo = (float) ($fila->total_costo ?? 0);
         $pagado = (float) ($fila->total_pagado ?? 0);
 
         return [
-            'admisiones'   => (int) ($fila->total_admisiones ?? 0),
-            'historias'    => (int) ($fila->total_historias ?? 0),
+            'admisiones' => (int) ($fila->total_admisiones ?? 0),
+            'historias' => (int) ($fila->total_historias ?? 0),
             'tratamientos' => (int) ($fila->total_tratamientos ?? 0),
-            'costo_total'  => $costo,
-            'pagado'       => $pagado,
-            'saldo'        => $costo - $pagado,
+            'costo_total' => $costo,
+            'pagado' => $pagado,
+            'saldo' => $costo - $pagado,
         ];
     }
 
@@ -252,7 +263,7 @@ class KardexController extends Controller
     {
         /** @var Paciente $model */
         $pacienteId = (int) $model->id;
-        $totales    = $this->totalesDePaciente($pacienteId);
+        $totales = $this->totalesDePaciente($pacienteId);
 
         // ---- Admisiones del paciente ----
         $admisiones = DB::table('admisiones as adm')
@@ -312,12 +323,13 @@ class KardexController extends Controller
         $subCajas = $this->subCajasDePacienteId($pacienteId);
 
         $pagos = Caja::query()
-            ->where(function (Builder $x) use ($subCajas, $pacienteId) {
-                $x->whereIn('cajas.id', $subCajas)
-                    ->orWhere('cajas.ci', function ($sub) use ($pacienteId) {
-                        $sub->select('pacientes.ci')
-                            ->from('pacientes')
-                            ->where('pacientes.id', $pacienteId);
+            ->where(function (Builder $x) use ($subCajas, $pacienteId, $model): void {
+                $x->where('cajas.paciente_id', $pacienteId)
+                    ->orWhere(function (Builder $legacy) use ($subCajas, $model): void {
+                        $legacy->whereNull('cajas.paciente_id')->where(function (Builder $links) use ($subCajas, $model): void {
+                            $links->whereIn('cajas.id', $subCajas)
+                                ->orWhereRaw('cajas.ci > 0 AND CAST(cajas.ci AS CHAR) = ?', [(string) $model->ci]);
+                        });
                     });
             })
             ->orderByDesc('cajas.id')
@@ -333,17 +345,17 @@ class KardexController extends Controller
             ]);
 
         return [
-            'es_edicion'         => false,
-            'total_admisiones'   => $totales['admisiones'],
-            'total_historias'    => $totales['historias'],
+            'es_edicion' => false,
+            'total_admisiones' => $totales['admisiones'],
+            'total_historias' => $totales['historias'],
             'total_tratamientos' => $totales['tratamientos'],
-            'total_costo'        => $totales['costo_total'],
-            'total_pagado'       => $totales['pagado'],
-            'saldo_pendiente'    => $totales['saldo'],
-            'admisiones'         => $admisiones,
-            'historias'          => $historias,
-            'tratamientos'       => $tratamientos,
-            'pagos'              => $pagos,
+            'total_costo' => $totales['costo_total'],
+            'total_pagado' => $totales['pagado'],
+            'saldo_pendiente' => $totales['saldo'],
+            'admisiones' => $admisiones,
+            'historias' => $historias,
+            'tratamientos' => $tratamientos,
+            'pagos' => $pagos,
         ];
     }
 

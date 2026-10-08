@@ -26,21 +26,7 @@
                         <span class="form-error" data-error-for="nombre"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="trat-costo">Costo (Bs) <span class="req">*</span></label>
-                        <input type="number" id="trat-costo" name="costo"
-                            class="form-control" required min="0" step="0.01"
-                            placeholder="Ej: 150.00">
-                        <span class="form-error" data-error-for="costo"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="trat-porcentaje-pg">% PG</label>
-                        <input type="text" id="trat-porcentaje-pg" name="porcentaje_pg"
-                            class="form-control" maxlength="100"
-                            placeholder="Ej: 50%">
-                        <span class="form-error" data-error-for="porcentaje_pg"></span>
-                    </div>
+                    <p style="grid-column:1 / -1; color:var(--muted);">El precio se asigna desde la opción Precio y los materiales desde Insumos.</p>
 
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="trat-clinica">Clínica <span class="req">*</span></label>
@@ -107,11 +93,12 @@
         const $errorTxt = document.getElementById('formTratamientoErrorText');
 
         window.TratamientoModal = {
-            abrirCrear() {
+            abrirCrear(clinicaId = '') {
                 resetForm();
                 $titulo.textContent = 'Nuevo Tratamiento';
                 $id.value = '';
                 $btnText.textContent = 'Registrar Tratamiento';
+                $form.clinica_id.value = clinicaId;
                 openModal();
             },
 
@@ -124,8 +111,6 @@
                 const t = data.registro || data;
 
                 $form.nombre.value = t.nombre ?? '';
-                $form.costo.value = t.costo ?? '';
-                $form.porcentaje_pg.value = t.porcentaje_pg ?? '';
                 $form.descripcion.value = t.descripcion ?? '';
                 $form.clinica_id.value = t.clinica_id ?? '';
 

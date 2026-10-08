@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Caja extends Model
 {
     protected $table = 'cajas';
 
     protected $fillable = [
+        'tratamiento_realizado_id', 'paciente_id', 'periodo_id',
         'recibo',
         'monto',
         'costo_total',
@@ -27,16 +30,26 @@ class Caja extends Model
     ];
 
     protected $casts = [
-        'monto'       => 'integer',
+        'monto' => 'integer',
         'costo_total' => 'decimal:2',
-        'cancelado'   => 'decimal:2',
-        'habilitada'  => 'boolean',
-        'ci'          => 'integer',
+        'cancelado' => 'decimal:2',
+        'habilitada' => 'boolean',
+        'ci' => 'integer',
     ];
 
     /* ============================================================
        RELACIONES
        ============================================================ */
+
+    public function tratamientoRealizado(): BelongsTo
+    {
+        return $this->belongsTo(TratamientoRealizado::class);
+    }
+
+    public function recibosAtencion(): HasMany
+    {
+        return $this->hasMany(self::class, 'tratamiento_realizado_id', 'tratamiento_realizado_id')->where('habilitada', true);
+    }
 
     public function tratamiento()
     {
@@ -79,8 +92,13 @@ class Caja extends Model
 
     public function getEstadoPagoAttribute(): string
     {
-        if ($this->cancelado <= 0) return 'pendiente';
-        if ($this->cancelado >= $this->costo_total) return 'pagado';
+        if ($this->cancelado <= 0) {
+            return 'pendiente';
+        }
+        if ($this->cancelado >= $this->costo_total) {
+            return 'pagado';
+        }
+
         return 'parcial';
     }
 }

@@ -9,9 +9,20 @@
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^10.0.3",
-        "tailwindcss": "^4.0.0"
+        "laravel-vite-plugin": "^3.2.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^8.3.2"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@cornerstonejs/core": "^5.11.4",
+        "@cornerstonejs/dicom-image-loader": "^5.11.4",
+        "@cornerstonejs/tools": "^5.11.4",
+        "dicom-parser": "^1.8.21",
+        "events": "^3.3.0",
+        "puppeteer": "^24.43.1",
+        "three": "^0.186.1"
     }
 }

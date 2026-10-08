@@ -2,19 +2,14 @@
 
 namespace Tests\Feature\Roles;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class PermissionMatrixTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
+    public function test_a_guest_is_redirected_to_login_when_viewing_roles(): void
     {
-        $response = $this->get('/');
+        $response = $this->get(route('roles.index'));
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('auth.login'));
     }
 }

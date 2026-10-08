@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Kardex;
 
+use App\Models\Caja;
+use App\Models\Paciente;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -20,16 +22,31 @@ class KardexTest extends TestCase
 {
     use DatabaseTransactions;
 
-    /** @var int */
+    public function test_kardex_uses_patient_id_and_excludes_zero_ci_receipts_of_other_patients(): void
+    {
+        $other = Paciente::create(['ci' => 'KARDEX-OTRO', 'nombre' => 'Otro paciente']);
+        $payment = [
+            'recibo' => 999010, 'monto' => 100, 'costo_total' => 100, 'cancelado' => 80, 'ci' => 0,
+            'tratamiento_id' => DB::table('tratamientos')->where('clinica_id', $this->clinicaId)->value('id'),
+            'clinica_id' => $this->clinicaId, 'usuario_id' => $this->usuarioAdmin->id,
+        ];
+        Caja::create([...$payment, 'paciente_id' => $other->id]);
+        Caja::create([...$payment, 'recibo' => 999011, 'paciente_id' => null]);
+        Caja::create([...$payment, 'recibo' => 999012, 'paciente_id' => $this->pacienteId, 'costo_total' => 50, 'cancelado' => 15]);
+
+        $response = $this->actingAs($this->usuarioAdmin)->getJson('/kardex/'.$this->pacienteId.'/datos')->assertOk();
+
+        $this->assertSame(55.0, (float) $response->json('total_pagado'));
+        $this->assertSame(95.0, (float) $response->json('saldo_pendiente'));
+        $this->assertCount(2, $response->json('pagos'));
+    }
+
     protected int $pacienteId;
 
-    /** @var int */
     protected int $clinicaId;
 
-    /** @var int */
     protected int $periodoId;
 
-    /** @var Usuario */
     protected Usuario $usuarioAdmin;
 
     protected function setUp(): void
@@ -72,91 +89,91 @@ class KardexTest extends TestCase
             ->where('usuario_id', '!=', $estudianteId)
             ->value('usuario_id') ?: $estudianteId);
 
-        $marca = 'KARDEX' . random_int(100000, 999999);
+        $marca = 'KARDEX'.random_int(100000, 999999);
 
         $this->pacienteId = (int) DB::table('pacientes')->insertGetId([
-            'ci'               => $marca,
-            'nombre'           => 'Paciente',
+            'ci' => $marca,
+            'nombre' => 'Paciente',
             'apellido_paterno' => $marca,
             'apellido_materno' => 'Prueba',
-            'genero'           => 'Masculino',
+            'genero' => 'Masculino',
             'fecha_nacimiento' => '1995-05-10',
-            'created_at'       => now(),
-            'updated_at'       => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $admisionId = (int) DB::table('admisiones')->insertGetId([
-            'paciente_id'              => $this->pacienteId,
-            'periodo_id'               => $this->periodoId ?: null,
-            'estado_civil'             => 'Soltero',
-            'ocupacion'                => 'Estudiante',
-            'diagnostico'              => 'Prueba de integración Kardex',
-            'estudiante_id'            => $estudianteId,
-            'especialidad_estudiante'  => (int) $especialidad->clinica_id,
-            'responsable_id'           => $docenteId,
+            'paciente_id' => $this->pacienteId,
+            'periodo_id' => $this->periodoId ?: null,
+            'estado_civil' => 'Soltero',
+            'ocupacion' => 'Estudiante',
+            'diagnostico' => 'Prueba de integración Kardex',
+            'estudiante_id' => $estudianteId,
+            'especialidad_estudiante' => (int) $especialidad->clinica_id,
+            'responsable_id' => $docenteId,
             'especialidad_responsable' => (int) $especialidad->clinica_id,
-            'created_at'               => now(),
-            'updated_at'               => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $historiaId = (int) DB::table('historias_clinicas')->insertGetId([
-            'admision_id'             => $admisionId,
-            'paciente_id'             => $this->pacienteId,
-            'clinica_id'              => $this->clinicaId,
-            'periodo_id'              => $this->periodoId,
-            'estado'                  => 'abierta',
-            'autorizado'              => 1,
-            'estudiante_id'           => $estudianteId,
+            'admision_id' => $admisionId,
+            'paciente_id' => $this->pacienteId,
+            'clinica_id' => $this->clinicaId,
+            'periodo_id' => $this->periodoId,
+            'estado' => 'abierta',
+            'autorizado' => 1,
+            'estudiante_id' => $estudianteId,
             'especialidad_estudiante' => (int) $especialidad->clinica_id,
-            'docente_id'              => $docenteId,
-            'especialidad_docente'    => (int) $especialidad->clinica_id,
-            'fecha_inicio'            => now()->toDateString(),
-            'created_at'              => now(),
-            'updated_at'              => now(),
+            'docente_id' => $docenteId,
+            'especialidad_docente' => (int) $especialidad->clinica_id,
+            'fecha_inicio' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $tratamientoRealizadoId = (int) DB::table('tratamientos_realizados')->insertGetId([
             'historia_clinica_id' => $historiaId,
-            'tratamiento_id'      => (int) $tratamiento->id,
-            'clinica_id'          => $this->clinicaId,
-            'pieza_dental'        => '16',
-            'estado'              => 'realizado',
-            'costo_cobrado'       => 100.00,
-            'observacion'         => 'Prueba de integración',
-            'fecha_inicio'        => now()->toDateString(),
-            'created_at'          => now(),
-            'updated_at'          => now(),
+            'tratamiento_id' => (int) $tratamiento->id,
+            'clinica_id' => $this->clinicaId,
+            'pieza_dental' => '16',
+            'estado' => 'realizado',
+            'costo_cobrado' => 100.00,
+            'observacion' => 'Prueba de integración',
+            'fecha_inicio' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $cajaId = (int) DB::table('cajas')->insertGetId([
-            'recibo'                   => 999001,
-            'monto'                    => 100,
-            'costo_total'              => 100.00,
-            'cancelado'                => 40.00,
-            'habilitada'               => 1,
-            'descripcion'              => 'Pago de prueba Kardex',
-            'ci'                       => (int) preg_replace('/\D/', '', $marca),
-            'tipo'                     => 'consulta',
-            'tipo_pago'                => 'efectivo',
-            'paciente_nombre_completo' => 'Paciente ' . $marca,
-            'grado'                    => '1',
-            'tratamiento_id'           => (int) $tratamiento->id,
-            'clinica_id'               => $this->clinicaId,
-            'usuario_id'               => (int) $this->usuarioAdmin->id,
-            'created_at'               => now(),
-            'updated_at'               => now(),
+            'recibo' => 999001,
+            'monto' => 100,
+            'costo_total' => 100.00,
+            'cancelado' => 40.00,
+            'habilitada' => 1,
+            'descripcion' => 'Pago de prueba Kardex',
+            'ci' => (int) preg_replace('/\D/', '', $marca),
+            'tipo' => 'consulta',
+            'tipo_pago' => 'efectivo',
+            'paciente_nombre_completo' => 'Paciente '.$marca,
+            'grado' => '1',
+            'tratamiento_id' => (int) $tratamiento->id,
+            'clinica_id' => $this->clinicaId,
+            'usuario_id' => (int) $this->usuarioAdmin->id,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         DB::table('caja_detalles')->insert([
-            'caja_id'                  => $cajaId,
+            'caja_id' => $cajaId,
             'tratamiento_realizado_id' => $tratamientoRealizadoId,
-            'concepto'                 => 'Tratamiento de prueba',
-            'cantidad'                 => 1,
-            'precio_unitario'          => 100.00,
-            'monto'                    => 100.00,
-            'fecha'                    => now()->toDateString(),
-            'created_at'               => now(),
-            'updated_at'               => now(),
+            'concepto' => 'Tratamiento de prueba',
+            'cantidad' => 1,
+            'precio_unitario' => 100.00,
+            'monto' => 100.00,
+            'fecha' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
@@ -224,17 +241,17 @@ class KardexTest extends TestCase
     public function test_filtros_de_kardex(): void
     {
         $porNombre = $this->actingAs($this->usuarioAdmin)
-            ->getJson('/kardex/tabla?buscar=' . urlencode('Paciente'));
+            ->getJson('/kardex/tabla?buscar='.urlencode('Paciente'));
         $porNombre->assertStatus(200);
         $this->assertGreaterThanOrEqual(1, $porNombre->json('total'));
 
         $porPeriodo = $this->actingAs($this->usuarioAdmin)
-            ->getJson('/kardex/tabla?periodo_id=' . $this->periodoId);
+            ->getJson('/kardex/tabla?periodo_id='.$this->periodoId);
         $porPeriodo->assertStatus(200);
         $this->assertGreaterThanOrEqual(1, $porPeriodo->json('total'));
 
         $porClinica = $this->actingAs($this->usuarioAdmin)
-            ->getJson('/kardex/tabla?clinica_id=' . $this->clinicaId);
+            ->getJson('/kardex/tabla?clinica_id='.$this->clinicaId);
         $porClinica->assertStatus(200);
         $this->assertGreaterThanOrEqual(1, $porClinica->json('total'));
     }

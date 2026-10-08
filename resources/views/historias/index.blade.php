@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $registros->total() }} historias registradas</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="historias.reporte" />
         @can('historias.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaHistoria">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -87,6 +88,9 @@
                     <th>Estudiante</th>
                     <th>Docente</th>
                     <th>Tratamientos</th>
+                    <th>Cajas</th>
+                    <th>Insumos</th>
+                    <th>Esterilizaciones</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>

@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sesiones_atencion', function (Blueprint $table) {
+        Schema::create('sesiones_atencion', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('tratamiento_realizado_id')->constrained('tratamientos_realizados')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('tratamiento_realizado_id')->constrained('tratamientos_realizados')->restrictOnDelete()->cascadeOnUpdate();
             $table->date('fecha')->nullable();
             $table->text('descripcion')->nullable();
-            $table->foreignId('estudiante_id')->constrained('usuarios')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('docente_id')->constrained('usuarios')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('estudiante_id')->constrained('usuarios')->restrictOnDelete()->cascadeOnUpdate();
+            $table->foreignId('docente_id')->constrained('usuarios')->restrictOnDelete()->cascadeOnUpdate();
             $table->text('observacion_docente')->nullable();
             $table->boolean('autorizado')->default(false);
+            $table->foreignId('autorizado_por')->nullable()->constrained('usuarios')->restrictOnDelete();
+            $table->timestamp('fecha_autorizacion')->nullable();
             $table->timestamps();
         });
     }

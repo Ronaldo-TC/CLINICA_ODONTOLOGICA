@@ -8,7 +8,9 @@ use App\Models\InsumoSolicitado;
 use App\Models\InsumoSolicitadoDetalle;
 use App\Models\InsumoTratamiento;
 use App\Models\Usuario;
+use App\Support\MenuBuilder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
 /**
@@ -17,6 +19,7 @@ use Tests\TestCase;
  */
 class FlujoSolicitudTest extends TestCase
 {
+    use CreatesClinicalCase;
     use DatabaseTransactions;
 
     private function usuarioConRol(string $rol): Usuario
@@ -32,35 +35,39 @@ class FlujoSolicitudTest extends TestCase
 
     public function test_flujo_completo_de_solicitud_de_insumos(): void
     {
-        $estudiante = $this->usuarioConRol('estudiante');
-        $admin      = $this->usuarioConRol('admin');
+        $case = $this->approvedProgress();
+        $case['teacher']->givePermissionTo('insumos.autorizar');
+        $estudiante = $case['student'];
+        $admin = $this->usuarioConRol('admin');
 
         // ---------- Catálogo base ----------
-        $clinica = Clinica::query()->orderBy('id')->firstOrFail();
+        $clinica = $case['clinic'];
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo de prueba',
+            'nombre' => 'Tipo de prueba',
             'descripcion' => 'Generado por test',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $insumo = Insumo::create([
-            'nombre'                => 'Insumo de prueba',
-            'cantidad_numerica'     => 10,
-            'cantidad'              => 'unidades',
-            'stock_minimo'          => 2,
-            'costo_unitario'        => 5,
+            'nombre' => 'Insumo de prueba',
+            'cantidad_numerica' => 10,
+            'cantidad' => 'unidades',
+            'stock_minimo' => 2,
+            'costo_unitario' => 5,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         // ---------- 1. Crear solicitud (pendiente) ----------
         $respuesta = $this->actingAs($estudiante)
             ->postJson(route('solicitudes-insumos.store'), [
-                'clinica_id'            => $clinica->id,
+                'clinica_id' => $clinica->id,
                 'insumo_tratamiento_id' => $tipo->id,
-                'pieza'                 => 16,
-                'detalles'              => [
+                'pieza' => 16,
+                'tratamiento_realizado_id' => $case['realized']->id,
+                'sesion_atencion_id' => $case['session']->id,
+                'detalles' => [
                     ['insumo_id' => $insumo->id, 'cantidad_solicitada' => 4],
                 ],
             ]);
@@ -69,7 +76,7 @@ class FlujoSolicitudTest extends TestCase
         $respuesta->assertJsonPath('success', true);
 
         $solicitudId = $respuesta->json('id');
-        $solicitud   = InsumoSolicitado::findOrFail($solicitudId);
+        $solicitud = InsumoSolicitado::findOrFail($solicitudId);
 
         $this->assertSame('pendiente', $solicitud->estado);
         $this->assertSame($estudiante->id, $solicitud->usuario_id);
@@ -78,7 +85,7 @@ class FlujoSolicitudTest extends TestCase
         $this->assertEqualsWithDelta(4, (float) $solicitud->detalles()->first()->cantidad_solicitada, 0.001);
 
         // ---------- 2. Autorizar ----------
-        $this->actingAs($admin)
+        $this->actingAs($case['teacher'])
             ->postJson(route('solicitudes-insumos.autorizar', $solicitudId))
             ->assertOk()
             ->assertJsonPath('success', true);
@@ -86,7 +93,7 @@ class FlujoSolicitudTest extends TestCase
         $solicitud->refresh();
         $this->assertSame('autorizado', $solicitud->estado);
         $this->assertTrue((bool) $solicitud->autorizado);
-        $this->assertSame($admin->id, $solicitud->docente_id);
+        $this->assertSame($case['teacher']->id, $solicitud->docente_id);
 
         // ---------- 3. Intentar entregar más que lo solicitado ----------
         $detalle = $solicitud->detalles()->first();
@@ -136,39 +143,39 @@ class FlujoSolicitudTest extends TestCase
     public function test_no_se_puede_entregar_una_solicitud_pendiente(): void
     {
         $estudiante = $this->usuarioConRol('estudiante');
-        $admin      = $this->usuarioConRol('admin');
+        $admin = $this->usuarioConRol('admin');
 
         $clinica = Clinica::query()->orderBy('id')->firstOrFail();
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo pendiente',
+            'nombre' => 'Tipo pendiente',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $insumo = Insumo::create([
-            'nombre'                => 'Insumo pendiente',
-            'cantidad_numerica'     => 5,
-            'cantidad'              => 'unidades',
-            'stock_minimo'          => 1,
-            'costo_unitario'        => 1,
+            'nombre' => 'Insumo pendiente',
+            'cantidad_numerica' => 5,
+            'cantidad' => 'unidades',
+            'stock_minimo' => 1,
+            'costo_unitario' => 1,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $solicitud = InsumoSolicitado::create([
-            'pieza'                 => 0,
+            'pieza' => 0,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
-            'usuario_id'            => $estudiante->id,
-            'estado'                => InsumoSolicitado::ESTADO_PENDIENTE,
+            'clinica_id' => $clinica->id,
+            'usuario_id' => $estudiante->id,
+            'estado' => InsumoSolicitado::ESTADO_PENDIENTE,
         ]);
 
         $detalle = InsumoSolicitadoDetalle::create([
             'insumo_solicitado_id' => $solicitud->id,
-            'insumo_id'            => $insumo->id,
-            'cantidad_solicitada'  => 2,
-            'cantidad_entregada'   => 0,
+            'insumo_id' => $insumo->id,
+            'cantidad_solicitada' => 2,
+            'cantidad_entregada' => 0,
         ]);
 
         $this->actingAs($admin)
@@ -188,39 +195,39 @@ class FlujoSolicitudTest extends TestCase
     public function test_no_se_puede_editar_una_solicitud_autorizada(): void
     {
         $estudiante = $this->usuarioConRol('estudiante');
-        $admin      = $this->usuarioConRol('admin');
+        $admin = $this->usuarioConRol('admin');
 
         $clinica = Clinica::query()->orderBy('id')->firstOrFail();
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo bloqueado',
+            'nombre' => 'Tipo bloqueado',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $insumo = Insumo::create([
-            'nombre'                => 'Insumo bloqueado',
-            'cantidad_numerica'     => 5,
-            'cantidad'              => 'unidades',
-            'stock_minimo'          => 1,
-            'costo_unitario'        => 1,
+            'nombre' => 'Insumo bloqueado',
+            'cantidad_numerica' => 5,
+            'cantidad' => 'unidades',
+            'stock_minimo' => 1,
+            'costo_unitario' => 1,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $solicitud = InsumoSolicitado::create([
-            'pieza'                 => 0,
+            'pieza' => 0,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
-            'usuario_id'            => $estudiante->id,
-            'estado'                => InsumoSolicitado::ESTADO_AUTORIZADO,
+            'clinica_id' => $clinica->id,
+            'usuario_id' => $estudiante->id,
+            'estado' => InsumoSolicitado::ESTADO_AUTORIZADO,
         ]);
 
         $respuesta = $this->actingAs($admin)->putJson(route('solicitudes-insumos.update', $solicitud->id), [
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
             'insumo_tratamiento_id' => $tipo->id,
-            'pieza'                 => 0,
-            'detalles'              => [
+            'pieza' => 0,
+            'detalles' => [
                 ['insumo_id' => $insumo->id, 'cantidad_solicitada' => 1],
             ],
         ]);
@@ -250,7 +257,7 @@ class FlujoSolicitudTest extends TestCase
     {
         $admin = $this->usuarioConRol('admin');
 
-        $menu = \App\Support\MenuBuilder::forUser($admin);
+        $menu = MenuBuilder::forUser($admin);
         $etiquetas = [];
 
         foreach ($menu as $item) {
@@ -271,19 +278,19 @@ class FlujoSolicitudTest extends TestCase
         $clinica = Clinica::query()->orderBy('id')->firstOrFail();
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo autocomplete',
+            'nombre' => 'Tipo autocomplete',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         Insumo::create([
-            'nombre'                => 'Guantes de nitrilo',
-            'cantidad_numerica'     => 100,
-            'cantidad'              => 'cajas',
-            'stock_minimo'          => 5,
-            'costo_unitario'        => 30,
+            'nombre' => 'Guantes de nitrilo',
+            'cantidad_numerica' => 100,
+            'cantidad' => 'cajas',
+            'stock_minimo' => 5,
+            'costo_unitario' => 30,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $respuesta = $this->actingAs($admin)
@@ -302,9 +309,9 @@ class FlujoSolicitudTest extends TestCase
         $clinica = Clinica::query()->orderBy('id')->firstOrFail();
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo filtrado',
+            'nombre' => 'Tipo filtrado',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $respuesta = $this->actingAs($admin)

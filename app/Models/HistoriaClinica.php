@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HistoriaClinica extends Model
 {
     protected $table = 'historias_clinicas';
 
     protected $fillable = [
+        'remision_id',
         'admision_id',
         'paciente_id',
         'clinica_id',
@@ -30,11 +32,11 @@ class HistoriaClinica extends Model
     ];
 
     protected $casts = [
-        'autorizado'        => 'boolean',
+        'autorizado' => 'boolean',
         'revision_cualquiera' => 'boolean',
-        'estado_revision'   => 'integer',
-        'fecha_inicio'      => 'date',
-        'fecha_fin'         => 'date',
+        'estado_revision' => 'integer',
+        'fecha_inicio' => 'date',
+        'fecha_fin' => 'date',
     ];
 
     /* ============================================================
@@ -44,6 +46,11 @@ class HistoriaClinica extends Model
     public function admision()
     {
         return $this->belongsTo(Admision::class, 'admision_id');
+    }
+
+    public function remision(): BelongsTo
+    {
+        return $this->belongsTo(Remision::class);
     }
 
     public function paciente()

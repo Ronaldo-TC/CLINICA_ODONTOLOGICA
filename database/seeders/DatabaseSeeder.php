@@ -21,9 +21,13 @@ class DatabaseSeeder extends Seeder
 
             // 3. Asignaciones (dependen de roles, permisos, usuarios, clínicas)
             RoleHasPermissionsSeeder::class,
+            FlujoClinicoPermissionsSeeder::class,
             EspecialidadesSeeder::class,
             InsumosTratamientoSeeder::class,
             TratamientosSeeder::class,
+
+            CondicionesOdontologicasSeeder::class,
+            FlujoClinicoDemoSeeder::class,
         ]);
     }
 }

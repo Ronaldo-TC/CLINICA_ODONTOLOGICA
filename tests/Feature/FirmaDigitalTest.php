@@ -47,9 +47,9 @@ class FirmaDigitalTest extends TestCase
     {
         $html = view('components.firma-digital', [
             'nombre' => 'firma',
-            'valor'  => null,
-            'id'     => 'firma-test',
-            'alto'   => 180,
+            'valor' => null,
+            'id' => 'firma-test',
+            'alto' => 180,
         ])->render();
 
         $this->assertStringContainsString('data-firma', $html);
@@ -68,10 +68,10 @@ class FirmaDigitalTest extends TestCase
         }
 
         [$estudianteId, $clinicaEst] = $this->parEspecialidad('estudiante');
-        [$docenteId, $clinicaDoc]    = $this->parEspecialidad('docente');
+        [$docenteId, $clinicaDoc] = $this->parEspecialidad('docente');
 
         $paciente = Paciente::create([
-            'ci'     => '9200001',
+            'ci' => '9200001',
             'nombre' => 'Paciente',
             'apellido_paterno' => 'Firma',
         ]);
@@ -82,13 +82,14 @@ class FirmaDigitalTest extends TestCase
         $firma = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8AAAwAB/AF+7g0dAAAAAElFTkSuQmCC';
 
         $respuesta = $this->actingAs($admin)->postJson(route('admisiones.store'), [
-            'paciente_id'              => $paciente->id,
-            'periodo_id'               => $periodo->id,
-            'estudiante_id'            => $estudianteId,
-            'especialidad_estudiante'  => $clinicaEst,
-            'responsable_id'           => $docenteId,
+            'paciente_id' => $paciente->id,
+            'periodo_id' => $periodo->id,
+            'estudiante_id' => $estudianteId,
+            'especialidad_estudiante' => $clinicaEst,
+            'responsable_id' => $docenteId,
             'especialidad_responsable' => $clinicaDoc,
-            'firma'                    => $firma,
+            'firma' => $firma,
+            'gpe' => 'Bueno',
         ]);
 
         $respuesta->assertStatus(201);
@@ -114,25 +115,25 @@ class FirmaDigitalTest extends TestCase
         }
 
         [$estudianteId, $clinicaEst] = $this->parEspecialidad('estudiante');
-        [$docenteId, $clinicaDoc]    = $this->parEspecialidad('docente');
+        [$docenteId, $clinicaDoc] = $this->parEspecialidad('docente');
 
         $paciente = Paciente::create([
-            'ci'     => '9200002',
+            'ci' => '9200002',
             'nombre' => 'Paciente',
             'apellido_paterno' => 'FirmaGrande',
         ]);
 
         // ~2.1 MB de texto: supera el límite de 2.000.000 caracteres
-        $firma = 'data:image/png;base64,' . str_repeat('A', 2100000);
+        $firma = 'data:image/png;base64,'.str_repeat('A', 2100000);
 
         $this->actingAs($admin)
             ->postJson(route('admisiones.store'), [
-                'paciente_id'              => $paciente->id,
-                'estudiante_id'            => $estudianteId,
-                'especialidad_estudiante'  => $clinicaEst,
-                'responsable_id'           => $docenteId,
+                'paciente_id' => $paciente->id,
+                'estudiante_id' => $estudianteId,
+                'especialidad_estudiante' => $clinicaEst,
+                'responsable_id' => $docenteId,
                 'especialidad_responsable' => $clinicaDoc,
-                'firma'                    => $firma,
+                'firma' => $firma,
             ])
             ->assertStatus(422);
     }

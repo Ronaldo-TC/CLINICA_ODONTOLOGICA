@@ -14,13 +14,27 @@ class EnsureUserSession
     public function handle(Request $request, Closure $next): Response
     {
         // ─────────────────────────────────────────────────────────
-        // 1. Si ya está autenticado por el guard web → continuar
+        // 1. Comprobar el usuario del guard web y la sesión registrada
         // ─────────────────────────────────────────────────────────
-        if (Auth::guard('web')->check()) {
-            return $next($request);
+        $guard = Auth::guard('web');
+        $guardUser = $guard->user();
+
+        if ($guardUser && ! $request->session()->has('user_id') && ! $request->session()->has('session_token')) {
+            $usuario = Usuario::with('roles', 'permissions')
+                ->where('habilitado', true)
+                ->where('permitir_login', true)
+                ->find($guardUser->getAuthIdentifier());
+
+            if ($usuario) {
+                $guard->setUser($usuario);
+
+                return $next($request);
+            }
+
+            return $this->denyAccess($request);
         }
 
-        $userId       = $request->session()->get('user_id');
+        $userId = $request->session()->get('user_id');
         $sessionToken = $request->session()->get('session_token');
 
         // ─────────────────────────────────────────────────────────
@@ -28,7 +42,9 @@ class EnsureUserSession
         // ─────────────────────────────────────────────────────────
         $activeSession = null;
 
-        if ($userId && is_string($sessionToken)) {
+        $hasMatchingUser = ! $guardUser || (string) $guardUser->getAuthIdentifier() === (string) $userId;
+
+        if ($hasMatchingUser && $userId && is_string($sessionToken) && $sessionToken !== '') {
             $activeSession = DB::table('sesiones')
                 ->join('usuarios', 'usuarios.id', '=', 'sesiones.usuario_id')
                 ->where('sesiones.usuario_id', $userId)
@@ -45,31 +61,19 @@ class EnsureUserSession
         // ─────────────────────────────────────────────────────────
         if (! $activeSession) {
 
-            if ($userId && is_string($sessionToken)) {
+            if ($hasMatchingUser && $userId && is_string($sessionToken)) {
                 DB::table('sesiones')
                     ->where('usuario_id', $userId)
                     ->where('token', $sessionToken)
                     ->where('activa', true)
                     ->update([
-                        'activa'     => false,
-                        'fin'        => now(),
+                        'activa' => false,
+                        'fin' => now(),
                         'updated_at' => now(),
                     ]);
             }
 
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'La sesión no es válida o ya fue cerrada.',
-                ], 401);
-            }
-
-            return redirect()->route('auth.login')->withErrors([
-                'acceso' => 'La sesión no es válida o ya fue cerrada.',
-            ]);
+            return $this->denyAccess($request);
         }
 
         // ─────────────────────────────────────────────────────────
@@ -80,24 +84,41 @@ class EnsureUserSession
             ->find($activeSession->usuario_id);
 
         if (! $usuario) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect()->route('auth.login')->withErrors([
-                'acceso' => 'Usuario no encontrado.',
-            ]);
+            return $this->denyAccess($request);
         }
 
-        Auth::guard('web')->login($usuario);
+        if ($guardUser) {
+            $guard->setUser($usuario);
+        } else {
+            $guard->login($usuario);
+        }
 
         // ─────────────────────────────────────────────────────────
         // 5. Actualizar ultimo_acceso de la sesión
         // ─────────────────────────────────────────────────────────
         DB::table('sesiones')->where('id', $activeSession->id)->update([
             'ultimo_acceso' => now(),
-            'updated_at'    => now(),
+            'updated_at' => now(),
         ]);
 
         return $next($request);
+    }
+
+    private function denyAccess(Request $request): Response
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La sesión no es válida o ya fue cerrada.',
+            ], 401);
+        }
+
+        return redirect()->route('auth.login')->withErrors([
+            'acceso' => 'La sesión no es válida o ya fue cerrada.',
+        ]);
     }
 }

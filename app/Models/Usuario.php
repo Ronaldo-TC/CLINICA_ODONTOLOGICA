@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 class Usuario extends Authenticatable
 {
     use HasApiTokens, HasRoles, Notifiable;
 
     protected $table = 'usuarios';
+
     protected $primaryKey = 'id';
+
     protected $guard_name = 'web'; // Para Spatie
 
     protected $fillable = [
@@ -36,6 +39,40 @@ class Usuario extends Authenticatable
         'sesion_extra',
         'remember_token',
     ];
+
+    public function allowsLoginFromIp(string $ip): bool
+    {
+        $configuredIps = trim($this->ip_permitida ?? '');
+
+        if ($configuredIps === '') {
+            return true;
+        }
+
+        $allowedIps = preg_split('/[\s,]+/', $configuredIps, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach ($allowedIps as $allowedIp) {
+            $range = explode('/', $allowedIp, 2);
+            $address = $range[0];
+
+            if (filter_var($address, FILTER_VALIDATE_IP) === false) {
+                continue;
+            }
+
+            if (isset($range[1])) {
+                $maximumPrefixLength = str_contains($address, ':') ? 128 : 32;
+
+                if (! ctype_digit($range[1]) || (int) $range[1] > $maximumPrefixLength) {
+                    continue;
+                }
+            }
+
+            if (IpUtils::checkIp($ip, $allowedIp)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     protected function casts(): array
     {
@@ -61,10 +98,13 @@ class Usuario extends Authenticatable
         return Attribute::make(
             get: function () {
                 $parts = preg_split('/\s+/', trim($this->nombre_completo ?? ''));
-                if (empty($parts[0])) return 'US';
+                if (empty($parts[0])) {
+                    return 'US';
+                }
                 $first = mb_substr($parts[0], 0, 1);
                 $last = mb_substr($parts[count($parts) - 1] ?? '', 0, 1);
-                return mb_strtoupper($first . $last);
+
+                return mb_strtoupper($first.$last);
             }
         );
     }

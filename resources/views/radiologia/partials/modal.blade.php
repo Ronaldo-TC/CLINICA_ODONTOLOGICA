@@ -67,8 +67,9 @@
                     <div class="form-group">
                         <label for="rad-descripcion">Descripción <span class="req">*</span></label>
                         <input type="text" id="rad-descripcion" name="descripcion"
-                            class="form-control" required maxlength="100"
-                            placeholder="Ej: Radiografía panorámica">
+                            class="form-control" required maxlength="100" list="tipos-estudio-radiologico"
+                            placeholder="Ej: Radiografía periapical">
+                        <datalist id="tipos-estudio-radiologico"><option value="Radiografía periapical"><option value="Radiografía panorámica"><option value="Tomografía CBCT"><option value="Tomografía computarizada"></datalist>
                         <span class="form-error" data-error-for="descripcion"></span>
                     </div>
 

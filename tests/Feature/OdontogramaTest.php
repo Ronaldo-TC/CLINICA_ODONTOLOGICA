@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Admision;
-use App\Models\Clinica;
 use App\Models\Paciente;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -50,30 +49,30 @@ class OdontogramaTest extends TestCase
         return [(int) $fila->usuario_id, (int) $fila->clinica_id];
     }
 
-    public function test_el_componente_renderiza_las_32_piezas_y_su_input(): void
+    public function test_el_componente_renderiza_las_piezas_adultas_e_infantiles_y_su_input(): void
     {
         $html = view('components.odontograma', [
             'nombre' => 'odontograma_pintado',
-            'valor'  => '{"16":{"o":"caries"}}',
+            'valor' => '{"16":{"o":"caries"}}',
             'lectura' => false,
-            'id'     => 'odonto-test',
+            'id' => 'odonto-test',
             'mostrarLeyenda' => true,
         ])->render();
 
-        // 32 piezas (notación FDI) y 5 caras por pieza
-        $this->assertSame(32, substr_count($html, 'class="diente"'));
-        $this->assertSame(160, substr_count($html, 'data-cara="'));
+        // 32 piezas permanentes + 20 temporales, con 5 caras por pieza.
+        $this->assertSame(52, substr_count($html, 'class="diente"'));
+        $this->assertSame(260, substr_count($html, 'data-cara="'));
 
         // Cuadrantes esperados
-        foreach ([18, 11, 21, 28, 31, 38, 41, 48] as $pieza) {
-            $this->assertStringContainsString('data-pieza="' . $pieza . '"', $html);
+        foreach ([18, 11, 21, 28, 31, 38, 41, 48, 55, 51, 61, 65, 71, 75, 81, 85] as $pieza) {
+            $this->assertStringContainsString('data-pieza="'.$pieza.'"', $html);
         }
 
         // Input oculto con el valor previo y la leyenda de estados
         $this->assertStringContainsString('data-odontograma-input', $html);
         $this->assertStringContainsString('odontograma_pintado', $html);
         $this->assertStringContainsString('Endodoncia', $html);
-        $this->assertStringContainsString('Obturado', $html);
+        $this->assertStringContainsString('Obturación', $html);
     }
 
     public function test_el_odontograma_se_integra_en_el_modulo_de_admisiones(): void
@@ -85,7 +84,7 @@ class OdontogramaTest extends TestCase
         }
 
         // El JS viaja por @push('scripts'); en la página completa debe existir.
-        $respuesta = $this->actingAs($admin)->get(route('admisiones.index'));
+        $respuesta = $this->actingAs($admin)->get(route('admisiones.create'));
 
         $respuesta->assertOk();
         $respuesta->assertSee('data-odontograma', false);
@@ -96,10 +95,10 @@ class OdontogramaTest extends TestCase
     public function test_el_componente_en_modo_lectura_desactiva_el_input(): void
     {
         $html = view('components.odontograma', [
-            'nombre'  => 'odontograma_pintado',
-            'valor'   => '{}',
+            'nombre' => 'odontograma_pintado',
+            'valor' => '{}',
             'lectura' => true,
-            'id'      => 'odonto-lectura',
+            'id' => 'odonto-lectura',
         ])->render();
 
         $this->assertStringContainsString('data-lectura="1"', $html);
@@ -116,23 +115,24 @@ class OdontogramaTest extends TestCase
         }
 
         [$estudianteId, $clinicaEstudiante] = $this->parEspecialidad('estudiante');
-        [$docenteId, $clinicaDocente]       = $this->parEspecialidad('docente');
+        [$docenteId, $clinicaDocente] = $this->parEspecialidad('docente');
 
         $paciente = Paciente::create([
-            'ci'       => '9000001',
-            'nombre'   => 'Paciente',
+            'ci' => '9000001',
+            'nombre' => 'Paciente',
             'apellido_paterno' => 'Odontograma',
-            'genero'   => 'Masculino',
+            'genero' => 'Masculino',
             'fecha_nacimiento' => '2000-01-01',
         ]);
 
         $respuesta = $this->actingAs($admin)->postJson(route('admisiones.store'), [
-            'paciente_id'          => $paciente->id,
-            'estudiante_id'        => $estudianteId,
+            'paciente_id' => $paciente->id,
+            'gpe' => 'Bueno',
+            'estudiante_id' => $estudianteId,
             'especialidad_estudiante' => $clinicaEstudiante,
-            'responsable_id'       => $docenteId,
+            'responsable_id' => $docenteId,
             'especialidad_responsable' => $clinicaDocente,
-            'odontograma_pintado'  => json_encode([
+            'odontograma_pintado' => json_encode([
                 '16' => ['o' => 'caries', 'v' => 'obturado'],
                 '36' => ['m' => 'endodoncia'],
                 '99' => ['o' => 'caries'],      // pieza inválida → se descarta
@@ -163,29 +163,29 @@ class OdontogramaTest extends TestCase
         }
 
         [$estudianteId, $clinicaEstudiante] = $this->parEspecialidad('estudiante');
-        [$docenteId, $clinicaDocente]       = $this->parEspecialidad('docente');
+        [$docenteId, $clinicaDocente] = $this->parEspecialidad('docente');
 
         $paciente = Paciente::create([
-            'ci'     => '9000002',
+            'ci' => '9000002',
             'nombre' => 'Paciente',
             'apellido_paterno' => 'SinOdontograma',
         ]);
 
         $admision = Admision::create([
-            'paciente_id'          => $paciente->id,
-            'estudiante_id'        => $estudianteId,
+            'paciente_id' => $paciente->id,
+            'estudiante_id' => $estudianteId,
             'especialidad_estudiante' => $clinicaEstudiante,
-            'responsable_id'       => $docenteId,
+            'responsable_id' => $docenteId,
             'especialidad_responsable' => $clinicaDocente,
         ]);
 
         $respuesta = $this->actingAs($admin)->putJson(route('admisiones.update', $admision->id), [
-            'paciente_id'          => $paciente->id,
-            'estudiante_id'        => $estudianteId,
+            'paciente_id' => $paciente->id,
+            'estudiante_id' => $estudianteId,
             'especialidad_estudiante' => $clinicaEstudiante,
-            'responsable_id'       => $docenteId,
+            'responsable_id' => $docenteId,
             'especialidad_responsable' => $clinicaDocente,
-            'odontograma_pintado'  => 'esto no es json',
+            'odontograma_pintado' => 'esto no es json',
         ]);
 
         $respuesta->assertOk();

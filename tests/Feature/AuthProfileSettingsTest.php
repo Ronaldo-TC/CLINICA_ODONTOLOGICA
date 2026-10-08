@@ -2,122 +2,80 @@
 
 namespace Tests\Feature;
 
-use App\Models\Usuario;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\TestWith;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use Tests\UsesAuthDatabase;
 
 class AuthProfileSettingsTest extends TestCase
 {
-    protected function setUp(): void
+    use UsesAuthDatabase;
+
+    public function test_profile_renders_personal_data_and_session_statistics(): void
     {
-        parent::setUp();
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'profile-session');
 
-        Schema::create('usuarios', function (Blueprint $table): void {
-            $table->id();
-            $table->string('ci', 50)->unique();
-            $table->string('nombre_usuario', 20)->unique();
-            $table->string('nombre_completo', 200);
-            $table->string('descripcion', 300)->nullable();
-            $table->string('tipo')->nullable();
-            $table->boolean('habilitado')->default(true);
-            $table->boolean('permitir_login')->default(true);
-            $table->boolean('multilogin')->default(false);
-            $table->string('contrasena', 200);
-            $table->string('ip', 300)->nullable();
-            $table->string('ip_permitida', 300)->nullable();
-            $table->string('info', 300)->nullable();
-            $table->string('foto')->nullable();
-            $table->string('sesion')->nullable();
-            $table->timestamp('ultimo_login')->nullable();
-            $table->timestamp('ultimo_logout')->nullable();
-            $table->timestamps();
-        });
+        $this->withSession($session)->get(route('auth.profile'))
+            ->assertOk()
+            ->assertViewIs('auth.profile')
+            ->assertSee('Datos personales')
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['sesiones_activas'] === 1 && $stats['total_sesiones'] === 1);
+    }
 
-        Schema::create('roles', function (Blueprint $table): void {
-            $table->id();
-            $table->string('nombre');
-            $table->boolean('habilitado');
-        });
+    public function test_profile_uses_local_initials_when_no_photo_is_uploaded(): void
+    {
+        $user = $this->createUser();
 
-        Schema::create('usuario_rol', function (Blueprint $table): void {
-            $table->unsignedBigInteger('usuario_id');
-            $table->unsignedBigInteger('rol_id');
-            $table->timestamp('fecha_asignacion')->nullable();
-            $table->timestamps();
-        });
+        $this->actingAs($user)->get(route('auth.profile'))
+            ->assertSee('Usuario de Prueba')
+            ->assertSee('aria-hidden="true"', false)
+            ->assertSee('UP')
+            ->assertDontSee('ui-avatars.com');
+    }
 
-        Schema::create('permisos', function (Blueprint $table): void {
-            $table->id();
-            $table->string('codigo', 50)->unique();
-            $table->string('descripcion', 200)->nullable();
-            $table->string('modulo', 50)->nullable();
-            $table->timestamps();
-        });
+    public function test_uploaded_profile_photo_is_shown_in_the_profile_and_sidebar(): void
+    {
+        $user = $this->createUser(['foto' => 'avatars/profile.png']);
 
-        Schema::create('rol_permiso', function (Blueprint $table): void {
-            $table->unsignedBigInteger('rol_id');
-            $table->unsignedBigInteger('permiso_id');
-            $table->boolean('habilitado')->default(true);
-            $table->timestamps();
-            $table->primary(['rol_id', 'permiso_id']);
-        });
-
-        Schema::create('sesiones', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('usuario_id');
-            $table->string('token')->unique();
-            $table->string('ip', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->timestamp('inicio')->nullable();
-            $table->timestamp('ultimo_acceso')->nullable();
-            $table->timestamp('fin')->nullable();
-            $table->boolean('activa')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('bitacoras', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('usuario_id')->nullable();
-            $table->string('ip', 45)->nullable();
-            $table->timestamp('fecha')->nullable();
-            $table->string('tipo');
-            $table->text('datos')->nullable();
-            $table->string('estado')->nullable();
-            $table->timestamps();
-        });
+        $this->actingAs($user)->get(route('auth.profile'))
+            ->assertSee('src="'.asset('storage/avatars/profile.png').'"', false)
+            ->assertSee('alt="Foto de Usuario de Prueba"', false)
+            ->assertSee('class="sidebar-user"', false);
     }
 
     public function test_any_authenticated_role_can_update_its_own_profile(): void
     {
-        $userId = $this->createUser();
-        $session = $this->createActiveSession($userId, 'perfil-session');
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'profile-update-session');
 
-        $this->withSession($session)
-            ->get(route('auth.profile'))
-            ->assertOk()
-            ->assertSee('Datos personales');
-
-        $this->withSession($session)
-            ->put(route('auth.profile.update'), [
-                'ci' => '87654321',
-                'nombre_usuario' => 'usuario_nuevo',
-                'nombre_completo' => 'Nombre actualizado',
-                'descripcion' => 'Perfil actualizado',
-            ])
-            ->assertRedirect(route('auth.profile'))
+        $this->withSession($session)->put(route('auth.profile.update'), [
+            'ci' => '87654321',
+            'nombre_usuario' => 'usuario_nuevo',
+            'nombre_completo' => 'Nombre actualizado',
+            'descripcion' => null,
+            'habilitado' => false,
+            'tipo' => 'admin',
+            'roles' => ['admin'],
+        ])->assertRedirect(route('auth.profile'))
             ->assertSessionHas('user_name', 'Nombre actualizado')
             ->assertSessionHas('user_username', 'usuario_nuevo');
 
         $this->assertDatabaseHas('usuarios', [
-            'id' => $userId,
+            'id' => $user->id,
             'ci' => '87654321',
             'nombre_usuario' => 'usuario_nuevo',
             'nombre_completo' => 'Nombre actualizado',
-            'descripcion' => 'Perfil actualizado',
+            'descripcion' => '',
+            'habilitado' => true,
+            'tipo' => '',
         ]);
+        $this->assertDatabaseMissing('model_has_roles', ['model_id' => $user->id]);
     }
 
     public function test_profile_and_settings_require_a_valid_session_user(): void
@@ -128,430 +86,321 @@ class AuthProfileSettingsTest extends TestCase
 
     public function test_sidebar_shows_only_modules_enabled_for_the_users_roles(): void
     {
-        $userId = $this->createUser(['tipo' => 'docente']);
-        $roleId = DB::table('roles')->insertGetId([
-            'nombre' => 'docente',
-            'habilitado' => true,
-        ]);
-        $permissionId = DB::table('permisos')->insertGetId([
-            'codigo' => 'pacientes.gestionar',
-            'descripcion' => 'Gestionar pacientes',
-            'modulo' => 'pacientes',
-        ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => $userId,
-            'rol_id' => $roleId,
-        ]);
-        DB::table('rol_permiso')->insert([
-            'rol_id' => $roleId,
-            'permiso_id' => $permissionId,
-            'habilitado' => true,
-        ]);
-        $session = $this->createActiveSession($userId, 'sidebar-session');
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'docente', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::create(['name' => 'pacientes.ver', 'guard_name' => 'web']));
+        $user->assignRole($role);
 
-        $this->withSession($session)
-            ->get(route('auth.profile'))
-            ->assertOk()
-            ->assertSee('href="'.route('docente.pacientes-derivados').'"', false)
-            ->assertDontSee('href="'.route('admin.pacientes.index').'"', false)
-            ->assertDontSee('href="'.route('admin.usuarios.index').'"', false);
+        $this->actingAs($user)->get(route('auth.profile'))
+            ->assertSee('href="'.route('pacientes.index').'"', false)
+            ->assertDontSee('href="'.route('usuarios.index').'"', false)
+            ->assertDontSee('href="'.route('clinicas.index').'"', false);
     }
 
     public function test_sidebar_only_shows_administrative_modules_with_effective_permissions(): void
     {
-        $userId = $this->createUser(['tipo' => 'subadmin']);
-        $roleId = DB::table('roles')->insertGetId([
-            'nombre' => 'subadmin',
-            'habilitado' => true,
-        ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => $userId,
-            'rol_id' => $roleId,
-        ]);
-        $clinicPermissionId = DB::table('permisos')->insertGetId([
-            'codigo' => 'clinica.gestionar',
-            'descripcion' => 'Gestionar clínicas',
-            'modulo' => 'clinica',
-        ]);
-        DB::table('rol_permiso')->insert([
-            'rol_id' => $roleId,
-            'permiso_id' => $clinicPermissionId,
-            'habilitado' => true,
-        ]);
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'subadmin', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::create(['name' => 'clinicas.ver', 'guard_name' => 'web']));
+        $user->assignRole($role);
 
-        $this->assertSame(
-            ['subadmin'],
-            Usuario::with('roles')->findOrFail($userId)->roles->pluck('nombre')->all(),
-        );
-
-        $session = $this->createActiveSession($userId, 'subadmin-sidebar-session');
-
-        $this->withSession($session)
-            ->get(route('auth.profile'))
-            ->assertOk()
-            ->assertSee('href="'.route('admin.clinicas.index').'"', false)
-            ->assertDontSee('href="'.route('admin.pacientes.index').'"', false)
-            ->assertDontSee('href="'.route('admin.usuarios.index').'"', false)
-            ->assertDontSee('href="'.route('admin.tratamientos.index').'"', false);
-
-        $patientPermissionId = DB::table('permisos')->insertGetId([
-            'codigo' => 'pacientes.gestionar',
-            'descripcion' => 'Gestionar pacientes',
-            'modulo' => 'pacientes',
-        ]);
-        DB::table('rol_permiso')->insert([
-            'rol_id' => $roleId,
-            'permiso_id' => $patientPermissionId,
-            'habilitado' => true,
-        ]);
-
-        $this->withSession($session)
-            ->get(route('auth.profile'))
-            ->assertOk()
-            ->assertSee('href="'.route('admin.clinicas.index').'"', false)
-            ->assertSee('href="'.route('admin.pacientes.index').'"', false)
-            ->assertDontSee('href="'.route('admin.usuarios.index').'"', false)
-            ->assertDontSee('href="'.route('admin.tratamientos.index').'"', false);
+        $this->actingAs($user)->get(route('auth.profile'))
+            ->assertSee('href="'.route('clinicas.index').'"', false)
+            ->assertDontSee('href="'.route('pacientes.index').'"', false)
+            ->assertDontSee('href="'.route('usuarios.index').'"', false);
     }
 
-    public function test_admin_sidebar_shows_administration_links(): void
+    public function test_admin_sidebar_shows_assigned_administration_links(): void
     {
-        $userId = $this->createUser(['tipo' => 'admin']);
-        $roleId = DB::table('roles')->insertGetId([
-            'nombre' => 'admin',
-            'habilitado' => true,
+        $user = $this->createUser();
+        $role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        $role->givePermissionTo([
+            Permission::create(['name' => 'roles.ver', 'guard_name' => 'web']),
+            Permission::create(['name' => 'usuarios.ver', 'guard_name' => 'web']),
         ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => $userId,
-            'rol_id' => $roleId,
-        ]);
-        $session = $this->createActiveSession($userId, 'admin-sidebar-session');
+        $user->assignRole($role);
 
-        $this->withSession($session)
-            ->get(route('auth.profile'))
+        $this->actingAs($user)->get(route('auth.profile'))
+            ->assertSee('href="'.route('roles.index').'"', false)
+            ->assertSee('href="'.route('usuarios.index').'"', false);
+    }
+
+    public function test_user_rows_show_assigned_spatie_roles(): void
+    {
+        $user = $this->createUser();
+        $user->assignRole(Role::create(['name' => 'docente', 'guard_name' => 'web']));
+        $userWithoutRole = $this->createUser(['ci' => 'other-ci', 'nombre_usuario' => 'otro_usuario']);
+
+        $this->view('usuarios.partials.filas', ['items' => collect([$user, $userWithoutRole])])
+            ->assertSee('docente')
+            ->assertSee('Sin rol');
+    }
+
+    public function test_user_rows_render_uploaded_profile_photos(): void
+    {
+        $user = $this->createUser(['foto' => 'avatars/usuario.png']);
+
+        $this->view('usuarios.partials.filas', ['items' => collect([$user])])
+            ->assertSee('src="'.asset('storage/avatars/usuario.png').'"', false);
+    }
+
+    public function test_settings_render_only_the_users_active_sessions(): void
+    {
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'settings-session');
+        $otherUser = $this->createUser(['ci' => 'other-ci', 'nombre_usuario' => 'otro_usuario']);
+        $this->insertSession($otherUser, 'other-session');
+
+        $this->withSession($session)->get(route('auth.settings'))
             ->assertOk()
-            ->assertSee('href="'.route('admin.roles.index').'"', false)
-            ->assertSee('href="'.route('admin.dashboard').'"', false);
+            ->assertViewIs('auth.settings')
+            ->assertSee('Cambiar contraseña')
+            ->assertViewHas('sesionesActivas', fn ($sessions): bool => $sessions->count() === 1 && $sessions->first()->usuario_id === $user->id);
     }
 
-    public function test_admin_user_rows_show_type_or_fall_back_to_assigned_roles(): void
+    public function test_settings_reject_a_wrong_current_password_without_changing_it(): void
     {
-        $users = collect([
-            (object) [
-                'id' => 1,
-                'ci' => '11111111',
-                'nombre_usuario' => 'tipo_definido',
-                'nombre_completo' => 'Tipo Definido',
-                'tipo' => 'personal',
-                'roles' => 'docente',
-                'habilitado' => true,
-                'ultimo_login' => null,
-            ],
-            (object) [
-                'id' => 2,
-                'ci' => '22222222',
-                'nombre_usuario' => 'tipo_vacio',
-                'nombre_completo' => 'Tipo Vacío',
-                'tipo' => null,
-                'roles' => 'docente',
-                'habilitado' => true,
-                'ultimo_login' => null,
-            ],
-        ]);
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'password-session');
+        $previousHash = $user->contrasena;
 
-        $html = view('admin.usuarios.partials.filas', compact('users'))
-            ->with('usuarios', $users)
-            ->render();
+        $this->withSession($session)->put(route('auth.settings.password'), [
+            'current_password' => 'incorrecta',
+            'new_password' => 'Nueva-clave-123',
+            'new_password_confirmation' => 'Nueva-clave-123',
+        ])->assertSessionHasErrors(['current_password' => 'La contraseña actual no es correcta.']);
 
-        $this->assertSame(1, substr_count($html, '<span class="badge badge-secondary">Personal</span>'));
-        $this->assertSame(1, substr_count($html, '<span class="badge badge-secondary">Docente</span>'));
+        $this->assertDatabaseHas('usuarios', ['id' => $user->id, 'contrasena' => $previousHash]);
     }
 
-    public function test_settings_change_password_only_after_current_password_is_verified(): void
+    public function test_settings_change_password_after_current_password_is_verified(): void
     {
-        $userId = $this->createUser();
-        $session = $this->createActiveSession($userId, 'password-session');
+        $user = $this->createUser(['contrasena' => hash('sha256', 'clave-anterior')]);
+        $session = $this->createActiveSession($user, 'password-session');
 
-        $this->withSession($session)
-            ->put(route('auth.settings.password'), [
-                'current_password' => 'incorrecta',
-                'new_password' => 'Nueva-clave-123',
-                'new_password_confirmation' => 'Nueva-clave-123',
-            ])
-            ->assertSessionHasErrors('current_password');
+        $this->withSession($session)->put(route('auth.settings.password'), [
+            'current_password' => 'clave-anterior',
+            'new_password' => 'Nueva-clave-123',
+            'new_password_confirmation' => 'Nueva-clave-123',
+        ])->assertRedirect(route('auth.settings'));
 
-        $this->assertDatabaseHas('usuarios', [
-            'id' => $userId,
-            'contrasena' => hash('sha256', 'clave-anterior'),
-        ]);
+        $this->assertTrue(Hash::check('Nueva-clave-123', $user->fresh()->contrasena));
+    }
 
-        $this->withSession($session)
-            ->put(route('auth.settings.password'), [
-                'current_password' => 'clave-anterior',
-                'new_password' => 'Nueva-clave-123',
-                'new_password_confirmation' => 'Nueva-clave-123',
-            ])
-            ->assertRedirect(route('auth.settings'));
+    #[TestWith(['abc', 'abc', 'La nueva contraseña debe tener al menos 8 caracteres.'])]
+    #[TestWith(['sinmayusculas123', 'sinmayusculas123', 'La contraseña debe contener al menos una mayúscula, una minúscula y un número.'])]
+    #[TestWith(['Nueva-clave-123', 'Otra-clave-123', 'La confirmación de contraseña no coincide.'])]
+    public function test_settings_reject_invalid_new_passwords(string $password, string $confirmation, string $message): void
+    {
+        $user = $this->createUser();
+        $previousHash = $user->contrasena;
 
-        $this->assertDatabaseHas('usuarios', [
-            'id' => $userId,
-        ]);
+        $this->actingAs($user)->put(route('auth.settings.password'), [
+            'current_password' => 'clave-anterior',
+            'new_password' => $password,
+            'new_password_confirmation' => $confirmation,
+        ])->assertSessionHasErrors(['new_password' => $message]);
 
-        $this->assertTrue(Hash::check(
-            'Nueva-clave-123',
-            (string) DB::table('usuarios')->where('id', $userId)->value('contrasena'),
-        ));
+        $this->assertDatabaseHas('usuarios', ['id' => $user->id, 'contrasena' => $previousHash]);
     }
 
     public function test_legacy_password_is_upgraded_after_a_successful_login(): void
     {
-        $userId = $this->createUser();
-        DB::table('roles')->insert(['id' => 1, 'nombre' => 'estudiante', 'habilitado' => true]);
-        DB::table('usuario_rol')->insert(['usuario_id' => $userId, 'rol_id' => 1]);
+        $user = $this->createUser(['contrasena' => hash('sha256', 'clave-anterior')]);
 
-        $this->post(route('auth.login.submit'), [
-            'nombre_usuario' => 'usuario_prueba',
+        $this->postJson(route('auth.login.post'), [
+            'nombre_usuario' => $user->nombre_usuario,
             'contrasena' => 'clave-anterior',
-        ])->assertRedirect(route('estudiante.dashboard'));
+        ])->assertOk()->assertJsonPath('redirect', route('dashboard'));
 
-        $this->assertTrue(Hash::check(
-            'clave-anterior',
-            (string) DB::table('usuarios')->where('id', $userId)->value('contrasena'),
-        ));
-
-        $this->assertDatabaseHas('sesiones', [
-            'usuario_id' => $userId,
-            'activa' => true,
-        ]);
-        $this->assertNotEmpty(session('session_token'));
+        $this->assertTrue(Hash::check('clave-anterior', $user->fresh()->contrasena));
+        $this->assertDatabaseHas('sesiones', ['usuario_id' => $user->id, 'activa' => true]);
+        $this->assertAuthenticatedAs($user, 'web');
     }
 
-    public function test_login_is_denied_when_user_is_not_allowed_to_login(): void
+    #[TestWith(['habilitado'])]
+    #[TestWith(['permitir_login'])]
+    public function test_login_is_denied_when_the_account_is_disabled(string $flag): void
     {
-        $userId = $this->createUser(['permitir_login' => false]);
-        DB::table('roles')->insert(['id' => 1, 'nombre' => 'estudiante', 'habilitado' => true]);
-        DB::table('usuario_rol')->insert(['usuario_id' => $userId, 'rol_id' => 1]);
+        $user = $this->createUser([$flag => false]);
 
-        $this->post(route('auth.login.submit'), [
-            'nombre_usuario' => 'usuario_prueba',
+        $this->postJson(route('auth.login.post'), [
+            'nombre_usuario' => $user->nombre_usuario,
             'contrasena' => 'clave-anterior',
-        ])->assertSessionHasErrors('nombre_usuario');
+        ])->assertUnprocessable()->assertJsonPath('success', false);
 
         $this->assertDatabaseCount('sesiones', 0);
+        $this->assertGuest('web');
     }
 
     public function test_disabling_login_revokes_an_existing_session(): void
     {
-        $userId = $this->createUser();
-        $session = $this->createActiveSession($userId, 'disabled-login-session');
-        DB::table('usuarios')->where('id', $userId)->update(['permitir_login' => false]);
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'disabled-session');
+        DB::table('usuarios')->where('id', $user->id)->update(['permitir_login' => false]);
 
-        $this->withSession($session)
-            ->get(route('auth.profile'))
-            ->assertRedirect(route('auth.login'));
+        $this->withSession($session)->get(route('auth.profile'))->assertRedirect(route('auth.login'));
 
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'disabled-login-session',
-            'activa' => false,
-        ]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'disabled-session', 'activa' => false]);
     }
 
     public function test_new_login_revokes_the_previous_session_when_multilogin_is_disabled(): void
     {
-        $userId = $this->createUser();
-        DB::table('roles')->insert(['id' => 1, 'nombre' => 'estudiante', 'habilitado' => true]);
-        DB::table('usuario_rol')->insert(['usuario_id' => $userId, 'rol_id' => 1]);
-        $this->insertSession($userId, 'previous-session');
+        $user = $this->createUser();
+        $this->insertSession($user, 'previous-session');
 
-        $this->post(route('auth.login.submit'), [
-            'nombre_usuario' => 'usuario_prueba',
+        $this->postJson(route('auth.login.post'), [
+            'nombre_usuario' => $user->nombre_usuario,
             'contrasena' => 'clave-anterior',
-        ])->assertRedirect(route('estudiante.dashboard'));
+        ])->assertOk();
 
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'previous-session',
-            'activa' => false,
-        ]);
-        $this->assertDatabaseHas('sesiones', [
-            'token' => session('session_token'),
-            'activa' => true,
-        ]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'previous-session', 'activa' => false]);
+        $this->assertDatabaseHas('sesiones', ['token' => session('session_token'), 'activa' => true]);
     }
 
     public function test_multilogin_keeps_existing_sessions_active(): void
     {
-        $userId = $this->createUser(['multilogin' => true]);
-        DB::table('roles')->insert(['id' => 1, 'nombre' => 'estudiante', 'habilitado' => true]);
-        DB::table('usuario_rol')->insert(['usuario_id' => $userId, 'rol_id' => 1]);
-        $this->insertSession($userId, 'existing-multilogin-session');
+        $user = $this->createUser(['multilogin' => true]);
+        $this->insertSession($user, 'existing-session');
 
-        $this->post(route('auth.login.submit'), [
-            'nombre_usuario' => 'usuario_prueba',
+        $this->postJson(route('auth.login.post'), [
+            'nombre_usuario' => $user->nombre_usuario,
             'contrasena' => 'clave-anterior',
-        ])->assertRedirect(route('estudiante.dashboard'));
+        ])->assertOk();
 
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'existing-multilogin-session',
-            'activa' => true,
-        ]);
-        $this->assertSame(2, DB::table('sesiones')->where('usuario_id', $userId)->where('activa', true)->count());
+        $this->assertDatabaseHas('sesiones', ['token' => 'existing-session', 'activa' => true]);
+        $this->assertDatabaseCount('sesiones', 2);
     }
 
     public function test_logout_marks_the_current_session_inactive(): void
     {
-        $userId = $this->createUser();
-        $session = $this->createActiveSession($userId, 'logout-session');
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'logout-session');
 
-        $this->withSession($session)
-            ->post(route('auth.logout'))
+        $this->actingAs($user)->withSession($session)->post(route('auth.logout'))
             ->assertRedirect(route('auth.login'));
 
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'logout-session',
-            'activa' => false,
-        ]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'logout-session', 'activa' => false]);
+        $this->assertGuest('web');
     }
 
     public function test_closing_other_sessions_keeps_only_the_current_session_active(): void
     {
-        $userId = $this->createUser(['multilogin' => true]);
-        $session = $this->createActiveSession($userId, 'current-session');
-        $this->insertSession($userId, 'other-session');
+        $user = $this->createUser(['multilogin' => true]);
+        $session = $this->createActiveSession($user, 'current-session');
+        $this->insertSession($user, 'other-session');
 
-        $this->withSession($session)
-            ->post(route('auth.settings.sessions.close-others'))
+        $this->withSession($session)->post(route('auth.settings.sessions.close-others'))
             ->assertRedirect(route('auth.settings'));
 
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'current-session',
-            'activa' => true,
-        ]);
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'other-session',
-            'activa' => false,
-        ]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'current-session', 'activa' => true]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'other-session', 'activa' => false]);
     }
 
     public function test_closing_an_individual_session_blocks_its_next_request(): void
     {
-        $userId = $this->createUser(['multilogin' => true]);
-        $currentSession = $this->createActiveSession($userId, 'current-session');
-        $this->insertSession($userId, 'revoked-session');
-        $revokedSessionId = DB::table('sesiones')->where('token', 'revoked-session')->value('id');
+        $user = $this->createUser(['multilogin' => true]);
+        $session = $this->createActiveSession($user, 'current-session');
+        $revokedId = $this->insertSession($user, 'revoked-session');
 
-        $this->withSession($currentSession)
-            ->delete(route('auth.settings.sessions.close', $revokedSessionId))
+        $this->withSession($session)->delete(route('auth.settings.sessions.close', $revokedId))
             ->assertRedirect(route('auth.settings'));
 
-        $this->assertDatabaseHas('sesiones', [
-            'id' => $revokedSessionId,
-            'activa' => false,
-        ]);
-
-        $this->withSession([
-            'user_id' => $userId,
-            'user_role' => 'estudiante',
-            'session_token' => 'revoked-session',
-        ])->get(route('auth.profile'))->assertRedirect(route('auth.login'));
+        $this->assertDatabaseHas('sesiones', ['id' => $revokedId, 'activa' => false]);
+        $this->actingAs($user)->withSession(['user_id' => $user->id, 'session_token' => 'revoked-session'])
+            ->get(route('auth.profile'))->assertRedirect(route('auth.login'));
     }
 
-    public function test_admin_can_disable_login_and_revoke_the_users_sessions(): void
+    public function test_closing_the_current_session_logs_the_user_out(): void
     {
-        $adminId = $this->createUser([
-            'ci' => 'admin-ci',
-            'nombre_usuario' => 'admin_user',
-            'nombre_completo' => 'Administrador',
-            'tipo' => 'admin',
-        ]);
-        $userId = $this->createUser([
-            'ci' => '87654321',
-            'nombre_usuario' => 'usuario_objetivo',
-            'nombre_completo' => 'Usuario Objetivo',
-            'tipo' => 'docente',
-            'multilogin' => true,
-        ]);
-        $adminRoleId = DB::table('roles')->insertGetId([
-            'nombre' => 'admin',
-            'habilitado' => true,
-        ]);
-        $docenteRoleId = DB::table('roles')->insertGetId([
-            'nombre' => 'docente',
-            'habilitado' => true,
-        ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => $adminId,
-            'rol_id' => $adminRoleId,
-        ]);
-        DB::table('usuario_rol')->insert([
-            'usuario_id' => $userId,
-            'rol_id' => $docenteRoleId,
-        ]);
-        $adminSession = $this->createActiveSession($adminId, 'admin-session');
-        $this->insertSession($userId, 'target-session-one');
-        $this->insertSession($userId, 'target-session-two');
+        $user = $this->createUser();
+        $session = $this->createActiveSession($user, 'current-session');
+        $sessionId = DB::table('sesiones')->where('token', 'current-session')->value('id');
 
-        $this->withSession($adminSession)
-            ->put(route('admin.usuarios.actualizar', $userId), [
-                'ci' => '87654321',
-                'nombre_usuario' => 'usuario_objetivo',
-                'nombre_completo' => 'Usuario Objetivo',
-                'descripcion' => '',
-                'tipo' => 'docente',
-                'roles' => [$docenteRoleId],
-                'habilitado' => '1',
-                'permitir_login' => '0',
-                'multilogin' => '0',
-                'contrasena' => '',
-            ])
-            ->assertRedirect();
+        $this->withSession($session)->delete(route('auth.settings.sessions.close', $sessionId))
+            ->assertRedirect(route('auth.login'));
 
-        $this->assertDatabaseHas('usuarios', [
-            'id' => $userId,
-            'habilitado' => true,
-            'permitir_login' => false,
-            'multilogin' => false,
-        ]);
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'target-session-one',
-            'activa' => false,
-        ]);
-        $this->assertDatabaseHas('sesiones', [
-            'token' => 'target-session-two',
-            'activa' => false,
-        ]);
+        $this->assertDatabaseHas('sesiones', ['id' => $sessionId, 'activa' => false]);
+        $this->assertGuest('web');
     }
 
-    private function createUser(array $overrides = []): int
+    public function test_returns_404_for_attempting_to_close_another_users_session(): void
     {
-        return DB::table('usuarios')->insertGetId(array_merge([
-            'ci' => '12345678',
-            'nombre_usuario' => 'usuario_prueba',
-            'nombre_completo' => 'Usuario de Prueba',
-            'descripcion' => null,
-            'contrasena' => hash('sha256', 'clave-anterior'),
-        ], $overrides));
+        $user = $this->createUser();
+        $otherUser = $this->createUser(['ci' => 'other-ci', 'nombre_usuario' => 'otro_usuario']);
+        $otherSessionId = $this->insertSession($otherUser, 'other-user-session');
+
+        $this->actingAs($user)->delete(route('auth.settings.sessions.close', $otherSessionId))->assertNotFound();
+
+        $this->assertDatabaseHas('sesiones', ['id' => $otherSessionId, 'activa' => true]);
     }
 
-    private function createActiveSession(int $userId, string $token): array
+    #[TestWith(['habilitado'])]
+    #[TestWith(['permitir_login'])]
+    public function test_admin_disabling_an_account_revokes_its_sessions_and_tokens(string $flag): void
     {
-        $this->insertSession($userId, $token);
+        $admin = $this->createUser();
+        $admin->givePermissionTo(Permission::create(['name' => 'usuarios.editar', 'guard_name' => 'web']));
+        $user = $this->createUser(['ci' => 'target-ci', 'nombre_usuario' => 'usuario_objetivo']);
+        $this->insertSession($user, 'target-session');
+        $token = $user->createToken('test-device')->accessToken;
 
-        return [
-            'user_id' => $userId,
-            'user_role' => 'estudiante',
-            'session_token' => $token,
-        ];
+        $this->actingAs($admin)->putJson(route('usuarios.update', $user->id), [
+            'ci' => $user->ci,
+            'nombre_usuario' => $user->nombre_usuario,
+            'nombre_completo' => $user->nombre_completo,
+            'habilitado' => $flag !== 'habilitado',
+            'permitir_login' => $flag !== 'permitir_login',
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('usuarios', ['id' => $user->id, $flag => false]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'target-session', 'activa' => false]);
+        $this->assertModelMissing($token);
     }
 
-    private function insertSession(int $userId, string $token): void
+    public function test_admin_disabling_a_user_revokes_its_sessions_and_tokens(): void
     {
-        DB::table('sesiones')->insert([
-            'usuario_id' => $userId,
-            'token' => $token,
-            'inicio' => now(),
-            'activa' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $admin = $this->createUser();
+        $admin->givePermissionTo(Permission::create(['name' => 'usuarios.eliminar', 'guard_name' => 'web']));
+        $user = $this->createUser(['ci' => 'target-ci', 'nombre_usuario' => 'usuario_objetivo']);
+        $this->insertSession($user, 'target-session');
+        $token = $user->createToken('test-device')->accessToken;
+
+        $this->actingAs($admin)->deleteJson(route('usuarios.destroy', $user->id))
+            ->assertOk()->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('usuarios', ['id' => $user->id, 'habilitado' => false, 'permitir_login' => false]);
+        $this->assertDatabaseHas('sesiones', ['token' => 'target-session', 'activa' => false]);
+        $this->assertModelMissing($token);
+    }
+
+    public function test_updating_profile_replaces_the_photo_and_deletes_the_old_one(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('avatars/old.png', 'old-photo');
+        $user = $this->createUser(['foto' => 'avatars/old.png']);
+        $photo = UploadedFile::fake()->image('avatar.png');
+
+        $this->actingAs($user)->put(route('auth.profile.update'), [
+            'ci' => $user->ci,
+            'nombre_usuario' => $user->nombre_usuario,
+            'nombre_completo' => $user->nombre_completo,
+            'foto' => $photo,
+        ])->assertRedirect(route('auth.profile'));
+
+        Storage::disk('public')->assertExists($user->fresh()->foto);
+        Storage::disk('public')->assertMissing('avatars/old.png');
+    }
+
+    public function test_deleting_avatar_removes_the_file_and_clears_the_profile_photo(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('avatars/old.png', 'old-photo');
+        $user = $this->createUser(['foto' => 'avatars/old.png']);
+
+        $this->actingAs($user)->delete(route('auth.profile.avatar.delete'))->assertRedirect(route('auth.profile'));
+
+        $this->assertDatabaseHas('usuarios', ['id' => $user->id, 'foto' => null]);
+        Storage::disk('public')->assertMissing('avatars/old.png');
     }
 }

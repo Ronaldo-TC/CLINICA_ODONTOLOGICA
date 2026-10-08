@@ -26,173 +26,192 @@ class MenuBuilder
 
             // Dashboard: SIN permiso → todos los autenticados lo ven
             [
-                'type'  => 'link',
+                'type' => 'link',
                 'label' => 'Dashboard',
                 'route' => 'dashboard',
-                'icon'  => 'grid',
+                'icon' => 'grid',
                 'pattern' => 'dashboard',
                 // sin 'permission' → siempre visible
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Pacientes',
-                'route'      => 'pacientes.index',
-                'icon'       => 'users',
-                'pattern'    => 'pacientes.*',
+                'type' => 'link',
+                'label' => 'Pacientes',
+                'route' => 'pacientes.index',
+                'icon' => 'users',
+                'pattern' => 'pacientes.*',
                 'permission' => 'pacientes.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Admisiones',
-                'route'      => 'admisiones.index',
-                'icon'       => 'clipboard',
-                'pattern'    => 'admisiones.*',
+                'type' => 'link',
+                'label' => 'Admisiones',
+                'route' => 'admisiones.index',
+                'icon' => 'clipboard',
+                'pattern' => 'admisiones.*',
                 'permission' => 'admisiones.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Historias clínicas',
-                'route'      => 'historias.index',
-                'icon'       => 'file-text',
-                'pattern'    => 'historias.*',
+                'type' => 'link',
+                'label' => 'Historias clínicas',
+                'route' => 'historias.index',
+                'icon' => 'file-text',
+                'pattern' => 'historias.*',
                 'permission' => 'historias.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Tratamientos',
-                'route'      => 'tratamientos.index',
-                'icon'       => 'activity',
-                'pattern'    => 'tratamientos.*',
-                'permission' => 'tratamientos.ver',
+                'type' => 'link',
+                'label' => 'Tratamientos',
+                'route' => 'tratamientos.index',
+                'icon' => 'activity',
+                'pattern' => 'tratamientos.*',
+                'permission' => ['tratamientos.ver', 'tratamientos.gestionar'],
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Remisiones',
-                'route'      => 'remisiones.index',
-                'icon'       => 'inbox',
-                'pattern'    => 'remisiones.*',
-                'permission' => 'remisiones.ver',
+                'type' => 'link',
+                'label' => 'Remisiones',
+                'route' => 'remisiones.index',
+                'icon' => 'inbox',
+                'pattern' => 'remisiones.*',
+                'permission' => ['remisiones.ver', 'remisiones.gestionar'],
+                'role' => ['admin', 'admision'],
+            ],
+            [
+                'type' => 'link',
+                'label' => 'Pacientes remitidos',
+                'route' => 'pacientes-remitidos.index',
+                'icon' => 'inbox',
+                'pattern' => 'pacientes-remitidos.*',
+                'permission' => ['remisiones.ver', 'remisiones.gestionar'],
+                'role' => ['admin', 'docente', 'jefe-catedra'],
             ],
 
             ['type' => 'label', 'label' => 'Operaciones'],
+            ['type' => 'link', 'label' => 'Atención y avances', 'route' => 'tratamientos-realizados.index', 'icon' => 'activity', 'pattern' => 'tratamientos-realizados.*', 'permission' => ['atenciones.ver', 'atenciones.gestionar']],
 
             [
-                'type'       => 'link',
-                'label'      => 'Insumos',
-                'route'      => 'insumos.index',
-                'icon'       => 'package',
-                'pattern'    => 'insumos.*',
-                'exclude'    => 'solicitudes-insumos.*',
+                'type' => 'link',
+                'label' => 'Insumos',
+                'route' => 'insumos.index',
+                'icon' => 'package',
+                'pattern' => 'insumos.*',
+                'exclude' => 'solicitudes-insumos.*',
                 'permission' => 'insumos.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Solicitudes de insumos',
-                'route'      => 'solicitudes-insumos.index',
-                'icon'       => 'clipboard',
-                'pattern'    => 'solicitudes-insumos.*',
+                'type' => 'link',
+                'label' => 'Solicitudes de insumos',
+                'route' => 'solicitudes-insumos.index',
+                'icon' => 'clipboard',
+                'pattern' => 'solicitudes-insumos.*',
                 'permission' => 'insumos.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Esterilización',
-                'route'      => 'esterilizacion.index',
-                'icon'       => 'layers',
-                'pattern'    => 'esterilizacion.*',
+                'type' => 'link',
+                'label' => 'Esterilización',
+                'route' => 'esterilizacion.index',
+                'icon' => 'layers',
+                'pattern' => 'esterilizacion.*',
                 'permission' => 'esterilizaciones.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Radiología',
-                'route'      => 'radiologia.index',
-                'icon'       => 'image',
-                'pattern'    => 'radiologia.*',
+                'type' => 'link',
+                'label' => 'Radiología',
+                'route' => 'radiologia.index',
+                'icon' => 'image',
+                'pattern' => 'radiologia.*',
                 'permission' => 'radiologias.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Cajas',
-                'route'      => 'cajas.index',
-                'icon'       => 'credit-card',
-                'pattern'    => 'cajas.*',
+                'type' => 'link',
+                'label' => 'Cajas',
+                'route' => 'cajas.index',
+                'icon' => 'credit-card',
+                'pattern' => 'cajas.*',
                 'permission' => 'cajas.ver',
             ],
 
             ['type' => 'label', 'label' => 'Análisis'],
 
             [
-                'type'       => 'link',
-                'label'      => 'Kardex',
-                'route'      => 'kardex.index',
-                'icon'       => 'clipboard',
-                'pattern'    => 'kardex.*',
+                'type' => 'link',
+                'label' => 'Kardex',
+                'route' => 'kardex.index',
+                'icon' => 'clipboard',
+                'pattern' => 'kardex.*',
                 'permission' => 'reportes.ver',
             ],
 
             [
-                'type'       => 'link',
-                'label'      => 'Reportes',
-                'route'      => 'reportes.index',
-                'icon'       => 'chart',
-                'pattern'    => 'reportes.*',
+                'type' => 'link',
+                'label' => 'Reportes',
+                'route' => 'reportes.index',
+                'icon' => 'chart',
+                'pattern' => 'reportes.*',
                 'permission' => 'reportes.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Investigación',
-                'route'      => 'investigacion.index',
-                'icon'       => 'trending',
-                'pattern'    => 'investigacion.*',
+                'type' => 'link',
+                'label' => 'Investigación',
+                'route' => 'investigacion.index',
+                'icon' => 'trending',
+                'pattern' => 'investigacion.*',
                 'permission' => 'investigacion.ver',
             ],
 
             ['type' => 'label', 'label' => 'Administración'],
+            [
+                'type' => 'link', 'label' => 'Mis inscripciones', 'route' => 'especialidades.mis-inscripciones',
+                'icon' => 'clipboard', 'pattern' => 'especialidades.mis-inscripciones', 'role' => ['docente', 'estudiante', 'interno', 'jefe-catedra'],
+            ],
+            [
+                'type' => 'link', 'label' => 'Asignar especialidades', 'route' => 'especialidades.index',
+                'icon' => 'hospital', 'pattern' => 'especialidades.*', 'permission' => ['especialidades.ver', 'especialidades.gestionar'],
+            ],
 
             // Submenú: Seguridad → Usuarios / Roles
             [
-                'type'       => 'link',
-                'label'      => 'Seguridad',
-                'icon'       => 'shield',
+                'type' => 'link',
+                'label' => 'Seguridad',
+                'icon' => 'shield',
                 'permission' => ['usuarios.ver', 'roles.ver'],   // visible si tiene AL MENOS uno
-                'children'   => [
+                'children' => [
                     [
-                        'label'      => 'Usuarios',
-                        'route'      => 'usuarios.index',
-                        'icon'       => 'user-plus',
-                        'pattern'    => 'usuarios.*',
+                        'label' => 'Usuarios',
+                        'route' => 'usuarios.index',
+                        'icon' => 'user-plus',
+                        'pattern' => 'usuarios.*',
                         'permission' => 'usuarios.ver',
                     ],
                     [
-                        'label'      => 'Roles y permisos',
-                        'route'      => 'roles.index',
-                        'icon'       => 'key',
-                        'pattern'    => 'roles.*',
+                        'label' => 'Roles y permisos',
+                        'route' => 'roles.index',
+                        'icon' => 'key',
+                        'pattern' => 'roles.*',
                         'permission' => 'roles.ver',
                     ],
                 ],
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Clínicas',
-                'route'      => 'clinicas.index',
-                'icon'       => 'hospital',
-                'pattern'    => 'clinicas.*',
+                'type' => 'link',
+                'label' => 'Clínicas',
+                'route' => 'clinicas.index',
+                'icon' => 'hospital',
+                'pattern' => 'clinicas.*',
                 'permission' => 'clinicas.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Periodos',
-                'route'      => 'periodos.index',
-                'icon'       => 'folder',
-                'pattern'    => 'periodos.*',
+                'type' => 'link',
+                'label' => 'Periodos',
+                'route' => 'periodos.index',
+                'icon' => 'folder',
+                'pattern' => 'periodos.*',
                 'permission' => 'periodos.ver',
             ],
             [
-                'type'       => 'link',
-                'label'      => 'Bitácoras',
-                'route'      => 'bitacoras.index',
-                'icon'       => 'book',
-                'pattern'    => 'bitacoras.*',
+                'type' => 'link',
+                'label' => 'Bitácoras',
+                'route' => 'bitacoras.index',
+                'icon' => 'book',
+                'pattern' => 'bitacoras.*',
                 'permission' => 'bitacoras.ver',
             ],
         ];
@@ -204,36 +223,52 @@ class MenuBuilder
      */
     public static function forUser($user): array
     {
-        if (! $user) return [];
+        if (! $user) {
+            return [];
+        }
 
         $items = self::items();
-        $out   = [];
+        if ($user->hasAnyRole(['estudiante', 'interno']) && ! $user->hasAnyRole(['admin', 'subadmin', 'director', 'jefatura-clinicas', 'docente', 'jefe-catedra'])) {
+            $items = array_values(array_filter($items, fn (array $item): bool => ! in_array($item['route'] ?? '', ['pacientes.index', 'admisiones.index', 'historias.index'], true)));
+            array_splice($items, 2, 0, [
+                ['type' => 'link', 'label' => 'Pacientes derivados', 'route' => 'estudiante.derivados', 'icon' => 'inbox', 'pattern' => 'estudiante.derivados', 'permission' => 'historias.ver'],
+                ['type' => 'link', 'label' => 'Mis Pacientes Designados', 'route' => 'estudiante.designados', 'icon' => 'users', 'pattern' => 'estudiante.designados', 'permission' => 'historias.ver'],
+                ['type' => 'link', 'label' => 'Mis Historias Clínicas', 'route' => 'estudiante.historias', 'icon' => 'file-text', 'pattern' => 'estudiante.historia*', 'permission' => 'historias.ver'],
+                ['type' => 'link', 'label' => 'Mis Pacientes Admitidos', 'route' => 'estudiante.admitidos', 'icon' => 'clipboard', 'pattern' => 'estudiante.admitidos', 'permission' => 'admisiones.ver'],
+            ]);
+        }
+        $out = [];
 
         foreach ($items as $item) {
 
             // ---- Labels: se agregan al buffer (se limpian al final) ----
             if (($item['type'] ?? 'link') === 'label') {
                 $out[] = $item;
+
                 continue;
             }
 
             // ---- Filtro por permiso (string o array) ----
             if (! empty($item['permission'])) {
                 $perms = (array) $item['permission'];
-                $ok    = false;
+                $ok = false;
                 foreach ($perms as $p) {
                     if ($user->can($p)) {
                         $ok = true;
                         break;
                     }
                 }
-                if (! $ok) continue;   // ❌ el usuario no tiene ninguno de los permisos → ocultar
+                if (! $ok) {
+                    continue;
+                }   // ❌ el usuario no tiene ninguno de los permisos → ocultar
             }
 
             // ---- Filtro por rol (string o array) ----
             if (! empty($item['role'])) {
                 $roles = (array) $item['role'];
-                if (! $user->hasAnyRole($roles)) continue;
+                if (! $user->hasAnyRole($roles)) {
+                    continue;
+                }
             }
 
             // ---- Submenús: filtrar hijos recursivamente ----
@@ -242,14 +277,16 @@ class MenuBuilder
                 foreach ($item['children'] as $child) {
                     if (! empty($child['permission'])) {
                         $cPerms = (array) $child['permission'];
-                        $cOk    = false;
+                        $cOk = false;
                         foreach ($cPerms as $cp) {
                             if ($user->can($cp)) {
                                 $cOk = true;
                                 break;
                             }
                         }
-                        if (! $cOk) continue;
+                        if (! $cOk) {
+                            continue;
+                        }
                     }
                     if (! empty($child['role']) && ! $user->hasAnyRole((array) $child['role'])) {
                         continue;
@@ -257,7 +294,9 @@ class MenuBuilder
                     $children[] = $child;
                 }
                 // Si el padre tenía hijos y todos fueron filtrados → ocultar el padre
-                if (empty($children)) continue;
+                if (empty($children)) {
+                    continue;
+                }
                 $item['children'] = $children;
             }
 
@@ -274,16 +313,21 @@ class MenuBuilder
         foreach ($out as $i => $item) {
             if (($item['type'] ?? 'link') !== 'label') {
                 $final[] = $item;
+
                 continue;
             }
             // ¿Hay algún link después de este label?
             $tieneHijos = false;
             for ($j = $i + 1; $j < count($out); $j++) {
-                if (($out[$j]['type'] ?? 'link') === 'label') break;
+                if (($out[$j]['type'] ?? 'link') === 'label') {
+                    break;
+                }
                 $tieneHijos = true;
                 break;
             }
-            if ($tieneHijos) $final[] = $item;
+            if ($tieneHijos) {
+                $final[] = $item;
+            }
         }
 
         return $final;

@@ -10,7 +10,8 @@
         <span id="crud-total-label">{{ $registros->total() }} tratamientos registrados</span>
     </div>
     <div class="toolbar-actions">
-        @can('tratamientos.crear')
+        <x-boton-reporte ruta="tratamientos.reporte" />
+        @canany(['tratamientos.crear', 'tratamientos.gestionar'])
         <button type="button" class="btn btn-primary" id="btnNuevoTratamiento">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -19,7 +20,7 @@
             </svg>
             Nuevo Tratamiento
         </button>
-        @endcan
+        @endcanany
     </div>
 </div>
 
@@ -35,6 +36,7 @@
     </div>
 
     <div class="card-body" style="padding-bottom: 14px;">
+        <p style="color:var(--muted); margin-bottom:14px;">Administración registra los tratamientos por clínica. Insumos asigna los materiales y Caja establece los precios.</p>
         <div class="form-grid">
             <div class="form-group">
                 <label>Buscar</label>
@@ -47,7 +49,7 @@
                 <select id="filtro-clinica" class="form-control">
                     <option value="">Todas las clínicas</option>
                     @foreach ($clinicas as $c)
-                    <option value="{{ $c->id }}">{{ $c->especialidad }}</option>
+                    <option value="{{ $c->id }}" @selected((string) request('clinica_id') === (string) $c->id)>{{ $c->especialidad }} ({{ $c->modulo }})</option>
                     @endforeach
                 </select>
             </div>
@@ -70,6 +72,7 @@
                     <th>Descripción</th>
                     <th>Costo</th>
                     <th>PG</th>
+                    <th>Insumos</th>
                     <th>Realizados</th>
                     <th>Acciones</th>
                 </tr>
@@ -195,7 +198,7 @@
             } catch (err) {
                 console.error('[Tratamientos] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="7">
+                <tr><td colspan="8">
                     <div class="empty-state"><p>Error al cargar tratamientos.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');
@@ -228,7 +231,7 @@
             }
 
             if (e.target.closest('#btnNuevoTratamiento')) {
-                TratamientoModal.abrirCrear();
+                TratamientoModal.abrirCrear($filtroClinica.value);
                 return;
             }
 

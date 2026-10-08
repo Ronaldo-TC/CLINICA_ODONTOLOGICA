@@ -31,7 +31,7 @@ class MotivosConsultaSeeder extends Seeder
         ];
 
         $rows = array_map(
-            fn(array $m): array => $m + [
+            fn (array $m): array => $m + [
                 'habilitado' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -39,6 +39,10 @@ class MotivosConsultaSeeder extends Seeder
             $motivos
         );
 
-        DB::table('motivos_consulta')->insert($rows);
+        foreach ($rows as $row) {
+            if (! DB::table('motivos_consulta')->where('nombre', $row['nombre'])->exists()) {
+                DB::table('motivos_consulta')->insert($row);
+            }
+        }
     }
 }

@@ -1,9 +1,10 @@
 @forelse ($items as $caja)
 @php
-$saldo = (float) $caja->costo_total - (float) $caja->cancelado;
-$estadoPago = $caja->cancelado <= 0
+$canceladoAcumulado = (float) ($caja->cancelado_acumulado ?? ($caja->habilitada ? $caja->cancelado : 0));
+$saldo = (float) $caja->costo_total - $canceladoAcumulado;
+$estadoPago = $canceladoAcumulado <= 0
     ? 'pendiente'
-    : ($caja->cancelado >= $caja->costo_total ? 'pagado' : 'parcial');
+    : ($canceladoAcumulado >= $caja->costo_total ? 'pagado' : 'parcial');
     @endphp
 
     <tr data-id="{{ $caja->id }}">
@@ -21,6 +22,7 @@ $estadoPago = $caja->cancelado <= 0
             <small style="color:var(--muted);">
                 CI: {{ $caja->ci ?: '—' }}
             </small>
+            <br><small>Ficha #{{ $caja->tratamientoRealizado?->historiaClinica?->admision_id }} · {{ $caja->tratamientoRealizado?->historiaClinica?->estudiante?->nombre_completo }}</small>
         </td>
 
         <td>
@@ -40,6 +42,8 @@ $estadoPago = $caja->cancelado <= 0
         <td>
             {{ number_format($caja->cancelado, 2) }} Bs
         </td>
+
+        <td>{{ number_format($canceladoAcumulado, 2) }} Bs</td>
 
         <td>
             @if ($saldo > 0)
@@ -85,7 +89,7 @@ $estadoPago = $caja->cancelado <= 0
     </tr>
     @empty
     <tr>
-        <td colspan="9">
+        <td colspan="10">
             <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

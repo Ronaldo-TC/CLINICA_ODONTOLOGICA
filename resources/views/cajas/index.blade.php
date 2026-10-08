@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $registros->total() }} registros de caja</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="cajas.reporte" />
         @can('cajas.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaCaja">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -17,15 +18,19 @@
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Nueva Caja
+            Nuevo recibo
         </button>
         @endcan
     </div>
 </div>
 
+@can('tratamientos.precios')
+@include('cajas.partials.precios')
+@endcan
+
 <div class="card">
     <div class="card-header">
-        <h2>Cajas y Pagos</h2>
+        <h2>Recibos y pagos</h2>
         <div class="card-header-actions">
             <span class="tabla-status" id="crud-status">
                 <span class="dot"></span>
@@ -89,7 +94,8 @@
                     <th>Tratamiento</th>
                     <th>Clínica</th>
                     <th>Costo</th>
-                    <th>Cancelado</th>
+                    <th>Pago del recibo</th>
+                    <th>Total cancelado</th>
                     <th>Saldo</th>
                     <th>Estado</th>
                     <th>Acciones</th>
@@ -220,7 +226,7 @@
             } catch (err) {
                 console.error('[Cajas] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="9">
+                <tr><td colspan="10">
                     <div class="empty-state"><p>Error al cargar cajas.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');

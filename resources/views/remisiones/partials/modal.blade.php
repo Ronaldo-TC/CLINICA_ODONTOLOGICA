@@ -1,5 +1,5 @@
 <div class="modal-backdrop" id="modalRemision">
-    <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalRemisionTitulo">
         <form id="formRemision" novalidate>
             @csrf
             <input type="hidden" name="_method" id="formRemisionMethod" value="POST">
@@ -7,7 +7,7 @@
 
             <div class="modal-header">
                 <h3 id="modalRemisionTitulo">Nueva Remisión</h3>
-                <button type="button" class="modal-close" data-modal-close>
+                <button type="button" class="modal-close" data-modal-close aria-label="Cerrar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -29,7 +29,7 @@
                                 placeholder="Escribe nombre o CI del paciente..."
                                 autocomplete="off">
                             <span class="autocomplete-loading"></span>
-                            <button type="button" class="autocomplete-clear" tabindex="-1">
+                            <button type="button" class="autocomplete-clear" aria-label="Limpiar paciente seleccionado">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -44,7 +44,7 @@
 
                     {{-- Clínica destino --}}
                     <div class="form-group">
-                        <label for="rem-clinica">Clínica destino <span class="req">*</span></label>
+                        <label for="rem-clinica">Especialidad destino <span class="req">*</span></label>
                         <select id="rem-clinica" name="clinica_id" class="form-control" required>
                             <option value="">Cargando...</option>
                         </select>
@@ -62,7 +62,7 @@
 
                     {{-- Habilitado --}}
                     <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Estado</label>
+                        <label>Activación</label>
                         <label class="switch-item">
                             <input type="checkbox" name="habilitado" id="rem-habilitado" value="1" checked>
                             <span class="switch-track"><span class="switch-thumb"></span></span>
@@ -103,12 +103,15 @@
 
         const URLS = {
             store: @json(route('remisiones.store')),
-            update: (id) => `/remisiones/${id}`,
+            update: (id) => @json(route('remisiones.update', ['remision' => '__ID__'])).replace('__ID__', encodeURIComponent(id)),
             datosIniciales: @json(route('remisiones.datos-iniciales')),
             buscarAdmisiones: @json(route('remisiones.buscar-admisiones')),
         };
 
         let datosInicialesCargados = false;
+        let admisionDebounceTimer = null;
+        let admisionAbortController = null;
+        let ultimoElementoActivo = null;
 
         const $modal = document.getElementById('modalRemision');
         const $form = document.getElementById('formRemision');
@@ -131,23 +134,21 @@
 
             async abrirEdicion(data) {
                 resetForm();
-                $titulo.textContent = 'Editar Remisión #' + data.id;
-                $id.value = data.id;
+                const r = data.registro || data;
+                $titulo.textContent = 'Editar Remisión #' + r.id;
+                $id.value = r.id;
                 $btnText.textContent = 'Actualizar Remisión';
 
                 await cargarDatosIniciales();
-
-                const r = data.registro || data;
 
                 $form.admision_id.value = r.admision_id ?? '';
                 $form.paciente_id.value = r.paciente_id ?? '';
                 $form.clinica_id.value = r.clinica_id ?? '';
                 $form.periodo_id.value = r.periodo_id ?? '';
-                $form.habilitado.checked = !!r.habilitado;
+                $form.habilitado.checked = [true, 1, '1'].includes(r.habilitado);
 
                 if (r.paciente) {
-                    document.getElementById('rem-admision-id').value = r.admision_id;
-                    document.getElementById('rem-admision-buscar').value = r.paciente.nombre_completo;
+                    document.getElementById('rem-admision-buscar').value = r.paciente.nombre_completo || '';
                     document.getElementById('wrapAdmision').classList.add('has-value');
                 }
 
@@ -174,15 +175,20 @@
                 if (!res.ok) throw new Error();
                 const data = await res.json();
 
-                $form.clinica_id.innerHTML = '<option value="">Seleccione...</option>' +
-                    data.clinicas.map((c) => `<option value="${c.id}">${c.texto}</option>`).join('');
-
-                $form.periodo_id.innerHTML = '<option value="">Seleccione...</option>' +
-                    data.periodos.map((p) => `<option value="${p.id}">${p.texto}</option>`).join('');
+                $form.clinica_id.replaceChildren(new Option('Seleccione...', ''));
+                data.clinicas.forEach((clinica) => {
+                    $form.clinica_id.add(new Option(clinica.texto, clinica.id));
+                });
+                $form.periodo_id.replaceChildren(new Option('Seleccione...', ''));
+                data.periodos.forEach((periodo) => {
+                    $form.periodo_id.add(new Option(periodo.texto, periodo.id));
+                });
 
                 datosInicialesCargados = true;
             } catch (err) {
                 console.error('[Remisiones] Error:', err);
+                $errorTxt.textContent = 'No se pudieron cargar las especialidades y periodos. Cierre e intente nuevamente.';
+                $errorBox.style.display = 'flex';
             }
         }
 
@@ -196,22 +202,18 @@
 
             if (!$input) return;
 
-            let debounceTimer = null;
-            let abortController = null;
-
             $input.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
+                cancelarBusquedaAdmision();
+                $hidden.value = '';
+                $paciente.value = '';
+                $wrap.classList.remove('has-value');
                 const q = $input.value.trim();
 
                 if (q === '') {
-                    $hidden.value = '';
-                    $paciente.value = '';
-                    $wrap.classList.remove('has-value');
-                    $dropdown.classList.remove('open');
                     return;
                 }
 
-                debounceTimer = setTimeout(() => buscar(q), 300);
+                admisionDebounceTimer = setTimeout(() => buscar(q), 300);
             });
 
             document.addEventListener('click', (e) => {
@@ -220,16 +222,14 @@
 
             $wrap.querySelector('.autocomplete-clear')?.addEventListener('click', () => {
                 $input.value = '';
-                $hidden.value = '';
-                $paciente.value = '';
-                $wrap.classList.remove('has-value');
-                $dropdown.classList.remove('open');
+                $input.dispatchEvent(new Event('input'));
                 $input.focus();
             });
 
             async function buscar(q) {
-                if (abortController) abortController.abort();
-                abortController = new AbortController();
+                admisionAbortController?.abort();
+                const abortController = new AbortController();
+                admisionAbortController = abortController;
 
                 $wrap.classList.add('loading');
 
@@ -245,46 +245,76 @@
 
                     if (!res.ok) throw new Error();
                     const items = await res.json();
+                    if (abortController.signal.aborted || $input.value.trim() !== q) return;
                     render(items);
                 } catch (err) {
-                    if (err.name !== 'AbortError') console.error(err);
+                    if (err.name !== 'AbortError' && admisionAbortController === abortController) {
+                        console.error(err);
+                        $dropdown.replaceChildren();
+                        const mensaje = document.createElement('div');
+                        mensaje.className = 'autocomplete-empty';
+                        mensaje.textContent = 'No se pudo buscar. Intente nuevamente.';
+                        $dropdown.appendChild(mensaje);
+                        $dropdown.classList.add('open');
+                    }
                 } finally {
-                    $wrap.classList.remove('loading');
+                    if (admisionAbortController === abortController) {
+                        $wrap.classList.remove('loading');
+                    }
                 }
             }
 
             function render(items) {
+                $dropdown.replaceChildren();
                 if (!items || items.length === 0) {
-                    $dropdown.innerHTML = `<div class="autocomplete-empty"><p>Sin resultados</p></div>`;
+                    const vacio = document.createElement('div');
+                    vacio.className = 'autocomplete-empty';
+                    vacio.textContent = 'Sin resultados';
+                    $dropdown.appendChild(vacio);
                     $dropdown.classList.add('open');
                     return;
                 }
 
-                $dropdown.innerHTML = items.map((item) => `
-                <div class="autocomplete-item"
-                     data-id="${item.id}"
-                     data-paciente="${item.paciente_id || ''}"
-                     data-texto="${item.texto}"
-                     data-extra="${item.extra || ''}">
-                    <div class="autocomplete-avatar">${item.iniciales || item.texto.substring(0, 2).toUpperCase()}</div>
-                    <div class="autocomplete-info">
-                        <span class="autocomplete-name">${item.texto}</span>
-                        ${item.extra ? `<span class="autocomplete-meta">${item.extra}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
-
-                $dropdown.classList.add('open');
-
-                $dropdown.querySelectorAll('.autocomplete-item').forEach((el) => {
-                    el.addEventListener('click', () => {
-                        $hidden.value = el.dataset.id;
-                        $paciente.value = el.dataset.paciente;
-                        $input.value = el.dataset.texto;
+                items.forEach((item) => {
+                    const texto = String(item.texto || '');
+                    const el = document.createElement('div');
+                    el.className = 'autocomplete-item';
+                    el.tabIndex = 0;
+                    el.setAttribute('role', 'button');
+                    const avatar = document.createElement('div');
+                    avatar.className = 'autocomplete-avatar';
+                    avatar.textContent = item.iniciales || texto.substring(0, 2).toUpperCase();
+                    const info = document.createElement('div');
+                    info.className = 'autocomplete-info';
+                    const nombre = document.createElement('span');
+                    nombre.className = 'autocomplete-name';
+                    nombre.textContent = texto;
+                    info.appendChild(nombre);
+                    if (item.extra) {
+                        const extra = document.createElement('span');
+                        extra.className = 'autocomplete-meta';
+                        extra.textContent = item.extra;
+                        info.appendChild(extra);
+                    }
+                    el.append(avatar, info);
+                    const seleccionar = () => {
+                        cancelarBusquedaAdmision();
+                        $hidden.value = item.id;
+                        $paciente.value = item.paciente_id || '';
+                        $input.value = texto;
                         $wrap.classList.add('has-value');
-                        $dropdown.classList.remove('open');
+                        $input.focus();
+                    };
+                    el.addEventListener('click', seleccionar);
+                    el.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            seleccionar();
+                        }
                     });
+                    $dropdown.appendChild(el);
                 });
+                $dropdown.classList.add('open');
             }
         })();
 
@@ -340,16 +370,31 @@
         });
 
         function openModal() {
+            ultimoElementoActivo = document.activeElement;
             $modal.classList.add('open');
             document.body.classList.add('modal-open');
+            document.getElementById('rem-admision-buscar').focus();
         }
 
         function closeModal() {
+            cancelarBusquedaAdmision();
             $modal.classList.remove('open');
             document.body.classList.remove('modal-open');
+            ultimoElementoActivo?.focus();
+        }
+
+        function cancelarBusquedaAdmision() {
+            clearTimeout(admisionDebounceTimer);
+            admisionAbortController?.abort();
+            admisionAbortController = null;
+            document.getElementById('wrapAdmision').classList.remove('loading');
+            const dropdown = document.getElementById('dropdownAdmision');
+            dropdown.classList.remove('open');
+            dropdown.replaceChildren();
         }
 
         function resetForm() {
+            cancelarBusquedaAdmision();
             $form.reset();
             $id.value = '';
             document.getElementById('rem-admision-buscar').value = '';
@@ -362,13 +407,14 @@
         }
 
         function clearErrors() {
-            document.querySelectorAll('[data-error-for]').forEach((el) => el.textContent = '');
+            $form.querySelectorAll('[data-error-for]').forEach((el) => el.textContent = '');
             $errorBox.style.display = 'none';
         }
 
         function mostrarErrores(errors) {
             Object.entries(errors).forEach(([field, messages]) => {
-                const $err = document.querySelector(`[data-error-for="${field}"]`);
+                const $err = Array.from($form.querySelectorAll('[data-error-for]'))
+                    .find((el) => el.dataset.errorFor === field);
                 if ($err) $err.textContent = Array.isArray(messages) ? messages[0] : messages;
             });
             $errorTxt.textContent = 'Corrige los errores marcados en rojo.';
@@ -377,7 +423,7 @@
 
         function collectErrors() {
             const errors = {};
-            document.querySelectorAll('[data-error-for]').forEach((el) => {
+            $form.querySelectorAll('[data-error-for]').forEach((el) => {
                 if (el.textContent.trim()) errors[el.dataset.errorFor] = el.textContent;
             });
             return errors;

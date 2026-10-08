@@ -23,11 +23,15 @@
 
     <td>
         @if ($remision->periodo)
-        <span class="badge badge-muted">{{ $remision->periodo->gestion }}-{{ $remision->periodo->semestre }}</span>
+        <span class="badge badge-muted">{{ $remision->periodo->nombre_completo }}</span>
         @else
         —
         @endif
     </td>
+
+    <td>{{ $remision->docente?->nombre_completo ?? 'Sin asignar' }}</td>
+
+    <td>{{ $remision->estudiante?->nombre_completo ?? 'Sin asignar' }}</td>
 
     <td>
         <span class="badge badge-info">{{ $remision->historias_clinicas_count ?? 0 }}</span>
@@ -38,36 +42,52 @@
     </td>
 
     <td>
-        @if ($remision->habilitado)
-        <span class="badge badge-success">Activa</span>
+        @if ($remision->estado === 'asignada')
+        <span class="badge badge-info">Asignada</span>
         @else
-        <span class="badge badge-danger">Inactiva</span>
+        <span class="badge badge-warning">Pendiente de asignación</span>
+        @endif
+        <br>
+        @if ($remision->habilitado)
+        <small style="color:var(--muted);">Habilitada</small>
+        @else
+        <span class="badge badge-danger">Inhabilitada</span>
         @endif
     </td>
 
     <td>
         <div class="actions">
-            @can('remisiones.editar')
+            @if ($remision->admision_id)
+            @canany(['admisiones.ver', 'admisiones.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}">Ver ficha</a>
+            @endcanany
+            @endif
+            @if (($remision->historias_clinicas_count ?? 0) > 0)
+            @canany(['historias.ver', 'historias.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}">Historias</a>
+            @endcanany
+            @endif
+            @canany(['remisiones.editar', 'remisiones.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $remision->id }}">
                 Editar
             </button>
-            @endcan
+            @endcanany
 
-            @can('remisiones.eliminar')
+            @canany(['remisiones.eliminar', 'remisiones.gestionar'])
             <button type="button" class="btn btn-sm btn-danger"
                 data-action="eliminar"
                 data-id="{{ $remision->id }}"
                 data-nombre="Remisión #{{ $remision->id }}">
                 Eliminar
             </button>
-            @endcan
+            @endcanany
         </div>
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="8">
+    <td colspan="10">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -16,6 +16,7 @@ class Radiologia extends Model
         'caja_id',
         'clinica_id',
         'paciente_id',
+        'periodo_id',
         'remision_id',
         'archivo_ruta',
         'fecha_toma',

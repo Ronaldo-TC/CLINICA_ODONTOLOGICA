@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clinica;
 use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
 use App\Models\Notificacion;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
 /**
@@ -17,6 +17,7 @@ use Tests\TestCase;
  */
 class NotificacionesTest extends TestCase
 {
+    use CreatesClinicalCase;
     use DatabaseTransactions;
 
     private function usuarioConRol(string $rol): ?Usuario
@@ -34,10 +35,10 @@ class NotificacionesTest extends TestCase
 
         Notificacion::create([
             'usuario_id' => $admin->id,
-            'tipo'       => Notificacion::TIPO_SOLICITUD_CREADA,
-            'titulo'     => 'Aviso de prueba',
-            'mensaje'    => 'Detalle del aviso',
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_SOLICITUD_CREADA,
+            'titulo' => 'Aviso de prueba',
+            'mensaje' => 'Detalle del aviso',
+            'leida' => false,
         ]);
 
         $respuesta = $this->actingAs($admin)->get(route('notificaciones.index'));
@@ -59,18 +60,18 @@ class NotificacionesTest extends TestCase
         // Un aviso del admin y otro de OTRO usuario
         Notificacion::create([
             'usuario_id' => $admin->id,
-            'tipo'       => Notificacion::TIPO_STOCK_BAJO,
-            'titulo'     => 'Mio sin leer',
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_STOCK_BAJO,
+            'titulo' => 'Mio sin leer',
+            'leida' => false,
         ]);
 
         $otro = Usuario::query()->where('id', '!=', $admin->id)->firstOrFail();
 
         Notificacion::create([
             'usuario_id' => $otro->id,
-            'tipo'       => Notificacion::TIPO_STOCK_BAJO,
-            'titulo'     => 'De otro usuario',
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_STOCK_BAJO,
+            'titulo' => 'De otro usuario',
+            'leida' => false,
         ]);
 
         $respuesta = $this->actingAs($admin)->getJson(route('notificaciones.ultimas'));
@@ -94,17 +95,17 @@ class NotificacionesTest extends TestCase
 
         $a = Notificacion::create([
             'usuario_id' => $admin->id,
-            'tipo'       => Notificacion::TIPO_HISTORIA_AUTORIZADA,
-            'titulo'     => 'Primera',
-            'url'        => url('/historias'),
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_HISTORIA_AUTORIZADA,
+            'titulo' => 'Primera',
+            'url' => url('/historias'),
+            'leida' => false,
         ]);
 
         Notificacion::create([
             'usuario_id' => $admin->id,
-            'tipo'       => Notificacion::TIPO_HISTORIA_AUTORIZADA,
-            'titulo'     => 'Segunda',
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_HISTORIA_AUTORIZADA,
+            'titulo' => 'Segunda',
+            'leida' => false,
         ]);
 
         // Marcar una
@@ -138,9 +139,9 @@ class NotificacionesTest extends TestCase
 
         $ajena = Notificacion::create([
             'usuario_id' => $otro->id,
-            'tipo'       => Notificacion::TIPO_STOCK_BAJO,
-            'titulo'     => 'Ajena',
-            'leida'      => false,
+            'tipo' => Notificacion::TIPO_STOCK_BAJO,
+            'titulo' => 'Ajena',
+            'leida' => false,
         ]);
 
         $this->actingAs($admin)
@@ -152,38 +153,41 @@ class NotificacionesTest extends TestCase
 
     public function test_crear_una_solicitud_notifica_a_los_docentes(): void
     {
-        $estudiante = $this->usuarioConRol('estudiante');
-        $docente    = $this->usuarioConRol('docente');
+        $case = $this->approvedProgress();
+        $estudiante = $case['student'];
+        $docente = $case['teacher'];
 
         if (! $estudiante || ! $docente) {
             $this->markTestSkipped('Faltan usuarios estudiante/docente');
         }
 
-        $clinica = Clinica::query()->orderBy('id')->firstOrFail();
+        $clinica = $case['clinic'];
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo notificación',
+            'nombre' => 'Tipo notificación',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $insumo = Insumo::create([
-            'nombre'                => 'Insumo notificación',
-            'cantidad_numerica'     => 10,
-            'cantidad'              => 'unidades',
-            'stock_minimo'          => 2,
-            'costo_unitario'        => 3,
+            'nombre' => 'Insumo notificación',
+            'cantidad_numerica' => 10,
+            'cantidad' => 'unidades',
+            'stock_minimo' => 2,
+            'costo_unitario' => 3,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $antes = Notificacion::query()->delUsuario($docente->id)->noLeidas()->count();
 
         $respuesta = $this->actingAs($estudiante)->postJson(route('solicitudes-insumos.store'), [
-            'clinica_id'            => $clinica->id,
+            'clinica_id' => $clinica->id,
             'insumo_tratamiento_id' => $tipo->id,
-            'pieza'                 => 0,
-            'detalles'              => [
+            'pieza' => 0,
+            'tratamiento_realizado_id' => $case['realized']->id,
+            'sesion_atencion_id' => $case['session']->id,
+            'detalles' => [
                 ['insumo_id' => $insumo->id, 'cantidad_solicitada' => 2],
             ],
         ]);
@@ -200,32 +204,35 @@ class NotificacionesTest extends TestCase
             ->first();
 
         $this->assertNotNull($aviso);
-        $this->assertStringContainsString('Nueva solicitud', $aviso->titulo);
+        $this->assertStringContainsString('Solicitud de insumos', $aviso->titulo);
     }
 
     public function test_autorizar_notifica_al_estudiante(): void
     {
-        $estudiante = $this->usuarioConRol('estudiante');
-        $admin      = $this->usuarioConRol('admin');
+        $case = $this->approvedProgress();
+        $estudiante = $case['student'];
+        $admin = $case['teacher'];
 
         if (! $estudiante || ! $admin) {
             $this->markTestSkipped('Faltan usuarios');
         }
 
-        $clinica = Clinica::query()->orderBy('id')->firstOrFail();
+        $clinica = $case['clinic'];
 
         $tipo = InsumoTratamiento::create([
-            'nombre'      => 'Tipo autorizar',
+            'nombre' => 'Tipo autorizar',
             'descripcion' => '',
-            'clinica_id'  => $clinica->id,
+            'clinica_id' => $clinica->id,
         ]);
 
         $solicitud = InsumoSolicitado::create([
-            'pieza'                 => 0,
+            'pieza' => 0,
             'insumo_tratamiento_id' => $tipo->id,
-            'clinica_id'            => $clinica->id,
-            'usuario_id'            => $estudiante->id,
-            'estado'                => InsumoSolicitado::ESTADO_PENDIENTE,
+            'clinica_id' => $clinica->id,
+            'usuario_id' => $estudiante->id,
+            'estado' => InsumoSolicitado::ESTADO_PENDIENTE,
+            'tratamiento_realizado_id' => $case['realized']->id,
+            'sesion_atencion_id' => $case['session']->id,
         ]);
 
         $this->actingAs($admin)

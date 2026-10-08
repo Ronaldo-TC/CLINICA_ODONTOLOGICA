@@ -214,6 +214,19 @@
                 </div>
 
                 {{-- ============ ODONTOGRAMA ============ --}}
+                <div class="form-grid" style="margin-top:18px;">
+                    <div class="form-group"><label>Fecha de admisión</label><input type="date" name="fecha_admision" class="form-control" value="{{ today()->toDateString() }}"></div>
+                    <div class="form-group"><label>Teléfono de emergencia</label><input type="tel" name="telefono_emergencia" class="form-control" maxlength="30"></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Historia de la enfermedad actual</label><textarea name="historia_enfermedad_actual" class="form-control" rows="3"></textarea></div>
+                    <div class="form-group"><label>Estado físico general</label><select name="gpe" class="form-control"><option value="">Sin registrar</option><option value="bueno">Bueno</option><option value="regular">Regular</option><option value="malo">Malo</option></select></div>
+                    @foreach (['peso_kg' => ['Peso (kg)', '0.01'], 'temperatura_c' => ['Temperatura (°C)', '0.1'], 'pulso' => ['Pulso por minuto', '1'], 'frecuencia_respiratoria' => ['Frecuencia respiratoria por minuto', '1']] as $campo => $configuracion)
+                        <div class="form-group"><label>{{ $configuracion[0] }}</label><input type="number" name="{{ $campo }}" step="{{ $configuracion[1] }}" min="0" class="form-control"><span class="form-error" data-error-for="{{ $campo }}"></span></div>
+                    @endforeach
+                    <div class="form-group"><label>Presión arterial (mmHg)</label><input name="presion_arterial" class="form-control" maxlength="20" placeholder="Ej. 120/80"></div>
+                    @foreach (['gmh' => 'Historia médica general', 'ee' => 'Examen extraoral: asimetría, color y abultamiento', 'cn' => 'Ganglios cervicales: palpación y observaciones', 'atm' => 'ATM: ruidos articulares y observaciones', 'bm' => 'Mucosa bucal: alteraciones y observaciones', 'gm' => 'Mucosa gingival: alteraciones y observaciones', 'calculo' => 'Cálculos', 'oclusion' => 'Oclusión', 'pieza_dental' => 'Piezas dentales', 'diagnostico' => 'Diagnóstico presuntivo', 'examen' => 'Examen complementario requerido'] as $campo => $etiqueta)
+                        <div class="form-group"><label>{{ $etiqueta }}</label><textarea name="{{ $campo }}" class="form-control" rows="2"></textarea><span class="form-error" data-error-for="{{ $campo }}"></span></div>
+                    @endforeach
+                </div>
                 <div class="form-group" style="margin-top: 18px;">
                     <label>Odontograma</label>
                     <x-odontograma nombre="odontograma_pintado" id="adm-odontograma" />
@@ -233,6 +246,11 @@
                             <input type="checkbox" name="consentimiento_datos" value="1">
                             <span class="switch-track"><span class="switch-thumb"></span></span>
                             <span class="switch-label">Consiente tratamiento de datos</span>
+                        </label>
+                        <label class="switch-item">
+                            <input type="checkbox" name="consentimiento_fotografias" value="1">
+                            <span class="switch-track"><span class="switch-thumb"></span></span>
+                            <span class="switch-label">Autoriza uso de fotografías con fines didácticos</span>
                         </label>
                         <label class="switch-item">
                             <input type="checkbox" name="consentimiento_investigacion" value="1">
@@ -348,7 +366,8 @@
 
                 // Resto de campos
                 ['telefono', 'estado_civil', 'ocupacion', 'direccion', 'emergencia',
-                    'antecedentes', 'motivo_consulta'
+                    'antecedentes', 'motivo_consulta', 'fecha_admision', 'telefono_emergencia', 'historia_enfermedad_actual',
+                    'peso_kg', 'temperatura_c', 'pulso', 'presion_arterial', 'frecuencia_respiratoria', 'gmh', 'gpe', 'ee', 'cn', 'atm', 'bm', 'gm', 'calculo', 'oclusion', 'pieza_dental', 'diagnostico', 'examen'
                 ].forEach((f) => {
                     if ($form[f] && a[f] !== undefined && a[f] !== null) {
                         $form[f].value = a[f];
@@ -356,12 +375,13 @@
                 });
 
                 $form.consentimiento_datos.checked = !!a.consentimiento_datos;
+                $form.consentimiento_fotografias.checked = !!a.consentimiento_fotografias;
                 $form.consentimiento_investigacion.checked = !!a.consentimiento_investigacion;
 
                 // Odontograma: se restaura lo pintado y se recuerda el valor previo
                 // (el controlador lo usa para registrar el cambio en bitácoras).
                 const odontogramaPrev = a.odontograma_pintado || '{}';
-                window.Odontograma?.set('#adm-odontograma', odontogramaPrev);
+                window.Odontograma?.set('#adm-odontograma', odontogramaPrev, a.odontograma_denticion || null);
                 let campoAnterior = $form.querySelector('[name="odontograma_pintado_anterior"]');
                 if (!campoAnterior) {
                     campoAnterior = document.createElement('input');

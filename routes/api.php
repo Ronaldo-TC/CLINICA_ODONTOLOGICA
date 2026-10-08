@@ -1,73 +1,69 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| API REST v1 (app móvil) — Laravel Sanctum
-|--------------------------------------------------------------------------
-| Prefijo real: /api/v1  (Laravel añade /api; aquí se versiona con /v1)
-|
-| Autenticación:
-|   POST /api/v1/login  { nombre_usuario, contrasena, device_name }
-|   → { access_token, token_type: "Bearer" }
-|   Enviar el token en la cabecera: Authorization: Bearer <token>
-|
-| Todos los endpoints protegidos validan además el permiso
-| `modulo.accion` del usuario (Spatie).
-*/
-
-use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HistoriaController;
+use App\Http\Controllers\InsumoController;
+use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\OdontogramaController;
+use App\Http\Controllers\PacienteController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->name('api.v1.')->group(function () {
+Route::prefix('v1')->name('api.v1.')->group(function (): void {
+    Route::post('/login', [AuthController::class, 'loginV1'])->name('login');
 
-    /* ---------- Público ---------- */
-    Route::post('/login', [ApiController::class, 'login'])->name('login');
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::controller(AuthController::class)->group(function (): void {
+            Route::get('/me', 'meV1')->name('me');
+            Route::post('/logout', 'logoutV1')->name('logout');
+            Route::post('/logout-all', 'logoutAllV1')->name('logout-all');
+        });
 
-    /* ---------- Protegido con Sanctum ---------- */
-    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'datosApi'])->name('dashboard');
 
-        /* Sesión */
-        Route::get('/me', [ApiController::class, 'me'])->name('me');
-        Route::post('/logout', [ApiController::class, 'logout'])->name('logout');
-        Route::post('/logout-all', [ApiController::class, 'logoutAll'])->name('logout-all');
+        Route::prefix('pacientes')->name('pacientes.')->controller(PacienteController::class)
+            ->middleware('permission:pacientes.ver')->group(function (): void {
+                Route::get('/', 'indexApi')->name('index');
+                Route::get('/{id}', 'showApi')->name('show');
+            });
 
-        /* Panel */
-        Route::get('/dashboard', [ApiController::class, 'dashboard'])->name('dashboard');
+        Route::prefix('historias')->name('historias.')->controller(HistoriaController::class)->group(function (): void {
+            Route::middleware('permission:historias.ver')->group(function (): void {
+                Route::get('/', 'indexApi')->name('index');
+                Route::get('/{id}', 'showApi')->name('show');
+            });
+            Route::post('/', 'actualizarAvanceApi')->middleware('permission:historias.editar')->name('store');
+        });
 
-        /* Pacientes */
-        Route::get('/pacientes', [ApiController::class, 'pacientes'])
-            ->middleware('permission:pacientes.ver')->name('pacientes.index');
-        Route::get('/pacientes/{id}', [ApiController::class, 'paciente'])
-            ->middleware('permission:pacientes.ver')->name('pacientes.show');
+        Route::controller(InsumoController::class)->group(function (): void {
+            Route::get('/insumos', 'catalogoApi')->middleware('permission:insumos.ver')->name('insumos.index');
+            Route::prefix('solicitudes-insumos')->name('solicitudes.')->group(function (): void {
+                Route::get('/', 'solicitudesApi')->middleware('permission:insumos.ver')->name('index');
+                Route::post('/', 'crearSolicitudApi')->middleware('permission:insumos.crear')->name('store');
+            });
+        });
 
-        /* Historias clínicas */
-        Route::get('/historias', [ApiController::class, 'historias'])
-            ->middleware('permission:historias.ver')->name('historias.index');
-        Route::get('/historias/{id}', [ApiController::class, 'historia'])
-            ->middleware('permission:historias.ver')->name('historias.show');
-        Route::post('/historias', [ApiController::class, 'crearHistoria'])
-            ->middleware('permission:historias.editar')->name('historias.store');
+        Route::prefix('notificaciones')->name('notificaciones.')->controller(NotificacionController::class)->group(function (): void {
+            Route::get('/', 'indexApi')->name('index');
+            Route::post('/{id}/leer', 'leerApi')->name('leer');
+        });
 
-        /* Insumos */
-        Route::get('/insumos', [ApiController::class, 'insumos'])
-            ->middleware('permission:insumos.ver')->name('insumos.index');
-
-        /* Solicitudes de insumos */
-        Route::get('/solicitudes-insumos', [ApiController::class, 'solicitudes'])
-            ->middleware('permission:insumos.ver')->name('solicitudes.index');
-        Route::post('/solicitudes-insumos', [ApiController::class, 'crearSolicitud'])
-            ->middleware('permission:insumos.crear')->name('solicitudes.store');
-
-        /* Notificaciones */
-        Route::get('/notificaciones', [ApiController::class, 'notificaciones'])->name('notificaciones.index');
-        Route::post('/notificaciones/{id}/leer', [ApiController::class, 'leerNotificacion'])->name('notificaciones.leer');
+        Route::controller(OdontogramaController::class)->group(function (): void {
+            Route::middleware('permission:historias.ver')->group(function (): void {
+                Route::get('/odontogramas/{odontograma}/threejs', 'threejs')->name('odontogramas.threejs');
+                Route::get('/pacientes/{paciente}/odontograma-actual', 'actualPorPaciente')->name('odontogramas.actual');
+                Route::get('/pacientes/{paciente}/odontogramas', 'indexPorPaciente')->name('odontogramas.index');
+            });
+            Route::post('/odontogramas/{odontograma}/hallazgos', 'guardarHallazgos')
+                ->middleware('permission:historias.editar|historias.gestionar')->name('odontogramas.hallazgos.guardar');
+        });
     });
 });
 
-/* ---------- Compatibilidad con las rutas previas (sin versión) ---------- */
-Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::controller(AuthController::class)->group(function (): void {
+    Route::post('/login', 'login');
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/me', 'me');
+        Route::post('/logout', 'logout');
+    });
 });

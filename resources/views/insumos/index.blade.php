@@ -10,16 +10,17 @@
         <span id="crud-total-label">{{ $stats['total'] }} insumos registrados</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="insumos.reporte" />
         @can('insumos.ver')
         <a href="{{ route('solicitudes-insumos.index') }}" class="btn btn-secondary">
             📋 Ver Solicitudes
         </a>
         @endcan
-        @can('insumos.crear')
+        @canany(['insumos.crear', 'insumos.gestionar'])
         <button type="button" class="btn btn-primary" id="btnNuevoInsumo">
             + Nuevo Insumo
         </button>
-        @endcan
+        @endcanany
     </div>
 </div>
 
@@ -106,7 +107,7 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Tipo</th>
+                    <th>Tratamiento</th>
                     <th>Clínica</th>
                     <th>Stock</th>
                     <th>Costo</th>
@@ -268,11 +269,6 @@
                 return;
             }
 
-            if (e.target.closest('#btnNuevoInsumo')) {
-                InsumoModal.abrirCrear();
-                return;
-            }
-
             const actionBtn = e.target.closest('[data-action]');
             if (!actionBtn) return;
 
@@ -305,7 +301,7 @@
                 });
                 if (!res.ok) throw new Error();
                 const data = await res.json();
-                InsumoModal.abrirEdicion(data);
+                InsumosModal.abrirEdicion(data);
                 setStatus('idle');
             } catch (err) {
                 console.error('[Insumos] Error:', err);

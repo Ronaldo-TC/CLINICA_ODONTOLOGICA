@@ -8,7 +8,9 @@ use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\Periodo;
 use App\Models\Usuario;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 /**
  * DashboardMetrics
@@ -48,21 +50,21 @@ class DashboardMetrics
     private static function clavesPorRol(Usuario $usuario): array
     {
         $mapa = [
-            'admin'             => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total', 'ingresos_mes'],
-            'subadmin'          => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total'],
-            'director'          => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'historias_pendientes', 'insumos_bajo_stock'],
+            'admin' => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total', 'ingresos_mes'],
+            'subadmin' => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total'],
+            'director' => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'historias_pendientes', 'insumos_bajo_stock'],
             'jefatura-clinicas' => ['historias_pendientes', 'insumos_bajo_stock', 'solicitudes_pendientes', 'admisiones_hoy', 'radiologias_hoy'],
-            'jefe-catedra'      => ['historias_pendientes', 'solicitudes_pendientes', 'pacientes_total', 'tratamientos_periodo'],
-            'docente'           => ['historias_por_autorizar', 'estudiantes_asignados', 'solicitudes_estudiantes', 'insumos_bajo_stock'],
-            'estudiante'        => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes', 'historias_pendientes'],
-            'interno'           => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes'],
-            'admision'          => ['admisiones_hoy', 'pacientes_total', 'periodos', 'mis_admisiones'],
-            'cajas'             => ['recaudacion_hoy', 'recibos_pendientes', 'ingresos_mes'],
-            'insumos'           => ['solicitudes_pendientes', 'insumos_bajo_stock', 'insumos_agotados', 'solicitudes_por_entregar'],
-            'esterilizacion'    => ['ciclos_hoy', 'paquetes_entregados', 'ciclos_mes'],
-            'radiologia'        => ['radiologias_hoy', 'radiografias_pendientes', 'radiografias_mes'],
-            'kardex'            => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'saldos'],
-            'investigacion'     => ['cohorte_investigacion', 'pacientes_total', 'tratamientos_periodo'],
+            'jefe-catedra' => ['historias_pendientes', 'solicitudes_pendientes', 'pacientes_total', 'tratamientos_periodo'],
+            'docente' => ['historias_por_autorizar', 'estudiantes_asignados', 'solicitudes_estudiantes', 'insumos_bajo_stock'],
+            'estudiante' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes', 'historias_pendientes'],
+            'interno' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes'],
+            'admision' => ['admisiones_hoy', 'pacientes_total', 'periodos', 'mis_admisiones'],
+            'cajas' => ['recaudacion_hoy', 'recibos_pendientes', 'ingresos_mes'],
+            'insumos' => ['solicitudes_pendientes', 'insumos_bajo_stock', 'insumos_agotados', 'solicitudes_por_entregar'],
+            'esterilizacion' => ['ciclos_hoy', 'paquetes_entregados', 'ciclos_mes'],
+            'radiologia' => ['radiologias_hoy', 'radiografias_pendientes', 'radiografias_mes'],
+            'kardex' => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'saldos'],
+            'investigacion' => ['cohorte_investigacion', 'pacientes_total', 'tratamientos_periodo'],
         ];
 
         foreach ($usuario->getRoleNames() as $rol) {
@@ -148,7 +150,7 @@ class DashboardMetrics
                 ),
                 'ingresos_mes' => self::tarjeta(
                     'Ingresos del mes',
-                    'Bs ' . number_format(self::ingresosDelMes(), 2),
+                    'Bs '.number_format(self::ingresosDelMes(), 2),
                     now()->translatedFormat('F Y'),
                     'cyan',
                     'credit-card',
@@ -156,7 +158,7 @@ class DashboardMetrics
                 ),
                 'recaudacion_hoy' => self::tarjeta(
                     'Recaudación de hoy',
-                    'Bs ' . number_format(self::recaudacionHoy(), 2),
+                    'Bs '.number_format(self::recaudacionHoy(), 2),
                     now()->format('d/m/Y'),
                     'cyan',
                     'credit-card',
@@ -164,7 +166,7 @@ class DashboardMetrics
                 ),
                 'recibos_pendientes' => self::tarjeta(
                     'Saldos por cobrar',
-                    'Bs ' . number_format(self::saldosPendientes(), 2),
+                    'Bs '.number_format(self::saldosPendientes(), 2),
                     'recibos con saldo',
                     'amber',
                     'receipt',
@@ -172,7 +174,7 @@ class DashboardMetrics
                 ),
                 'saldos' => self::tarjeta(
                     'Saldos por cobrar',
-                    'Bs ' . number_format(self::saldosPendientes(), 2),
+                    'Bs '.number_format(self::saldosPendientes(), 2),
                     'total pendiente',
                     'amber',
                     'receipt',
@@ -231,7 +233,9 @@ class DashboardMetrics
                 ),
                 'mis_admisiones' => self::tarjeta(
                     'Admisiones registradas',
-                    self::contar(DB::table('admisiones')->where('estudiante_id', $usuario->id)),
+                    self::contar(DB::table('admisiones')->where(fn (Builder $query): Builder => $query
+                        ->where('registrado_por', $usuario->id)
+                        ->orWhere(fn (Builder $legacy): Builder => $legacy->whereNull('registrado_por')->where('estudiante_id', $usuario->id)))),
                     'por ti',
                     'teal',
                     'clipboard',
@@ -417,7 +421,7 @@ class DashboardMetrics
 
     private static function ruta(string $nombre): ?string
     {
-        return \Illuminate\Support\Facades\Route::has($nombre) ? route($nombre) : null;
+        return Route::has($nombre) ? route($nombre) : null;
     }
 
     /* ============================================================
@@ -469,7 +473,7 @@ class DashboardMetrics
             ->get();
 
         return [
-            'labels'  => $filas->pluck('nombre')->all(),
+            'labels' => $filas->pluck('nombre')->all(),
             'valores' => $filas->pluck('total')->map(fn ($v) => (int) $v)->all(),
         ];
     }

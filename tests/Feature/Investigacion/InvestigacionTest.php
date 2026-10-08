@@ -57,31 +57,31 @@ class InvestigacionTest extends TestCase
            Catálogos mínimos
            ------------------------------------------------------------ */
         $clinica = Clinica::create([
-            'modulo'       => 'Test',
+            'modulo' => 'Test',
             'especialidad' => 'Especialidad Test Investigacion',
-            'curso'        => 1,
+            'curso' => 1,
         ]);
         $this->clinicaId = $clinica->id;
 
         $periodo = Periodo::create([
-            'nombre'       => 'Periodo Test Investigacion',
-            'gestion'      => 2099,
-            'semestre'     => 1,
+            'nombre' => 'Periodo Test Investigacion',
+            'gestion' => 2099,
+            'semestre' => 1,
             'fecha_inicio' => now()->subMonth()->toDateString(),
-            'fecha_fin'    => now()->addMonth()->toDateString(),
-            'habilitado'   => true,
+            'fecha_fin' => now()->addMonth()->toDateString(),
+            'habilitado' => true,
         ]);
         $this->periodoId = $periodo->id;
 
         $motivo = MotivoConsulta::create([
-            'nombre'      => 'Motivo Test Investigacion',
+            'nombre' => 'Motivo Test Investigacion',
             'descripcion' => 'Generado por test',
-            'habilitado'  => true,
+            'habilitado' => true,
         ]);
 
         $tratamiento = Tratamiento::create([
-            'nombre'    => 'Tratamiento Test Investigacion',
-            'costo'     => 100,
+            'nombre' => 'Tratamiento Test Investigacion',
+            'costo' => 100,
             'clinica_id' => $this->clinicaId,
         ]);
 
@@ -91,75 +91,75 @@ class InvestigacionTest extends TestCase
            compuestas contra `especialidades`, por eso la fila pivote.
            ------------------------------------------------------------ */
         $docente = Usuario::create([
-            'ci'              => 'CI-DOC-TEST-' . random_int(100000, 999999),
-            'nombre_usuario'  => 'inv' . random_int(100000, 999999),
+            'ci' => 'CI-DOC-TEST-'.random_int(100000, 999999),
+            'nombre_usuario' => 'inv'.random_int(100000, 999999),
             'nombre_completo' => 'Docente Test Investigacion',
-            'tipo'            => 'docente',
-            'contrasena'      => 'secret123',
+            'tipo' => 'docente',
+            'contrasena' => 'secret123',
         ]);
 
         DB::table('especialidades')->insert([
-            'usuario_id'            => $docente->id,
-            'clinica_id'            => $this->clinicaId,
-            'habilitado'            => true,
-            'rotacion'              => -1,
-            'responsable_admision'  => true,
-            'created_at'            => now(),
-            'updated_at'            => now(),
+            'usuario_id' => $docente->id,
+            'clinica_id' => $this->clinicaId,
+            'habilitado' => true,
+            'rotacion' => -1,
+            'responsable_admision' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         /* ------------------------------------------------------------
            Paciente CON consentimiento de investigación (visible)
            ------------------------------------------------------------ */
         $paciente = Paciente::create([
-            'ci'                => $this->ciConsentido,
-            'nombre'            => $this->nombreConsentido,
-            'apellido_paterno'  => 'ApellidoConsentido',
-            'apellido_materno'  => 'ApellidoConsentidoDos',
-            'genero'            => 'Femenino',
-            'fecha_nacimiento'  => now()->subYears(30)->toDateString(),
+            'ci' => $this->ciConsentido,
+            'nombre' => $this->nombreConsentido,
+            'apellido_paterno' => 'ApellidoConsentido',
+            'apellido_materno' => 'ApellidoConsentidoDos',
+            'genero' => 'Femenino',
+            'fecha_nacimiento' => now()->subYears(30)->toDateString(),
         ]);
         $this->pacienteId = $paciente->id;
 
         $admision = Admision::create([
-            'paciente_id'                   => $paciente->id,
-            'periodo_id'                    => $this->periodoId,
-            'motivo_consulta_id'            => $motivo->id,
-            'motivo_consulta'               => 'Motivo en texto libre',
-            'diagnostico'                   => 'Diagnóstico de prueba',
-            'consentimiento_datos'          => true,
-            'consentimiento_investigacion'  => true,
-            'estudiante_id'                 => $docente->id,
-            'especialidad_estudiante'       => $this->clinicaId,
-            'responsable_id'                => $docente->id,
-            'especialidad_responsable'      => $this->clinicaId,
+            'paciente_id' => $paciente->id,
+            'periodo_id' => $this->periodoId,
+            'motivo_consulta_id' => $motivo->id,
+            'motivo_consulta' => 'Motivo en texto libre',
+            'diagnostico' => 'Diagnóstico de prueba',
+            'consentimiento_datos' => true,
+            'consentimiento_investigacion' => true,
+            'estudiante_id' => $docente->id,
+            'especialidad_estudiante' => $this->clinicaId,
+            'responsable_id' => $docente->id,
+            'especialidad_responsable' => $this->clinicaId,
         ]);
 
         $historia = HistoriaClinica::create([
-            'admision_id'              => $admision->id,
-            'paciente_id'              => $paciente->id,
-            'clinica_id'               => $this->clinicaId,
-            'periodo_id'               => $this->periodoId,
-            'estado'                   => 'concluida',
-            'autorizado'               => true,
-            'estudiante_id'            => $docente->id,
-            'especialidad_estudiante'  => $this->clinicaId,
-            'docente_id'               => $docente->id,
-            'especialidad_docente'     => $this->clinicaId,
+            'admision_id' => $admision->id,
+            'paciente_id' => $paciente->id,
+            'clinica_id' => $this->clinicaId,
+            'periodo_id' => $this->periodoId,
+            'estado' => 'concluida',
+            'autorizado' => true,
+            'estudiante_id' => $docente->id,
+            'especialidad_estudiante' => $this->clinicaId,
+            'docente_id' => $docente->id,
+            'especialidad_docente' => $this->clinicaId,
         ]);
 
         TratamientoRealizado::create([
             'historia_clinica_id' => $historia->id,
-            'tratamiento_id'      => $tratamiento->id,
-            'clinica_id'          => $this->clinicaId,
-            'pieza_dental'        => '11',
-            'estado'              => 'realizado',
-            'costo_cobrado'       => 100,
-            'fecha_inicio'        => now()->toDateString(),
+            'tratamiento_id' => $tratamiento->id,
+            'clinica_id' => $this->clinicaId,
+            'pieza_dental' => '11',
+            'estado' => 'realizado',
+            'costo_cobrado' => 100,
+            'fecha_inicio' => now()->toDateString(),
         ]);
 
         $this->codigoEsperado = substr(
-            hash('sha256', $this->pacienteId . config('app.key')),
+            hash('sha256', $this->pacienteId.config('app.key')),
             0,
             12
         );
@@ -168,46 +168,46 @@ class InvestigacionTest extends TestCase
            Paciente SIN consentimiento de investigación (oculto)
            ------------------------------------------------------------ */
         $pacienteOculto = Paciente::create([
-            'ci'                => $this->ciSinConsentimiento,
-            'nombre'            => $this->nombreSinConsentimiento,
-            'apellido_paterno'  => 'ApellidoSinConsentimiento',
-            'genero'            => 'Masculino',
-            'fecha_nacimiento'  => now()->subYears(45)->toDateString(),
+            'ci' => $this->ciSinConsentimiento,
+            'nombre' => $this->nombreSinConsentimiento,
+            'apellido_paterno' => 'ApellidoSinConsentimiento',
+            'genero' => 'Masculino',
+            'fecha_nacimiento' => now()->subYears(45)->toDateString(),
         ]);
 
         $admisionOculta = Admision::create([
-            'paciente_id'                   => $pacienteOculto->id,
-            'periodo_id'                    => $this->periodoId,
-            'motivo_consulta_id'            => $motivo->id,
-            'consentimiento_datos'          => true,
-            'consentimiento_investigacion'  => false,
-            'estudiante_id'                 => $docente->id,
-            'especialidad_estudiante'       => $this->clinicaId,
-            'responsable_id'                => $docente->id,
-            'especialidad_responsable'      => $this->clinicaId,
+            'paciente_id' => $pacienteOculto->id,
+            'periodo_id' => $this->periodoId,
+            'motivo_consulta_id' => $motivo->id,
+            'consentimiento_datos' => true,
+            'consentimiento_investigacion' => false,
+            'estudiante_id' => $docente->id,
+            'especialidad_estudiante' => $this->clinicaId,
+            'responsable_id' => $docente->id,
+            'especialidad_responsable' => $this->clinicaId,
         ]);
 
         $historiaOculta = HistoriaClinica::create([
-            'admision_id'              => $admisionOculta->id,
-            'paciente_id'              => $pacienteOculto->id,
-            'clinica_id'               => $this->clinicaId,
-            'periodo_id'               => $this->periodoId,
-            'estado'                   => 'concluida',
-            'autorizado'               => true,
-            'estudiante_id'            => $docente->id,
-            'especialidad_estudiante'  => $this->clinicaId,
-            'docente_id'               => $docente->id,
-            'especialidad_docente'     => $this->clinicaId,
+            'admision_id' => $admisionOculta->id,
+            'paciente_id' => $pacienteOculto->id,
+            'clinica_id' => $this->clinicaId,
+            'periodo_id' => $this->periodoId,
+            'estado' => 'concluida',
+            'autorizado' => true,
+            'estudiante_id' => $docente->id,
+            'especialidad_estudiante' => $this->clinicaId,
+            'docente_id' => $docente->id,
+            'especialidad_docente' => $this->clinicaId,
         ]);
 
         TratamientoRealizado::create([
             'historia_clinica_id' => $historiaOculta->id,
-            'tratamiento_id'      => $tratamiento->id,
-            'clinica_id'          => $this->clinicaId,
-            'pieza_dental'        => '21',
-            'estado'              => 'realizado',
-            'costo_cobrado'       => 100,
-            'fecha_inicio'        => now()->toDateString(),
+            'tratamiento_id' => $tratamiento->id,
+            'clinica_id' => $this->clinicaId,
+            'pieza_dental' => '21',
+            'estado' => 'realizado',
+            'costo_cobrado' => 100,
+            'fecha_inicio' => now()->toDateString(),
         ]);
     }
 
@@ -257,7 +257,7 @@ class InvestigacionTest extends TestCase
 
     public function test_las_estadisticas_devuelven_la_estructura_esperada(): void
     {
-        $respuesta = $this->actingAs($this->admin)->getJson('/investigacion/estadisticas');
+        $respuesta = $this->actingAs($this->admin)->getJson('/investigacion/estadisticas?clinica='.$this->clinicaId);
 
         $respuesta->assertStatus(200);
         $respuesta->assertJsonStructure([

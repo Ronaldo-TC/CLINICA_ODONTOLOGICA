@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Clinica;
 use App\Models\Periodo;
 use App\Models\Usuario;
+use App\Services\ReporteModulo;
+use App\Services\ReportePdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 /**
  * ReporteController
@@ -44,95 +48,95 @@ class ReporteController extends Controller
     {
         return [
             'pacientes-por-periodo' => [
-                'titulo'   => 'Admisiones por periodo',
-                'grafico'  => 'barra',
+                'titulo' => 'Admisiones por periodo',
+                'grafico' => 'barra',
                 'etiqueta' => 'Periodo',
-                'valor'    => 'Admisiones',
-                'ruta'     => 'reportes.pacientes-por-periodo',
+                'valor' => 'Admisiones',
+                'ruta' => 'reportes.pacientes-por-periodo',
             ],
             'pacientes-por-especialidad' => [
-                'titulo'   => 'Admisiones por clínica',
-                'grafico'  => 'torta',
+                'titulo' => 'Admisiones por clínica',
+                'grafico' => 'torta',
                 'etiqueta' => 'Clínica',
-                'valor'    => 'Admisiones',
-                'ruta'     => 'reportes.pacientes-por-especialidad',
+                'valor' => 'Admisiones',
+                'ruta' => 'reportes.pacientes-por-especialidad',
             ],
             'pacientes-por-edad' => [
-                'titulo'   => 'Pacientes por grupo de edad',
-                'grafico'  => 'barra',
+                'titulo' => 'Pacientes por grupo de edad',
+                'grafico' => 'barra',
                 'etiqueta' => 'Grupo de edad',
-                'valor'    => 'Pacientes',
-                'ruta'     => 'reportes.pacientes-por-edad',
+                'valor' => 'Pacientes',
+                'ruta' => 'reportes.pacientes-por-edad',
             ],
             'pacientes-por-sexo' => [
-                'titulo'   => 'Pacientes por sexo',
-                'grafico'  => 'dona',
+                'titulo' => 'Pacientes por sexo',
+                'grafico' => 'dona',
                 'etiqueta' => 'Sexo',
-                'valor'    => 'Pacientes',
-                'ruta'     => 'reportes.pacientes-por-sexo',
+                'valor' => 'Pacientes',
+                'ruta' => 'reportes.pacientes-por-sexo',
             ],
             'motivos-consulta' => [
-                'titulo'   => 'Motivos de consulta más frecuentes (top 10)',
-                'grafico'  => 'barra-horizontal',
+                'titulo' => 'Motivos de consulta más frecuentes (top 10)',
+                'grafico' => 'barra-horizontal',
                 'etiqueta' => 'Motivo de consulta',
-                'valor'    => 'Admisiones',
-                'ruta'     => 'reportes.motivos-consulta',
+                'valor' => 'Admisiones',
+                'ruta' => 'reportes.motivos-consulta',
             ],
             'tratamientos-por-especialidad' => [
-                'titulo'   => 'Tratamientos realizados por clínica',
-                'grafico'  => 'barra',
+                'titulo' => 'Tratamientos realizados por clínica',
+                'grafico' => 'barra',
                 'etiqueta' => 'Clínica',
-                'valor'    => 'Tratamientos',
-                'ruta'     => 'reportes.tratamientos-por-especialidad',
+                'valor' => 'Tratamientos',
+                'ruta' => 'reportes.tratamientos-por-especialidad',
             ],
             'atenciones-por-docente' => [
-                'titulo'   => 'Atenciones por docente (top 10, historias autorizadas)',
-                'grafico'  => 'barra',
+                'titulo' => 'Atenciones por docente (top 10, historias autorizadas)',
+                'grafico' => 'barra',
                 'etiqueta' => 'Docente',
-                'valor'    => 'Historias autorizadas',
-                'ruta'     => 'reportes.atenciones-por-docente',
+                'valor' => 'Historias autorizadas',
+                'ruta' => 'reportes.atenciones-por-docente',
             ],
             'atenciones-por-estudiante' => [
-                'titulo'   => 'Atenciones por estudiante (top 10, tratamientos realizados)',
-                'grafico'  => 'barra',
+                'titulo' => 'Atenciones por estudiante (top 10, tratamientos realizados)',
+                'grafico' => 'barra',
                 'etiqueta' => 'Estudiante',
-                'valor'    => 'Tratamientos',
-                'ruta'     => 'reportes.atenciones-por-estudiante',
+                'valor' => 'Tratamientos',
+                'ruta' => 'reportes.atenciones-por-estudiante',
             ],
             'insumos-utilizados' => [
-                'titulo'   => 'Insumos más utilizados (top 10)',
-                'grafico'  => 'barra',
+                'titulo' => 'Insumos más utilizados (top 10)',
+                'grafico' => 'barra',
                 'etiqueta' => 'Insumo',
-                'valor'    => 'Cantidad usada',
-                'ruta'     => 'reportes.insumos-utilizados',
+                'valor' => 'Cantidad usada',
+                'ruta' => 'reportes.insumos-utilizados',
             ],
             'radiografias-por-mes' => [
-                'titulo'   => 'Radiografías por mes',
-                'grafico'  => 'linea',
+                'titulo' => 'Radiografías por mes',
+                'grafico' => 'linea',
                 'etiqueta' => 'Mes',
-                'valor'    => 'Radiografías',
-                'ruta'     => 'reportes.radiografias-por-mes',
+                'valor' => 'Radiografías',
+                'ruta' => 'reportes.radiografias-por-mes',
             ],
             'esterilizaciones-por-mes' => [
-                'titulo'   => 'Ciclos de esterilización por mes',
-                'grafico'  => 'linea',
+                'titulo' => 'Ciclos de esterilización por mes',
+                'grafico' => 'linea',
                 'etiqueta' => 'Mes',
-                'valor'    => 'Ciclos',
-                'ruta'     => 'reportes.esterilizaciones-por-mes',
+                'valor' => 'Ciclos',
+                'ruta' => 'reportes.esterilizaciones-por-mes',
             ],
             'pagos-por-tipo' => [
-                'titulo'   => 'Pagos por tipo (monto cancelado)',
-                'grafico'  => 'torta',
+                'titulo' => 'Pagos por tipo (monto cancelado)',
+                'grafico' => 'torta',
                 'etiqueta' => 'Tipo de pago',
-                'valor'    => 'Cancelado (Bs)',
-                'ruta'     => 'reportes.pagos-por-tipo',
+                'valor' => 'Cancelado (Bs)',
+                'ruta' => 'reportes.pagos-por-tipo',
             ],
             'ingresos-por-mes' => [
-                'titulo'   => 'Ingresos por mes (monto cancelado)',
-                'grafico'  => 'linea',
+                'titulo' => 'Ingresos por mes (monto cancelado)',
+                'grafico' => 'linea',
                 'etiqueta' => 'Mes',
-                'valor'    => 'Cancelado (Bs)',
-                'ruta'     => 'reportes.ingresos-por-mes',
+                'valor' => 'Cancelado (Bs)',
+                'ruta' => 'reportes.ingresos-por-mes',
             ],
         ];
     }
@@ -154,7 +158,7 @@ class ReporteController extends Controller
             'clinicas' => Clinica::query()
                 ->orderBy('especialidad')
                 ->get(['id', 'especialidad', 'modulo']),
-            'filtros'  => $this->filtros($request),
+            'filtros' => $this->filtros($request),
         ]);
     }
 
@@ -264,13 +268,13 @@ class ReporteController extends Controller
     {
         $this->authorizeAction('ver');
 
-        $catalogo   = self::catalogo();
+        $catalogo = self::catalogo();
         $solicitado = $request->input('reporte');
-        $claves     = ($solicitado && isset($catalogo[$solicitado]))
+        $claves = ($solicitado && isset($catalogo[$solicitado]))
             ? [$solicitado]
             : array_keys($catalogo);
 
-        $nombre = 'reportes_clinica_' . now()->format('Y-m-d_His') . '.csv';
+        $nombre = 'reportes_clinica_'.now()->format('Y-m-d_His').'.csv';
 
         return response()->streamDownload(function () use ($claves, $catalogo, $request) {
             $salida = fopen('php://output', 'w');
@@ -282,14 +286,14 @@ class ReporteController extends Controller
 
             foreach ($claves as $clave) {
                 $definicion = $catalogo[$clave];
-                $datos      = $this->datos($clave, $request);
+                $datos = $this->datos($clave, $request);
 
                 if (! $primero) {
                     fputcsv($salida, [], ';');   // línea en blanco separadora
                 }
                 $primero = false;
 
-                fputcsv($salida, ['# ' . $definicion['titulo']], ';');
+                fputcsv($salida, ['# '.$definicion['titulo']], ';');
                 fputcsv($salida, ['Filtros', $this->descripcionFiltros($request)], ';');
                 fputcsv($salida, [$definicion['etiqueta'], $definicion['valor']], ';');
 
@@ -302,7 +306,7 @@ class ReporteController extends Controller
 
             fclose($salida);
         }, $nombre, [
-            'Content-Type'  => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
     }
@@ -319,19 +323,42 @@ class ReporteController extends Controller
         $this->authorizeAction('ver');
 
         $catalogo = self::catalogo();
-        $datos    = [];
+        $datos = [];
 
         foreach (array_keys($catalogo) as $clave) {
             $datos[$clave] = $this->datos($clave, $request);
         }
 
         return view('reportes.partials.imprimible', [
-            'catalogo'    => $catalogo,
-            'datos'       => $datos,
-            'filtros'     => $this->filtros($request),
+            'catalogo' => $catalogo,
+            'datos' => $datos,
+            'filtros' => $this->filtros($request),
             'descripcion' => $this->descripcionFiltros($request),
-            'emitido'     => now(),
+            'emitido' => now(),
         ]);
+    }
+
+    public function exportarPdf(Request $request, ReporteModulo $reporteModulo, ReportePdf $reportePdf): Response
+    {
+        $this->authorizeAction('ver');
+        $reporteModulo->validarFiltros($request);
+        $catalogo = self::catalogo();
+        $request->validate(['reporte' => ['nullable', Rule::in(array_keys($catalogo))]]);
+        if ($request->filled('reporte')) {
+            $catalogo = [$request->input('reporte') => $catalogo[$request->input('reporte')]];
+        }
+        $datos = [];
+        foreach (array_keys($catalogo) as $clave) {
+            $datos[$clave] = $this->datos($clave, $request);
+        }
+        $request->merge(['formato' => 'pdf']);
+
+        return $reportePdf->responder('reportes.estadisticas', [
+            'titulo' => 'Reporte estadístico de la clínica', 'codigo' => 'EST-'.now()->format('Ymd'),
+            'emitidoPor' => $request->user()->nombre_completo, 'emitidoEn' => now(),
+            'volver' => route('reportes.index'), 'catalogo' => $catalogo, 'datos' => $datos,
+            'descripcion' => $this->descripcionFiltros($request),
+        ], $request, 'estadisticas-clinica-'.now()->format('Ymd-His').'.pdf');
     }
 
     /* ============================================================
@@ -344,20 +371,20 @@ class ReporteController extends Controller
     public function datos(string $clave, Request $request): array
     {
         return match ($clave) {
-            'pacientes-por-periodo'         => $this->datosPacientesPorPeriodo($request),
-            'pacientes-por-especialidad'    => $this->datosPacientesPorEspecialidad($request),
-            'pacientes-por-edad'            => $this->datosPacientesPorEdad($request),
-            'pacientes-por-sexo'            => $this->datosPacientesPorSexo($request),
-            'motivos-consulta'              => $this->datosMotivosConsulta($request),
+            'pacientes-por-periodo' => $this->datosPacientesPorPeriodo($request),
+            'pacientes-por-especialidad' => $this->datosPacientesPorEspecialidad($request),
+            'pacientes-por-edad' => $this->datosPacientesPorEdad($request),
+            'pacientes-por-sexo' => $this->datosPacientesPorSexo($request),
+            'motivos-consulta' => $this->datosMotivosConsulta($request),
             'tratamientos-por-especialidad' => $this->datosTratamientosPorEspecialidad($request),
-            'atenciones-por-docente'        => $this->datosAtencionesPorDocente($request),
-            'atenciones-por-estudiante'     => $this->datosAtencionesPorEstudiante($request),
-            'insumos-utilizados'            => $this->datosInsumosUtilizados($request),
-            'radiografias-por-mes'          => $this->datosRadiografiasPorMes($request),
-            'esterilizaciones-por-mes'      => $this->datosEsterilizacionesPorMes($request),
-            'pagos-por-tipo'                => $this->datosPagosPorTipo($request),
-            'ingresos-por-mes'              => $this->datosIngresosPorMes($request),
-            default                         => ['labels' => [], 'valores' => [], 'total' => 0],
+            'atenciones-por-docente' => $this->datosAtencionesPorDocente($request),
+            'atenciones-por-estudiante' => $this->datosAtencionesPorEstudiante($request),
+            'insumos-utilizados' => $this->datosInsumosUtilizados($request),
+            'radiografias-por-mes' => $this->datosRadiografiasPorMes($request),
+            'esterilizaciones-por-mes' => $this->datosEsterilizacionesPorMes($request),
+            'pagos-por-tipo' => $this->datosPagosPorTipo($request),
+            'ingresos-por-mes' => $this->datosIngresosPorMes($request),
+            default => ['labels' => [], 'valores' => [], 'total' => 0],
         };
     }
 
@@ -389,7 +416,7 @@ class ReporteController extends Controller
         $this->rango($query, $f, 'a.created_at');
 
         $filas = $query->get()->sortBy(static function ($fila) {
-            return ($fila->orden ?: '9999-12-31') . '|' . $fila->etiqueta;
+            return ($fila->orden ?: '9999-12-31').'|'.$fila->etiqueta;
         })->values();
 
         return $this->armar($filas->pluck('etiqueta')->all(), $filas->pluck('total')->all());
@@ -464,12 +491,12 @@ class ReporteController extends Controller
 
         $mapa = $query->get()->pluck('total', 'etiqueta');
 
-        $labels  = $grupos;
+        $labels = $grupos;
         $valores = array_map(static fn ($grupo) => (int) ($mapa[$grupo] ?? 0), $grupos);
 
         $sinDato = (int) ($mapa['Sin dato'] ?? 0);
         if ($sinDato > 0) {
-            $labels[]  = 'Sin dato';
+            $labels[] = 'Sin dato';
             $valores[] = $sinDato;
         }
 
@@ -640,7 +667,7 @@ class ReporteController extends Controller
             $query->where('h.periodo_id', $f['periodo_id']);
         }
 
-        $this->rango($query, $f, DB::raw('COALESCE(iu.fecha, iu.created_at)'));
+        $this->rango($query, $f, DB::raw('COALESCE(iu.fecha_uso, iu.created_at)'));
 
         $filas = $query->get();
 
@@ -765,8 +792,8 @@ class ReporteController extends Controller
     protected function filtros(Request $request): array
     {
         return [
-            'desde'      => $this->fechaValida($request->input('desde')),
-            'hasta'      => $this->fechaValida($request->input('hasta')),
+            'desde' => $this->fechaValida($request->input('desde')),
+            'hasta' => $this->fechaValida($request->input('hasta')),
             'periodo_id' => $this->enteroValido($request->input('periodo_id')),
             'clinica_id' => $this->enteroValido($request->input('clinica_id')),
         ];
@@ -852,7 +879,7 @@ class ReporteController extends Controller
      */
     protected function armar(array $labels, array $valores, bool $decimal = false): array
     {
-        $labels  = array_values($labels);
+        $labels = array_values($labels);
         $valores = array_map(static function ($valor) use ($decimal) {
             $valor = (float) ($valor ?? 0);
 
@@ -860,9 +887,9 @@ class ReporteController extends Controller
         }, array_values($valores));
 
         return [
-            'labels'  => $labels,
+            'labels' => $labels,
             'valores' => $valores,
-            'total'   => $decimal ? round(array_sum($valores), 2) : array_sum($valores),
+            'total' => $decimal ? round(array_sum($valores), 2) : array_sum($valores),
         ];
     }
 
@@ -914,16 +941,16 @@ class ReporteController extends Controller
         $partes = [];
 
         if ($f['desde']) {
-            $partes[] = 'desde ' . $f['desde'];
+            $partes[] = 'desde '.$f['desde'];
         }
         if ($f['hasta']) {
-            $partes[] = 'hasta ' . $f['hasta'];
+            $partes[] = 'hasta '.$f['hasta'];
         }
         if ($f['periodo_id']) {
-            $partes[] = 'periodo #' . $f['periodo_id'];
+            $partes[] = 'periodo #'.$f['periodo_id'];
         }
         if ($f['clinica_id']) {
-            $partes[] = 'clínica #' . $f['clinica_id'];
+            $partes[] = 'clínica #'.$f['clinica_id'];
         }
 
         return $partes ? implode(', ', $partes) : 'sin filtros (todo el histórico)';

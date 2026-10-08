@@ -59,10 +59,10 @@
 
                     {{-- Autocomplete de tratamiento realizado (opcional) --}}
                     <div class="form-group">
-                        <label for="solTratamientoInput">Tratamiento realizado</label>
+                        <label for="solTratamientoInput">Tratamiento autorizado <span class="req">*</span></label>
                         <div class="autocomplete-wrap" data-autocomplete="tratamiento">
                             <input type="text" id="solTratamientoInput" class="form-control autocomplete-input"
-                                placeholder="Buscar tratamiento (opcional)…" autocomplete="off"
+                                placeholder="Buscar tratamiento autorizado…" autocomplete="off"
                                 role="combobox" aria-expanded="false" aria-autocomplete="list">
                             <span class="autocomplete-loading"></span>
                             <button type="button" class="autocomplete-clear" data-autocomplete-clear hidden
@@ -77,6 +77,7 @@
                         </div>
                         <span class="form-error" data-error-for="tratamiento_realizado_id"></span>
                     </div>
+                    <div class="form-group"><label for="solSesion">Avance autorizado <span class="req">*</span></label><select name="sesion_atencion_id" id="solSesion" class="form-control" required><option value="">Seleccione primero el tratamiento</option></select><span class="form-error" data-error-for="sesion_atencion_id"></span></div>
                 </div>
 
                 {{-- ---------- Detalle de insumos ---------- --}}
@@ -229,6 +230,10 @@
 
         function reset() {
             $form.reset();
+            $clinica.disabled = false;
+            $tratInput.disabled = false;
+            const clearTreatment = $tratWrap?.querySelector('[data-autocomplete-clear]');
+            if (clearTreatment) clearTreatment.disabled = false;
             $id.value = '';
             $tbody.innerHTML = '';
             contadorFilas = 0;
@@ -540,16 +545,32 @@
                 }).then((r) => (r.ok ? r.json() : [])),
                 alElegir: (item) => {
                     $tratId.value = item.id;
+                    cargarSesiones(item.id);
                     if (item.pieza && !$pieza.value) $pieza.value = item.pieza;
                 },
-                alLimpiar: () => { $tratId.value = ''; },
+                alLimpiar: () => { $tratId.value = ''; cargarSesiones(''); },
             });
         }
 
         function resetTratamiento() {
+            cargarSesiones('');
             if ($tratInput) $tratInput.value = '';
             if ($tratId) $tratId.value = '';
             $tratWrap?.classList.remove('has-value');
+        }
+
+        async function cargarSesiones(tratamiento, elegido = '') {
+            const selector = document.getElementById('solSesion');
+            selector.replaceChildren(new Option('Seleccione un avance autorizado', ''));
+            if (!tratamiento) return;
+            try {
+                const response = await fetch(@json(route('solicitudes-insumos.buscar-sesiones')) + '?tratamiento_realizado_id=' + tratamiento, {headers: {Accept: 'application/json'}});
+                if (!response.ok) throw new Error('No se pudieron cargar los avances.');
+                const items = await response.json();
+                if ($tratId.value !== String(tratamiento)) return;
+                items.forEach(item => selector.add(new Option(item.texto, item.id)));
+                selector.value = String(elegido || (items.length === 1 ? items[0].id : ''));
+            } catch (error) { mostrarErrores({sesion_atencion_id: [error.message]}); }
         }
 
         /* ============================================================
@@ -629,6 +650,7 @@
                 insumo_tratamiento_id: parseInt($tipo.value, 10),
                 pieza: $pieza.value === '' ? 0 : parseInt($pieza.value, 10),
                 tratamiento_realizado_id: $tratId.value ? parseInt($tratId.value, 10) : null,
+                sesion_atencion_id: Number(document.getElementById('solSesion').value) || null,
                 detalles,
             };
 
@@ -686,10 +708,25 @@
            API pública
            ============================================================ */
         window.SolicitudModal = {
-            abrirCrear() {
+            abrirCrear(contexto = {}) {
                 reset();
                 $titulo.textContent = 'Nueva Solicitud de Insumos';
                 $btnGuardarText.textContent = 'Enviar Solicitud';
+                if (contexto.clinica_id) {
+                    $clinica.value = contexto.clinica_id;
+                    $clinica.disabled = true;
+                    cargarTipos(contexto.clinica_id, '');
+                }
+                if (contexto.tratamiento_realizado_id) {
+                    $tratId.value = contexto.tratamiento_realizado_id;
+                    $tratInput.value = contexto.tratamiento_nombre || 'Tratamiento #' + contexto.tratamiento_realizado_id;
+                    $tratInput.disabled = true;
+                    const clearTreatment = $tratWrap?.querySelector('[data-autocomplete-clear]');
+                    if (clearTreatment) clearTreatment.disabled = true;
+                    $tratWrap?.classList.add('has-value');
+                    $pieza.value = /^\d{1,2}$/.test(contexto.pieza || '') ? contexto.pieza : '';
+                    cargarSesiones(contexto.tratamiento_realizado_id, contexto.sesion_atencion_id);
+                }
                 abrir();
             },
 
@@ -707,6 +744,7 @@
 
                 $pieza.value = sol.pieza ?? '';
                 $tratId.value = sol.tratamiento_realizado_id ?? '';
+                cargarSesiones($tratId.value, sol.sesion_atencion_id);
                 if (sol.tratamiento_realizado_id) {
                     $tratInput.value = 'Tratamiento #' + sol.tratamiento_realizado_id;
                     $tratWrap?.classList.add('has-value');

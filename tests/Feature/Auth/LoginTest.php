@@ -2,19 +2,17 @@
 
 namespace Tests\Feature\Auth;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
+    public function test_a_guest_can_view_the_login_form(): void
     {
-        $response = $this->get('/');
+        $response = $this->get(route('auth.login'));
 
-        $response->assertStatus(200);
+        $response->assertOk()
+            ->assertViewIs('auth.login')
+            ->assertSee('name="nombre_usuario"', false)
+            ->assertSee('name="contrasena"', false);
     }
 }

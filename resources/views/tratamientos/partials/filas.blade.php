@@ -17,12 +17,18 @@
     </td>
 
     <td>
+        @if ($tratamiento->precio_asignado)
         <strong>{{ number_format($tratamiento->costo, 2) }}</strong> Bs
+        @else
+        <span class="badge badge-warning">Precio pendiente</span>
+        @endif
     </td>
 
     <td>
         {{ $tratamiento->porcentaje_pg ?: '—' }}
     </td>
+
+    <td><span class="badge badge-info">{{ $tratamiento->insumos_count ?? 0 }}</span></td>
 
     <td>
         <span class="badge badge-muted">
@@ -32,16 +38,23 @@
 
     <td>
         <div class="actions">
-            @can('tratamientos.editar')
+            <a class="btn btn-sm btn-secondary" href="{{ route('tratamientos.show', $tratamiento) }}">Ver</a>
+            @can('tratamientos.precios')
+            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#precio">Precio</a>
+            @endcan
+            @can('tratamientos.insumos')
+            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#insumos">Insumos</a>
+            @endcan
+            @canany(['tratamientos.editar', 'tratamientos.gestionar'])
             <button type="button"
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $tratamiento->id }}">
                 Editar
             </button>
-            @endcan
+            @endcanany
 
-            @can('tratamientos.eliminar')
+            @canany(['tratamientos.eliminar', 'tratamientos.gestionar'])
             <button type="button"
                 class="btn btn-sm btn-danger"
                 data-action="eliminar"
@@ -49,13 +62,13 @@
                 data-nombre="{{ $tratamiento->nombre }}">
                 Eliminar
             </button>
-            @endcan
+            @endcanany
         </div>
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="7">
+    <td colspan="8">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

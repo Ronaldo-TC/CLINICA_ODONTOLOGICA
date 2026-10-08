@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notificacion;
 use App\Models\Usuario;
 use App\Services\DashboardMetrics;
 use Illuminate\Http\JsonResponse;
@@ -18,11 +19,11 @@ class DashboardController extends Controller
         $user = $this->usuarioActual();
 
         return view('dashboard', [
-            'user'                 => $user,
-            'tarjetas'             => $user ? DashboardMetrics::tarjetas($user) : [],
-            'pacientesPorMes'      => DashboardMetrics::pacientesPorMes(),
-            'topEspecialidades'    => DashboardMetrics::topEspecialidades(),
-            'actividadReciente'    => DashboardMetrics::actividadReciente(),
+            'user' => $user,
+            'tarjetas' => $user ? DashboardMetrics::tarjetas($user) : [],
+            'pacientesPorMes' => DashboardMetrics::pacientesPorMes(),
+            'topEspecialidades' => DashboardMetrics::topEspecialidades(),
+            'actividadReciente' => DashboardMetrics::actividadReciente(),
             'proximosVencimientos' => DashboardMetrics::proximosVencimientos(),
         ]);
     }
@@ -34,15 +35,31 @@ class DashboardController extends Controller
     public function stats(): JsonResponse
     {
         return response()->json([
-            'success'    => true,
-            'por_mes'    => DashboardMetrics::pacientesPorMes(),
+            'success' => true,
+            'por_mes' => DashboardMetrics::pacientesPorMes(),
             'especialidades' => DashboardMetrics::topEspecialidades(),
-            'generado'   => now()->toIso8601String(),
+            'generado' => now()->toIso8601String(),
         ]);
     }
 
     private function usuarioActual(): ?Usuario
     {
         return auth()->user() ?? Usuario::find(session('user_id'));
+    }
+
+    public function datosApi(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+        abort_unless($usuario !== null, 401, 'No autenticado.');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'tarjetas' => DashboardMetrics::tarjetas($usuario),
+                'pacientes_por_mes' => DashboardMetrics::pacientesPorMes(),
+                'especialidades' => DashboardMetrics::topEspecialidades(),
+                'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
+            ],
+        ]);
     }
 }

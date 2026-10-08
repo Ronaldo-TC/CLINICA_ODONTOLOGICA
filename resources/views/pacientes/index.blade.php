@@ -10,6 +10,7 @@
         <span id="crud-total-label">{{ $registros->total() }} pacientes registrados</span>
     </div>
     <div class="toolbar-actions">
+        <x-boton-reporte ruta="pacientes.reporte" />
         @can('pacientes.crear')
         <button type="button" class="btn btn-primary" id="btnNuevoPaciente">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

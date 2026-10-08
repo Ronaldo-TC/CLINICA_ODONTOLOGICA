@@ -57,6 +57,7 @@
 
     <td>
         <div class="actions">
+            <a class="btn btn-sm btn-secondary" href="{{ route('radiologia.visor', $rad->id) }}">Imágenes / DICOM</a>
             @can('radiologias.editar')
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $rad->id }}">
