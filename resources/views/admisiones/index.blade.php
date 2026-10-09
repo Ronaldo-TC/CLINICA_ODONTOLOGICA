@@ -11,7 +11,7 @@
     </div>
     <div class="toolbar-actions">
         <x-boton-reporte ruta="admisiones.reporte" />
-        <div class="admision-odontograma-preview">
+        <!-- <div class="admision-odontograma-preview">
             <canvas
                 id="admision-odontograma-canvas"
                 data-model-url="{{ asset('models/odontograma.glb') }}"
@@ -29,7 +29,7 @@
                 </svg>
                 Ampliar
             </button>
-        </div>
+        </div> -->
         @can('admisiones.crear')
         <a href="{{ route('admisiones.create') }}" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -41,7 +41,7 @@
         </a>
         @endcan
         @canany(['admisiones.crear', 'admisiones.gestionar'])
-        <a href="{{ route('admisiones.create-3d') }}" class="btn btn-primary" target="_blank" rel="noopener">
+        <a href="{{ route('admisiones.create-3d') }}" class="btn btn-primary">
             Nueva admisión 3D
         </a>
         @endcanany
@@ -269,7 +269,7 @@
 @endpush
 
 @push('scripts')
-    @vite('public/js/odontograma-3d.js')
+@vite('public/js/odontograma-3d.js')
 @endpush
 
 @push('scripts')

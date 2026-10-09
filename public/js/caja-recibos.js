@@ -16,6 +16,7 @@
     const error = document.getElementById('formCajaErrorText');
     const save = document.getElementById('btnGuardarCaja');
     let atenciones = [];
+    let designacion = null;
     let requestSequence = 0;
     let debounce = null;
 
@@ -28,6 +29,7 @@
 
     function limpiarAtencion() {
         atenciones = [];
+        designacion = null;
         atencion.replaceChildren(new Option('Busque primero la ficha', ''));
         paciente.value = estudiante.value = costo.value = form.tratamiento_id.value = '';
         anterior.value = '0.00';
@@ -36,34 +38,49 @@
 
     function elegirAtencion() {
         const item = atenciones.find(item => String(item.id) === atencion.value);
-        if (!item) { paciente.value = estudiante.value = costo.value = ''; anterior.value = '0.00'; resumen(); return; }
+        if (!item) {
+            paciente.value = designacion?.paciente || '';
+            estudiante.value = designacion?.estudiante || '';
+            costo.value = form.tratamiento_id.value = '';
+            anterior.value = '0.00';
+            save.disabled = true;
+            resumen();
+            return;
+        }
+        clinica.value = String(item.clinica_id || clinica.value);
         paciente.value = item.paciente;
         estudiante.value = item.estudiante;
         costo.value = Number(item.costo).toFixed(2);
         anterior.value = Number(item.cancelado_anterior).toFixed(2);
         form.tratamiento_id.value = item.tratamiento_id;
+        save.disabled = false;
         resumen();
     }
 
     async function buscarFicha() {
-        if (id.value || !clinica.value || !ficha.value) return;
+        clearTimeout(debounce);
+        if (id.value || !ficha.value) return;
         const sequence = ++requestSequence;
         limpiarAtencion();
         error.textContent = 'Buscando ficha…';
         save.disabled = true;
         try {
-            const params = new URLSearchParams({ficha: ficha.value, clinica_id: clinica.value});
+            const params = new URLSearchParams({ficha: ficha.value});
+            if (clinica.value) params.set('clinica_id', clinica.value);
             const response = await fetch(form.dataset.ficha + '?' + params, {headers: {Accept: 'application/json'}});
             const result = await response.json();
             if (sequence !== requestSequence) return;
             if (!response.ok) throw new Error(result.message || 'No se encontró la ficha.');
             atenciones = result.atenciones;
-            paciente.value = result.paciente;
+            designacion = {paciente: result.paciente, estudiante: result.estudiante};
+            paciente.value = designacion.paciente;
+            estudiante.value = designacion.estudiante || '';
+            if (result.clinica_id) clinica.value = String(result.clinica_id);
             atencion.replaceChildren(new Option('Seleccione un tratamiento autorizado', ''));
             atenciones.forEach(item => atencion.add(new Option(item.tratamiento + ' · ' + item.estudiante + ' · Saldo: ' + Number(item.saldo).toFixed(2) + ' Bs', item.id)));
             error.textContent = atenciones.length ? '' : 'La ficha no tiene tratamientos autorizados en esta clínica. El docente debe autorizar el tratamiento.';
             if (atenciones.length === 1) { atencion.value = String(atenciones[0].id); elegirAtencion(); }
-            save.disabled = !atenciones.length;
+            save.disabled = !atencion.value;
         } catch (failure) {
             if (sequence === requestSequence) error.textContent = failure.message;
         }
@@ -126,8 +143,9 @@
         ++requestSequence;
         clearTimeout(debounce);
         limpiarAtencion();
+        error.textContent = '';
         save.disabled = true;
-        debounce = setTimeout(buscarFicha, 300);
+        if (ficha.value) debounce = setTimeout(buscarFicha, 300);
     }
     ficha.addEventListener('input', changed);
     clinica.addEventListener('change', changed);

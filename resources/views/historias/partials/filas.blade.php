@@ -47,6 +47,7 @@
         <span class="badge badge-info">
             {{ $historia->tratamientos_realizados_count ?? 0 }}
         </span>
+        <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#tratamientos">Ver tratamientos</a>
     </td>
 
     <td>

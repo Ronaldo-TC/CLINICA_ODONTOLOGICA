@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { configurarPantallaCompleta } from './visor-pantalla-completa.js';
 import {
     CARAS_ADMISION, actualizarPieza, aplicarEstadoModelo, esVisibleEnEscena,
     identificarPieza, limitesDenticion, limpiarDenticion, piezasDeDenticion, prepararModeloAdmision,
+    pintarMaterial, posicionEtiquetaEncia,
 } from '../../public/js/odontograma/admision.js';
 
 function iniciarEditor() {
@@ -24,7 +26,13 @@ function iniciarEditor() {
     const selectorColor = control('color');
     const selectorDenticion = control('denticion');
     const resumen = control('resumen');
-    const botonesModelo = ['aplicar', 'extraer', 'restaurar'].map(control);
+    const botonesModelo = ['aplicar', 'extraer', 'restaurar', 'enfocar'].map(control);
+    const herramientas = [...editor.querySelectorAll('[data-3d-herramienta]')];
+    const caras = [...editor.querySelectorAll('[data-3d-cara]')];
+    const historial = [{ datos: structuredClone(estado()), denticion: denticion() }];
+    let posicionHistorial = 0;
+    let restaurandoHistorial = false;
+    let guardando = false;
     let indice = null;
     let renderer = null;
     let camera = null;
@@ -33,10 +41,29 @@ function iniciarEditor() {
     let labels = null;
     let ultimaDenticion = null;
     let destruido = false;
+    let renderPendiente = true;
     const accesorios = new Map();
 
+    const actualizarHistorial = () => {
+        const actual = { datos: structuredClone(estado()), denticion: denticion() };
+        if (!restaurandoHistorial && JSON.stringify(actual) !== JSON.stringify(historial[posicionHistorial])) {
+            historial.splice(posicionHistorial + 1);
+            historial.push(actual);
+            if (historial.length > 50) historial.shift();
+            posicionHistorial = historial.length - 1;
+        }
+        control('deshacer').disabled = posicionHistorial === 0;
+        control('rehacer').disabled = posicionHistorial === historial.length - 1;
+    };
+
     const guardar = (datos, tipo = denticion()) => {
-        const limpio = window.Odontograma.set(odontograma, datos, tipo);
+        let limpio;
+        guardando = true;
+        try {
+            limpio = window.Odontograma.set(odontograma, datos, tipo);
+        } finally {
+            guardando = false;
+        }
         odontograma.dispatchEvent(new CustomEvent('odontograma:cambio', {
             bubbles: true, detail: { datos: limpio, denticion: tipo },
         }));
@@ -44,12 +71,16 @@ function iniciarEditor() {
 
     const seleccionar = (pieza, cara = null) => {
         selectorPieza.value = pieza;
-        if (cara) {
+        if (cara && selectorModo.value === 'cara') {
             selectorCara.value = cara;
-            selectorModo.value = 'cara';
         }
         sincronizar();
     };
+
+    const aplicarActual = (alternar = false) => guardar(actualizarPieza(estado(), {
+        pieza: selectorPieza.value, cara: selectorCara.value, estado: selectorCondicion.value,
+        modo: selectorModo.value, color: selectorColor.value, alternar,
+    }));
 
     const crearBotonResumen = (texto, accion) => {
         const boton = document.createElement('button');
@@ -63,7 +94,7 @@ function iniciarEditor() {
     const renderResumen = datos => {
         resumen.replaceChildren();
         const titulo = document.createElement('p');
-        titulo.textContent = `Pieza ${selectorPieza.value} · selecciona una condición y pulsa Aplicar.`;
+        titulo.textContent = `Pieza ${selectorPieza.value} · ${catalogo[selectorCondicion.value]?.etiqueta || ''}.`;
         resumen.append(titulo);
         const diente = datos[selectorPieza.value] || {};
         CARAS_ADMISION.forEach(cara => {
@@ -96,33 +127,39 @@ function iniciarEditor() {
             if (!diente) return;
             const marcas = datos[pieza]?.marcas || [];
             const imagen = document.createElement('canvas');
-            imagen.width = marcas.length ? 512 : 128;
-            imagen.height = 64;
+            imagen.width = marcas.length ? 256 : 128;
+            imagen.height = marcas.length ? 96 : 64;
             const contexto = imagen.getContext('2d');
-            contexto.fillStyle = 'rgba(255,255,255,0.94)';
-            contexto.fillRect(0, 0, imagen.width, 64);
+            contexto.fillStyle = selectorPieza.value === pieza ? '#075985' : '#182331';
+            contexto.fillRect(0, 0, imagen.width, imagen.height);
             contexto.font = 'bold 32px sans-serif';
             contexto.textAlign = 'center';
             contexto.textBaseline = 'middle';
-            contexto.fillStyle = selectorPieza.value === pieza ? '#0e7490' : '#334155';
-            contexto.fillText(pieza, imagen.width / 2, marcas.length ? 18 : 32);
+            contexto.fillStyle = '#f8fafc';
+            contexto.fillText(pieza, imagen.width / 2, 32);
             if (marcas.length) {
                 contexto.font = '20px sans-serif';
-                const anchoMarca = 512 / marcas.length;
-                marcas.forEach((marca, index) => {
-                    contexto.fillStyle = marca.color === 'azul' ? '#2563eb' : '#dc2626';
-                    contexto.fillText(catalogo[marca.estado]?.simbolo || catalogo[marca.estado]?.etiqueta || marca.estado, anchoMarca * (index + 0.5), 47, anchoMarca - 4);
+                const visibles = marcas.slice(0, 3);
+                const anchoMarca = 256 / (visibles.length + (marcas.length > 3 ? 1 : 0));
+                visibles.forEach((marca, index) => {
+                    contexto.fillStyle = marca.color === 'azul' ? '#60a5fa' : '#f87171';
+                    contexto.fillText(catalogo[marca.estado]?.simbolo || catalogo[marca.estado]?.etiqueta || marca.estado, anchoMarca * (index + 0.5), 75, anchoMarca - 4);
                 });
+                if (marcas.length > 3) {
+                    contexto.fillStyle = '#f8fafc';
+                    contexto.fillText(`+${marcas.length - 3}`, 256 - anchoMarca / 2, 75);
+                }
             }
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(imagen), depthTest: false }));
-            const superficie = indice.superficies.find(objeto => String(objeto.userData.fdi) === pieza && objeto.userData.surface === 'O');
-            new THREE.Box3().setFromObject(superficie || diente).getCenter(sprite.position);
-            sprite.position.y += 0.009;
-            sprite.scale.set(marcas.length ? 0.036 : 0.009, 0.0045, 1);
+            const textura = new THREE.CanvasTexture(imagen);
+            textura.colorSpace = THREE.SRGBColorSpace;
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: textura, depthTest: false, depthWrite: false, toneMapped: false }));
+            sprite.position.copy(posicionEtiquetaEncia(indice, pieza));
+            sprite.scale.set(marcas.length ? 0.014 : 0.007, marcas.length ? 0.00525 : 0.0035, 1);
             sprite.userData.fdi = pieza;
             sprite.renderOrder = 10;
             labels.add(sprite);
         });
+        labels.visible = control('numeros').checked;
     };
 
     const renderAccesorios = datos => {
@@ -161,30 +198,48 @@ function iniciarEditor() {
                     if (!objeto.isMesh) return;
                     const materiales = Array.isArray(objeto.material) ? objeto.material : [objeto.material];
                     materiales.forEach(material => {
-                        material.color.set(marca.color === 'azul' ? '#2563eb' : '#dc2626');
-                        material.vertexColors = false;
-                        material.needsUpdate = true;
+                        pintarMaterial(material, marca.color === 'azul' ? '#2563eb' : '#dc2626');
                     });
                 });
             });
         });
     };
 
-    const centrar = () => {
+    const orientar = (vista = 'perspectiva', pieza = null) => {
         if (!indice) return;
         const limites = limitesDenticion(indice, denticion());
+        if (pieza) {
+            limites.makeEmpty();
+            indice.superficies.filter(objeto => String(objeto.userData.fdi) === pieza).forEach(objeto => limites.union(new THREE.Box3().setFromObject(objeto)));
+        }
         if (limites.isEmpty()) return;
         const centro = limites.getCenter(new THREE.Vector3());
         const size = limites.getSize(new THREE.Vector3());
         const distancia = Math.max(size.y, size.x / camera.aspect, size.z) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.6;
         controls.target.copy(centro);
-        camera.position.copy(centro).add(new THREE.Vector3(distancia * 0.25, distancia * 0.3, distancia));
-        controls.minDistance = distancia * 0.15;
-        controls.maxDistance = distancia * 5;
+        const direcciones = {
+            perspectiva: [0.25, 0.3, 1], frontal: [0, 0, 1], superior: [0, 1, 0.001],
+            inferior: [0, -1, 0.001], derecha: [-1, 0, 0], izquierda: [1, 0, 0], posterior: [0, 0, -1],
+        };
+        camera.position.copy(centro).add(new THREE.Vector3(...(direcciones[vista] || direcciones.perspectiva)).normalize().multiplyScalar(distancia));
+        controls.minDistance = 0.003;
+        controls.maxDistance = 1;
+        controls.update();
+    };
+    const centrar = () => orientar(control('vista').value);
+
+    const zoom = factor => {
+        if (!controls) return;
+        const direccion = camera.position.clone().sub(controls.target);
+        direccion.setLength(THREE.MathUtils.clamp(direccion.length() * factor, controls.minDistance, controls.maxDistance));
+        camera.position.copy(controls.target).add(direccion);
         controls.update();
     };
 
+    const limpiarPantalla = configurarPantallaCompleta(editor, control('pantalla'), 'odontograma-3d-fullscreen', 'Volver al formulario');
+
     function sincronizar() {
+        renderPendiente = true;
         const tipo = denticion();
         const datos = estado();
         selectorDenticion.value = tipo;
@@ -197,6 +252,16 @@ function iniciarEditor() {
         }
         selectorCara.disabled = selectorModo.value === 'marca';
         selectorColor.disabled = selectorModo.value !== 'marca';
+        herramientas.forEach(boton => boton.setAttribute('aria-pressed', String(boton.dataset['3dHerramienta'] === selectorCondicion.value)));
+        caras.forEach(boton => {
+            const cara = boton.dataset['3dCara'];
+            const condicion = datos[selectorPieza.value]?.[cara];
+            boton.style.backgroundColor = catalogo[condicion]?.color || (condicion ? '#dc2626' : '#fff');
+            boton.style.color = condicion ? '#fff' : '#334155';
+            boton.setAttribute('aria-pressed', String(selectorModo.value === 'cara' && selectorCara.value === cara));
+            boton.disabled = !indice;
+        });
+        actualizarHistorial();
         renderResumen(datos);
         if (!indice) return;
         aplicarEstadoModelo(indice, datos, catalogo, {
@@ -211,14 +276,27 @@ function iniciarEditor() {
     }
 
     odontograma.addEventListener('odontograma:cambio', sincronizar);
-    odontograma.addEventListener('odontograma:actualizado', sincronizar);
+    odontograma.addEventListener('odontograma:actualizado', () => {
+        if (!guardando) {
+            historial.splice(0, historial.length, { datos: structuredClone(estado()), denticion: denticion() });
+            posicionHistorial = 0;
+        }
+        sincronizar();
+    });
     selectorDenticion.addEventListener('change', () => guardar(estado(), selectorDenticion.value));
-    [selectorPieza, selectorCara, selectorModo, control('encias'), control('raices'), control('huesos')].forEach(elemento => elemento.addEventListener('change', sincronizar));
+    [selectorPieza, selectorCara, selectorModo, selectorCondicion, selectorColor, control('encias'), control('raices'), control('huesos'), control('numeros')].forEach(elemento => elemento.addEventListener('change', sincronizar));
     selectorCondicion.value = 'caries';
-    control('aplicar').addEventListener('click', () => guardar(actualizarPieza(estado(), {
-        pieza: selectorPieza.value, cara: selectorCara.value, estado: selectorCondicion.value,
-        modo: selectorModo.value, color: selectorColor.value,
-    })));
+    herramientas.forEach(boton => boton.addEventListener('click', () => {
+        selectorCondicion.value = boton.dataset['3dHerramienta'];
+        if (!catalogo[selectorCondicion.value]?.color) selectorModo.value = 'marca';
+        sincronizar();
+    }));
+    caras.forEach(boton => boton.addEventListener('click', () => {
+        selectorModo.value = 'cara';
+        selectorCara.value = boton.dataset['3dCara'];
+        aplicarActual();
+    }));
+    control('aplicar').addEventListener('click', () => aplicarActual());
     control('extraer').addEventListener('click', () => guardar(actualizarPieza(estado(), {
         pieza: selectorPieza.value, estado: 'ausente', modo: 'marca', color: selectorColor.value,
     })));
@@ -227,6 +305,25 @@ function iniciarEditor() {
         if (window.confirm('¿Borrar las marcas de la dentición visible?')) guardar(limpiarDenticion(estado(), denticion()));
     });
     control('centrar').addEventListener('click', centrar);
+    control('vista').addEventListener('change', centrar);
+    control('enfocar').addEventListener('click', () => orientar(control('vista').value, selectorPieza.value));
+    control('acercar').addEventListener('click', () => zoom(0.8));
+    control('alejar').addEventListener('click', () => zoom(1.25));
+    control('girar').addEventListener('change', () => {
+        if (controls) controls.autoRotate = control('girar').checked;
+    });
+    control('suelo').addEventListener('change', () => canvas.parentElement.classList.toggle('sin-suelo', !control('suelo').checked));
+    ['deshacer', 'rehacer'].forEach((nombre, index) => control(nombre).addEventListener('click', () => {
+        const siguiente = posicionHistorial + (index === 0 ? -1 : 1);
+        if (siguiente < 0 || siguiente >= historial.length) return;
+        posicionHistorial = siguiente;
+        restaurandoHistorial = true;
+        try {
+            guardar(historial[siguiente].datos, historial[siguiente].denticion);
+        } finally {
+            restaurandoHistorial = false;
+        }
+    }));
     sincronizar();
 
     const mostrarError = error => {
@@ -238,17 +335,26 @@ function iniciarEditor() {
 
     try {
         scene = new THREE.Scene();
-        scene.background = new THREE.Color('#eef2f7');
         camera = new THREE.PerspectiveCamera(38, 1, 0.0005, 10);
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         controls = new OrbitControls(camera, canvas);
+        controls.addEventListener('change', () => renderPendiente = true);
         controls.enableDamping = true;
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x64748b, 2));
-        const luz = new THREE.DirectionalLight(0xffffff, 2.5);
+        controls.enablePan = true;
+        controls.autoRotateSpeed = 0.8;
+        const ambiente = new THREE.HemisphereLight(0xffffff, 0x64748b, 1.4);
+        scene.add(ambiente);
+        const luz = new THREE.DirectionalLight(0xffffff, 1.8);
         luz.position.set(0.2, 0.4, 0.5);
         scene.add(luz);
+        control('iluminacion').addEventListener('input', () => {
+            const intensidad = Number(control('iluminacion').value);
+            ambiente.intensity = 1.4 * intensidad;
+            luz.intensity = 1.8 * intensidad;
+            renderPendiente = true;
+        });
         labels = new THREE.Group();
         scene.add(labels);
         const resize = new ResizeObserver(() => {
@@ -257,7 +363,7 @@ function iniciarEditor() {
             renderer.setSize(width, height, false);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
-            centrar();
+            renderPendiente = true;
         });
         resize.observe(canvas.parentElement);
         const raycaster = new THREE.Raycaster();
@@ -265,19 +371,21 @@ function iniciarEditor() {
         let inicio = null;
         let arrastrando = false;
         canvas.addEventListener('pointerdown', evento => {
-            if (!evento.isPrimary || evento.button !== 0) {
+            if (!evento.isPrimary || ![0, 2].includes(evento.button) || evento.ctrlKey || evento.shiftKey || evento.metaKey) {
                 inicio = null;
                 return;
             }
-            inicio = { x: evento.clientX, y: evento.clientY };
+            inicio = { x: evento.clientX, y: evento.clientY, button: evento.button };
             arrastrando = false;
         });
         canvas.addEventListener('pointermove', evento => {
             if (inicio && Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) > 5) arrastrando = true;
         });
         canvas.addEventListener('pointercancel', () => inicio = null);
+        canvas.addEventListener('contextmenu', evento => evento.preventDefault());
         canvas.addEventListener('pointerup', evento => {
             const seleccionarClick = inicio && !arrastrando && Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) <= 5;
+            const borrar = inicio?.button === 2;
             inicio = null;
             if (!indice || !seleccionarClick) return;
             const rect = canvas.getBoundingClientRect();
@@ -286,11 +394,20 @@ function iniciarEditor() {
             const objetos = [...indice.seleccionables, ...labels.children].filter(esVisibleEnEscena);
             const interseccion = raycaster.intersectObjects(objetos, false)[0];
             const diente = interseccion ? identificarPieza(interseccion.object) : null;
-            if (diente) seleccionar(diente.pieza, diente.cara);
+            if (diente) {
+                seleccionar(diente.pieza, diente.cara);
+                if (borrar) {
+                    guardar(actualizarPieza(estado(), { pieza: diente.pieza, modo: 'borrar' }));
+                } else if (control('pintar').checked && (diente.cara || selectorModo.value === 'marca')) {
+                    aplicarActual(true);
+                }
+            }
         });
         renderer.setAnimationLoop(() => {
-            controls.update();
-            renderer.render(scene, camera);
+            if (controls.update() || renderPendiente) {
+                renderer.render(scene, camera);
+                renderPendiente = false;
+            }
         });
         new GLTFLoader().load(editor.dataset.modelUrl, gltf => {
             if (destruido) return;
@@ -309,6 +426,7 @@ function iniciarEditor() {
         window.addEventListener('pagehide', evento => {
             if (evento.persisted) return;
             destruido = true;
+            limpiarPantalla();
             resize.disconnect();
             renderer.setAnimationLoop(null);
             controls.dispose();

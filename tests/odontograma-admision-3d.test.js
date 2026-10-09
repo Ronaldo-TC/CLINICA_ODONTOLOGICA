@@ -5,10 +5,31 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
     actualizarPieza, aplicarEstadoModelo, esVisibleEnEscena, identificarPieza,
-    limpiarDenticion, piezaAusente, piezasDeDenticion, prepararModeloAdmision,
+    limpiarDenticion, piezaAusente, piezasDeDenticion, prepararModeloAdmision, pintarMaterial, posicionEtiquetaEncia,
 } from '../public/js/odontograma/admision.js';
 
 const catalogo = { caries: { color: '#dc2626' }, obturado: { color: '#2563eb' } };
+
+test('el clic en una marca alterna igual que el 2D y cambiar de color conserva las otras condiciones', () => {
+    const datos = { '16': { o: 'caries', marcas: [{ estado: 'rotacion', color: 'rojo' }, { estado: 'corona', color: 'azul' }] } };
+    const quitado = actualizarPieza(datos, { pieza: '16', modo: 'marca', estado: 'rotacion', color: 'rojo', alternar: true });
+    assert.deepEqual(quitado['16'], { o: 'caries', marcas: [{ estado: 'corona', color: 'azul' }] });
+    const cambiado = actualizarPieza(datos, { pieza: '16', modo: 'marca', estado: 'rotacion', color: 'azul', alternar: true });
+    assert.deepEqual(cambiado['16'].marcas, [{ estado: 'corona', color: 'azul' }, { estado: 'rotacion', color: 'azul' }]);
+});
+
+test('los hallazgos se pintan opacos aunque el material original tenga textura, transparencia y transmisión', () => {
+    const material = new THREE.MeshPhysicalMaterial({ transmission: 0.8, transparent: true, opacity: 0.2, vertexColors: true, map: new THREE.Texture(), alphaMap: new THREE.Texture(), metalness: 0.8 });
+    pintarMaterial(material, '#dc2626');
+    assert.equal(material.color.getHexString(), 'dc2626');
+    assert.equal(material.opacity, 1);
+    assert.equal(material.transparent, false);
+    assert.equal(material.transmission, 0);
+    assert.equal(material.map, null);
+    assert.equal(material.alphaMap, null);
+    assert.equal(material.vertexColors, false);
+    assert.equal(material.depthWrite, true);
+});
 
 test('pintar una cara conserva otras caras, piezas y múltiples marcas sin mutar los datos de origen', () => {
     const datos = { '16': { m: 'obturado', marcas: [{ estado: 'rotacion', color: 'azul' }] }, '55': { v: 'sellante' } };
@@ -57,10 +78,19 @@ test('el GLB exportado permite pintar cada cara, seleccionar ausentes y cambiar 
     const o17 = indice.superficies.find(objeto => objeto.userData.fdi === '17' && objeto.userData.surface === 'O');
     const original17 = o17.material.color.getHexString();
     const original16 = o16.material.color.getHexString();
+    const encias16 = posicionEtiquetaEncia(indice, '16');
+    const origen16 = indice.dientes.get('16').getWorldPosition(new THREE.Vector3());
+    assert.ok(Math.abs(encias16.y - origen16.y - 0.002) < 1e-8);
+    const encias46 = posicionEtiquetaEncia(indice, '46');
+    const origen46 = indice.dientes.get('46').getWorldPosition(new THREE.Vector3());
+    assert.ok(Math.abs(encias46.y - origen46.y + 0.002) < 1e-8);
     assert.deepEqual(identificarPieza(o16), { pieza: '16', cara: 'o' });
     aplicarEstadoModelo(indice, { '16': { o: 'caries', m: 'obturado' } }, catalogo);
     assert.equal(o16.material.color.getHexString(), 'dc2626');
     assert.equal(m16.material.color.getHexString(), '2563eb');
+    assert.equal(o16.material.opacity, 1);
+    assert.equal(o16.material.transparent, false);
+    assert.equal(o16.material.transmission, 0);
     assert.equal(o17.material.color.getHexString(), original17);
     assert.notEqual(o16.material, o17.material);
     assert.equal(esVisibleEnEscena(indice.dientes.get('55')), false);

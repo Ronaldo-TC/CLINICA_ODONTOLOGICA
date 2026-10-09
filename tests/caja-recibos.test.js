@@ -43,8 +43,9 @@ function harness(fetch) {
     return {elements, form, window, runTimer: () => {const callback = [...timers.values()].at(-1); timers.clear(); return callback?.();}};
 }
 
-function response(paciente = 'Paciente designado', id = 9) {
-    return {ok: true, json: async () => ({paciente, atenciones: [{id, clinica_id: 2, tratamiento_id: 4, tratamiento: 'Restauración', estudiante: 'Estudiante asignado', paciente, costo: 100, cancelado_anterior: 30, saldo: 70}]})};
+function response(paciente = 'Paciente designado', id = 9, overrides = {}) {
+    return {ok: true, json: async () => ({paciente, estudiante: 'Estudiante asignado', clinica_id: 2,
+        atenciones: [{id, clinica_id: 2, tratamiento_id: 4, tratamiento: 'Restauración', estudiante: 'Estudiante asignado', paciente, costo: 100, cancelado_anterior: 30, saldo: 70}], ...overrides})};
 }
 
 test('la ficha completa el estudiante y paciente y suma el pago actual al cancelado anterior', async () => {
@@ -90,4 +91,102 @@ test('editar conserva la atención y envía el importe del recibo aunque los sel
     assert.equal(submitted.get('clinica_id'), '2');
     assert.equal(Number(submitted.get('cancelado')), 20);
     assert.equal(submitted.get('_method'), 'PUT');
+});
+
+test('escribir la ficha busca por AJAX sin elegir clínica y completa la designación automáticamente', async () => {
+    const calls = [];
+    const ui = harness(async url => {calls.push(url); return response();});
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '1';
+    ui.form.ficha.emit('input');
+    ui.form.ficha.value = '10';
+    ui.form.ficha.emit('input');
+    assert.equal(calls.length, 0);
+
+    await ui.runTimer();
+
+    assert.deepEqual(calls, ['/cajas/buscar-ficha?ficha=10']);
+    assert.equal(ui.elements['caja-paciente'].value, 'Paciente designado');
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+    assert.equal(ui.form.clinica_id.value, '2');
+    assert.equal(ui.form.tratamiento_realizado_id.value, '9');
+});
+
+test('la ficha completa los nombres aunque no tenga tratamientos autorizados y bloquea guardar', async () => {
+    const ui = harness(async () => response('Paciente sin tratamiento', 9, {atenciones: []}));
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '10';
+    ui.form.ficha.emit('input');
+
+    await ui.runTimer();
+
+    assert.equal(ui.elements['caja-paciente'].value, 'Paciente sin tratamiento');
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+    assert.match(ui.elements.formCajaErrorText.textContent, /no tiene tratamientos autorizados/);
+});
+
+test('varios tratamientos mantienen la designación y requieren elegir uno para guardar el recibo', async () => {
+    const data = await response().json();
+    data.atenciones.push({...data.atenciones[0], id: 12, tratamiento_id: 6, tratamiento: 'Endodoncia'});
+    const ui = harness(async () => ({ok: true, json: async () => data}));
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '10';
+    ui.form.ficha.emit('input');
+    await ui.runTimer();
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+    assert.equal(ui.elements['caja-paciente'].value, 'Paciente designado');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+
+    ui.form.tratamiento_realizado_id.value = '12';
+    ui.form.tratamiento_realizado_id.emit('change');
+    assert.equal(ui.form.tratamiento_id.value, 6);
+    assert.equal(ui.elements.btnGuardarCaja.disabled, false);
+    ui.form.tratamiento_realizado_id.value = '';
+    ui.form.tratamiento_realizado_id.emit('change');
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+    assert.equal(ui.elements['caja-paciente'].value, 'Paciente designado');
+    assert.equal(ui.form.tratamiento_id.value, '');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+});
+
+test('una ficha inexistente limpia los nombres anteriores y borrar la ficha cancela la búsqueda', async () => {
+    const calls = [];
+    const ui = harness(async url => {
+        calls.push(url);
+        return url.includes('ficha=10') ? response() : {ok: false, json: async () => ({message: 'Ficha no encontrada.'})};
+    });
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '10';
+    ui.form.ficha.emit('input');
+    await ui.runTimer();
+    ui.form.ficha.value = '11';
+    ui.form.ficha.emit('input');
+    assert.equal(ui.elements['caja-estudiante'].value, '');
+    assert.equal(ui.elements['caja-paciente'].value, '');
+    await ui.runTimer();
+    assert.equal(ui.elements.formCajaErrorText.textContent, 'Ficha no encontrada.');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+
+    ui.form.ficha.value = '12';
+    ui.form.ficha.emit('input');
+    ui.form.ficha.value = '';
+    ui.form.ficha.emit('input');
+    await ui.runTimer();
+    assert.equal(calls.length, 2);
+    assert.equal(ui.elements.formCajaErrorText.textContent, '');
+});
+
+test('buscar con el botón cancela la búsqueda automática pendiente', async () => {
+    const calls = [];
+    const ui = harness(async url => {calls.push(url); return response();});
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '10';
+    ui.form.ficha.emit('input');
+
+    await ui.elements['caja-buscar-ficha'].emit('click');
+    await ui.runTimer();
+
+    assert.equal(calls.length, 1);
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
 });

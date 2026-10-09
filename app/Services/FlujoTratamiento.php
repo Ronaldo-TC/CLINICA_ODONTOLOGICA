@@ -234,7 +234,9 @@ class FlujoTratamiento
 
     private function exigirHistoriaActiva(HistoriaClinica $historia): void
     {
-        $this->exigir((bool) $historia->autorizado && ! in_array($historia->estado, ['completado', 'culminado', 'cancelado'], true), 'historia_clinica_id', 'La historia clínica debe estar autorizada y abierta.');
+        $this->exigir((bool) $historia->autorizado && $historia->fecha_fin === null
+            && ! in_array($historia->estado, ['cerrada', 'finalizada', 'culminada', 'completada', 'cancelada', 'completado', 'culminado', 'cancelado'], true),
+            'historia_clinica_id', 'La historia clínica debe estar autorizada y abierta.');
     }
 
     private function exigirAtencion(TratamientoRealizado $tratamiento): void

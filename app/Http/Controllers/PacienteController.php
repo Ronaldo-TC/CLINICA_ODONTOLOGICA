@@ -98,6 +98,13 @@ class PacienteController extends Controller
             'apellido_materno' => ['nullable', 'string', 'max:100'],
             'genero' => ['nullable', 'string', 'max:50'],
             'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'telefono' => ['nullable', 'string', 'max:30'],
+            'estado_civil' => ['nullable', 'string', 'max:200'],
+            'escuela' => ['nullable', 'string', 'max:200'],
+            'ocupacion' => ['nullable', 'string', 'max:200'],
+            'direccion' => ['nullable', 'string', 'max:200'],
+            'emergencia' => ['nullable', 'string', 'max:200'],
+            'telefono_emergencia' => ['nullable', 'string', 'max:30'],
         ];
     }
 

@@ -6,13 +6,17 @@ use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
 use App\Models\Remision;
+use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
 class SolicitudesPacientesDesignadosTest extends TestCase
 {
-    use CreatesClinicalCase, DatabaseTransactions;
+    use CreatesClinicalCase {
+        clinicalUser as private createClinicalUser;
+    }
+    use DatabaseTransactions;
 
     public function test_designated_student_requests_configured_materials_before_any_authorized_session(): void
     {
@@ -49,6 +53,34 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $this->actingAs($this->clinicalUser('estudiante'))->getJson(route('solicitudes-insumos.catalogo-designado', ['historia_clinica_id' => $case['history']->id]))->assertNotFound();
     }
 
+    public function test_student_creates_separate_requests_for_the_same_material_while_previous_requests_are_pending(): void
+    {
+        $this->freezeTime();
+        $case = $this->clinicalCase();
+        $material = $this->material($case);
+        $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->actingAs($case['student']);
+        $requestIds = [];
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $requestIds[] = $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))
+                ->assertCreated()->assertJsonPath('success', true)->json('id');
+        }
+
+        $this->assertCount(3, array_unique($requestIds));
+        foreach ($requestIds as $requestId) {
+            $this->assertDatabaseHas('insumos_solicitados', ['id' => $requestId, 'historia_clinica_id' => $case['history']->id,
+                'tratamiento_id' => $case['treatment']->id, 'usuario_id' => $case['student']->id, 'estado' => 'pendiente']);
+            $this->assertDatabaseHas('insumos_solicitados_detalle', ['insumo_solicitado_id' => $requestId,
+                'insumo_id' => $material->id, 'cantidad_solicitada' => 2, 'cantidad_entregada' => 0]);
+            $this->assertDatabaseHas('notificaciones', ['usuario_id' => $case['teacher']->id,
+                'tipo' => 'solicitud_creada', 'titulo' => 'Solicitud de insumos #'.$requestId]);
+        }
+        $this->assertSame('10.00', $material->fresh()->cantidad_numerica);
+        $this->get(route('estudiante.historia', $case['history']))->assertSee('Solicitar nuevamente')
+            ->assertSee('Solicitud #'.$requestIds[0])->assertSee('Solicitud #'.$requestIds[1])->assertSee('Solicitud #'.$requestIds[2]);
+    }
+
     public function test_only_assigned_teacher_authorizes_then_stock_staff_approves_and_delivers(): void
     {
         $case = $this->clinicalCase();
@@ -79,6 +111,16 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $this->assertSame('8.00', $material->fresh()->cantidad_numerica);
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $id, 'estado' => 'entregado']);
         $this->assertDatabaseHas('insumos_entregas', ['insumo_solicitado_id' => $id, 'usuario_id' => $warehouse->id, 'cantidad' => 2]);
+
+        $newId = $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))
+            ->assertCreated()->json('id');
+
+        $this->assertNotSame($id, $newId);
+        $this->assertDatabaseHas('insumos_solicitados', ['id' => $newId, 'historia_clinica_id' => $case['history']->id, 'estado' => 'pendiente', 'autorizado' => false]);
+        $this->assertDatabaseHas('insumos_solicitados', ['id' => $id, 'estado' => 'entregado']);
+        $this->assertDatabaseHas('insumos_solicitados_detalle', ['insumo_solicitado_id' => $newId, 'insumo_id' => $material->id, 'cantidad_solicitada' => 2, 'cantidad_entregada' => 0]);
+        $this->assertSame('8.00', $material->fresh()->cantidad_numerica);
+        $this->get(route('estudiante.historia', $case['history']))->assertSee('Solicitar nuevamente');
     }
 
     public function test_patient_can_select_each_assigned_clinic_and_its_own_catalog(): void
@@ -217,6 +259,17 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $case['history']->update(['estado' => 'cerrada']);
         $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertUnprocessable()->assertJsonValidationErrors('historia_clinica_id');
         $this->assertDatabaseMissing('insumos_solicitados', ['historia_clinica_id' => $case['history']->id]);
+        $this->get(route('estudiante.historia', $case['history']))->assertDontSee('data-solicitar-designado', false);
+    }
+
+    private function clinicalUser(string $role): Usuario
+    {
+        $user = $this->createClinicalUser($role);
+        if ($role === 'estudiante') {
+            $user->givePermissionTo(['historias.ver', 'insumos.ver', 'insumos.crear']);
+        }
+
+        return $user;
     }
 
     /** @param array<string, mixed> $case */

@@ -5,71 +5,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Iniciar sesión · Clínica Odontológica UPEA</title>
+    <title>Acceso · Clínica Odontológica UPEA</title>
 
     <style>
-        /* ===== RESET ===== */
-        * {
+        /* ============================================
+           VARIABLES
+           ============================================ */
+        :root {
+            --teal: #0a7d76;
+            --teal-dark: #075e59;
+            --teal-soft: #e6f4f3;
+            --ink: #14232b;
+            --ink-soft: #2c3e47;
+            --muted: #6b7c85;
+            --line: #e3eae8;
+            --line-strong: #cdd8d5;
+            --surface: #ffffff;
+            --surface-soft: #f7faf9;
+            --cyan: #06b6d4;
+            --fuchsia: #c026d3;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-line: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --radius-lg: 24px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --shadow-sm: 0 1px 2px rgba(20, 35, 43, 0.04);
+            --shadow-md: 0 4px 16px rgba(20, 35, 43, 0.06);
+            --shadow-lg: 0 24px 48px -12px rgba(20, 35, 43, 0.12);
+            --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* ============================================
+           RESET
+           ============================================ */
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent;
         }
 
         html,
         body {
-            height: 100%;
+            min-height: 100vh;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif;
-            background: #f2f2f7;
-            min-height: 100vh;
+            font-family: var(--font);
+            color: var(--ink);
+            background: #eef3f2;
             display: grid;
             place-items: center;
-            padding: 20px;
+            padding: 24px;
             position: relative;
             overflow: hidden;
-            color: #1c1c1e;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ===== FONDO DEGRADADO SUAVE (estilo iOS) ===== */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(circle at 15% 20%, rgba(0, 122, 255, 0.10), transparent 45%),
-                radial-gradient(circle at 85% 80%, rgba(88, 86, 214, 0.10), transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6), transparent 70%);
+        /* ============================================
+           FONDO DECORATIVO (sin GPU, sin blur)
+           ============================================ */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
             z-index: 0;
             pointer-events: none;
+            will-change: auto;
         }
 
-        /* ===== TARJETA PRINCIPAL ===== */
-        .login-card {
+        .blob-cyan-1 {
+            width: 680px;
+            height: 680px;
+            top: -240px;
+            left: -200px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.28) 0%, rgba(6, 182, 212, 0.12) 40%, transparent 70%);
+        }
+
+        .blob-fuchsia-1 {
+            width: 600px;
+            height: 600px;
+            bottom: -220px;
+            right: -180px;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.22) 0%, rgba(192, 38, 211, 0.10) 40%, transparent 70%);
+        }
+
+        .blob-teal-1 {
+            width: 420px;
+            height: 420px;
+            top: 38%;
+            right: -160px;
+            background: radial-gradient(circle, rgba(10, 125, 118, 0.18) 0%, transparent 65%);
+        }
+
+        .blob-teal-2 {
+            width: 380px;
+            height: 380px;
+            bottom: 18%;
+            left: -140px;
+            background: radial-gradient(circle, rgba(10, 125, 118, 0.16) 0%, transparent 65%);
+        }
+
+        /* ============================================
+           CONTENEDOR PRINCIPAL
+           ============================================ */
+        .shell {
             position: relative;
             z-index: 1;
-            background: rgba(255, 255, 255, 0.78);
-            backdrop-filter: saturate(180%) blur(30px);
-            -webkit-backdrop-filter: saturate(180%) blur(30px);
-            padding: 48px 36px 36px;
-            border-radius: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            width: min(1000px, 100%);
+            min-height: 640px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
             box-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.02),
-                0 12px 32px rgba(0, 0, 0, 0.08),
-                0 32px 64px rgba(0, 0, 0, 0.06);
-            width: 100%;
-            max-width: 400px;
-            animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+                var(--shadow-sm),
+                var(--shadow-md),
+                var(--shadow-lg);
+            overflow: hidden;
+            animation: shellIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes cardIn {
+        @keyframes shellIn {
             from {
                 opacity: 0;
-                transform: translateY(16px) scale(0.98);
+                transform: translateY(12px) scale(0.99);
             }
 
             to {
@@ -78,126 +143,291 @@
             }
         }
 
-        /* ===== ENCABEZADO ===== */
-        .logo {
-            width: 64px;
-            height: 64px;
-            border-radius: 18px;
-            background: linear-gradient(145deg, #007aff, #5856d6);
-            display: grid;
-            place-items: center;
-            margin: 0 auto 22px;
-            box-shadow:
-                0 8px 20px rgba(0, 122, 255, 0.25),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        /* ============================================
+           PANEL IZQUIERDO (INTRO)
+           ============================================ */
+        .intro {
+            padding: clamp(36px, 5vw, 64px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: linear-gradient(160deg, #eaf6f5 0%, #f5ecf5 100%);
+            border-right: 1px solid var(--line);
+            position: relative;
+            overflow: hidden;
         }
 
-        .logo svg {
-            width: 34px;
-            height: 34px;
+        /* Patrón sutil de puntos */
+        .intro::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(10, 125, 118, 0.08) 1px, transparent 1px);
+            background-size: 22px 22px;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .intro>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mark {
+            width: 60px;
+            height: 60px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--teal), var(--cyan));
+            display: grid;
+            place-items: center;
+            box-shadow:
+                0 8px 20px rgba(10, 125, 118, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.25);
+        }
+
+        .mark svg {
+            width: 32px;
+            height: 32px;
             fill: #fff;
         }
 
+        .eyebrow {
+            margin-bottom: 18px;
+            color: var(--teal);
+            font: 700 11px var(--font);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
         h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: #1c1c1e;
-            letter-spacing: -0.03em;
-            text-align: center;
+            max-width: 360px;
+            font-size: clamp(32px, 4.2vw, 48px);
+            line-height: 1.05;
+            font-weight: 300;
+            letter-spacing: -0.025em;
+            color: var(--ink);
         }
 
-        h1 span {
-            background: linear-gradient(145deg, #007aff, #5856d6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+        h1 strong {
+            font-weight: 600;
+            color: var(--teal);
         }
 
-        p.subtitle {
-            font-size: 14px;
-            color: #8e8e93;
-            margin-bottom: 32px;
-            line-height: 1.4;
-            text-align: center;
-            font-weight: 400;
+        .intro p.lead {
+            max-width: 340px;
+            margin-top: 20px;
+            color: var(--ink-soft);
+            font: 15px/1.6 var(--font);
         }
 
-        /* ===== CAMPOS ===== */
-        .form-group {
+        .intro p.lead strong {
+            color: var(--teal);
+            font-weight: 600;
+        }
+
+        .note {
+            color: var(--muted);
+            font: 12px/1.5 var(--font);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+        }
+
+        /* ============================================
+           PANEL DERECHO (FORMULARIO)
+           ============================================ */
+        .form-panel {
+            padding: clamp(36px, 5vw, 64px);
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 16px;
+            justify-content: center;
+            background: var(--surface);
         }
 
-        label {
-            font-size: 13px;
+        .form-panel h2 {
+            font-size: 28px;
             font-weight: 600;
-            color: #3a3a3c;
-            padding-left: 4px;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+            color: var(--ink);
         }
 
-        input {
+        .subhead {
+            margin-bottom: 28px;
+            color: var(--muted);
+            font: 14px/1.5 var(--font);
+        }
+
+        /* ============================================
+           ALERTA GLOBAL
+           ============================================ */
+        .alert {
+            margin-bottom: 20px;
+            padding: 13px 16px;
+            border-radius: var(--radius-sm);
+            font: 13px/1.45 var(--font);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: alertIn 0.3s ease;
+        }
+
+        @keyframes alertIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert::before {
+            font-size: 15px;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+
+        .alert-danger {
+            color: var(--danger);
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-line);
+        }
+
+        .alert-danger::before {
+            content: '⚠';
+        }
+
+        .alert-success {
+            color: var(--success);
+            background: var(--success-bg);
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-success::before {
+            content: '✓';
+            font-weight: 700;
+        }
+
+        /* ============================================
+           CAMPOS
+           ============================================ */
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font: 700 11px var(--font);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink);
+        }
+
+        .field input {
             width: 100%;
-            padding: 15px 16px;
-            border: 1px solid #d1d1d6;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.2s ease;
-            background: rgba(255, 255, 255, 0.7);
-            color: #1c1c1e;
-            -webkit-appearance: none;
+            padding: 15px 18px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-md);
+            outline: 0;
+            color: var(--ink);
+            font: 16px var(--font);
+            background: #fff;
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease,
+                background-color 0.15s ease;
         }
 
-        input::placeholder {
-            color: #c7c7cc;
-            font-weight: 400;
+        .field input::placeholder {
+            color: rgba(20, 35, 43, 0.35);
         }
 
-        input:focus {
-            border-color: #007aff;
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+        .field input:hover {
+            border-color: #b8c5c1;
         }
 
-        input.is-invalid {
-            border-color: #ff3b30;
-            box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.10);
+        .field input:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 4px rgba(10, 125, 118, 0.12);
         }
 
-        /* ===== INPUT CONTRASEÑA ===== */
+        .field input:-webkit-autofill {
+            -webkit-text-fill-color: var(--ink);
+            -webkit-box-shadow: 0 0 0 1000px #fff inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .field input[aria-invalid="true"] {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 4px rgba(185, 28, 28, 0.10);
+        }
+
+        .field-error {
+            display: block;
+            min-height: 16px;
+            margin-top: 6px;
+            padding-left: 4px;
+            font: 500 12px/1.4 var(--font);
+            color: var(--danger);
+            opacity: 0;
+            transform: translateY(-2px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .field-error.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ============================================
+           CAMPO CONTRASEÑA
+           ============================================ */
         .password-wrap {
             position: relative;
         }
 
         .password-wrap input {
-            padding-right: 52px;
+            padding-right: 54px;
         }
 
         .toggle-password {
             position: absolute;
             top: 50%;
-            right: 8px;
+            right: 10px;
             transform: translateY(-50%);
             width: 38px;
             height: 38px;
             border: 0;
-            border-radius: 10px;
+            border-radius: 50%;
             background: transparent;
-            color: #8e8e93;
+            color: var(--muted);
             cursor: pointer;
             display: grid;
             place-items: center;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .toggle-password:hover {
-            background: rgba(0, 122, 255, 0.08);
-            color: #007aff;
+            background: var(--teal-soft);
+            color: var(--teal);
+        }
+
+        .toggle-password:focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
         }
 
         .toggle-password svg {
@@ -210,96 +440,54 @@
             stroke-linejoin: round;
         }
 
-        /* ===== BOTÓN ===== */
-        button[type="submit"] {
+        /* ============================================
+           BOTÓN
+           ============================================ */
+        .btn-submit {
             width: 100%;
-            padding: 16px;
+            margin-top: 10px;
+            padding: 16px 18px;
             border: 0;
-            border-radius: 14px;
-            background: linear-gradient(145deg, #007aff, #5856d6);
+            border-radius: var(--radius-md);
             color: #fff;
-            font-size: 17px;
-            font-weight: 600;
-            font-family: inherit;
-            letter-spacing: -0.01em;
+            background: var(--teal);
             cursor: pointer;
-            transition: all 0.2s ease;
+            font: 700 13px var(--font);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-            box-shadow:
-                0 4px 12px rgba(0, 122, 255, 0.3),
-                inset 0 1px 1px rgba(255, 255, 255, 0.2);
-            -webkit-appearance: none;
+            gap: 10px;
+            transition:
+                background-color 0.15s ease,
+                transform 0.1s ease,
+                box-shadow 0.15s ease;
+            box-shadow: 0 4px 14px rgba(10, 125, 118, 0.25);
         }
 
-        button[type="submit"]:hover:not(:disabled) {
+        .btn-submit:hover:not(:disabled) {
+            background: var(--teal-dark);
+            box-shadow: 0 6px 20px rgba(10, 125, 118, 0.35);
             transform: translateY(-1px);
-            box-shadow:
-                0 6px 18px rgba(0, 122, 255, 0.4),
-                inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
 
-        button[type="submit"]:active:not(:disabled) {
-            transform: translateY(0) scale(0.98);
-            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0) scale(0.99);
+            box-shadow: 0 2px 8px rgba(10, 125, 118, 0.25);
         }
 
-        button[type="submit"]:disabled {
+        .btn-submit:disabled {
             opacity: 0.7;
             cursor: not-allowed;
         }
 
-        /* ===== ALERTAS ===== */
-        .alert {
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-            animation: alertIn 0.3s ease;
+        .btn-submit:focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 3px;
         }
 
-        @keyframes alertIn {
-            from {
-                opacity: 0;
-                transform: translateY(-6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-danger {
-            background: rgba(255, 59, 48, 0.10);
-            border-color: rgba(255, 59, 48, 0.2);
-            color: #d70015;
-        }
-
-        .alert-success {
-            background: rgba(52, 199, 89, 0.10);
-            border-color: rgba(52, 199, 89, 0.2);
-            color: #248a3d;
-        }
-
-        .field-error {
-            font-size: 12px;
-            color: #ff3b30;
-            margin-top: 4px;
-            min-height: 16px;
-            padding-left: 4px;
-            font-weight: 500;
-        }
-
-        /* ===== SPINNER ===== */
+        /* Spinner */
         .spinner {
             width: 16px;
             height: 16px;
@@ -310,11 +498,11 @@
             display: none;
         }
 
-        button.loading .spinner {
+        .btn-submit.loading .spinner {
             display: block;
         }
 
-        button.loading .btn-text {
+        .btn-submit.loading .btn-text {
             display: none;
         }
 
@@ -324,40 +512,80 @@
             }
         }
 
-        /* ===== FOOTER ===== */
-        .hint {
-            text-align: center;
-            font-size: 12px;
-            color: #c7c7cc;
-            margin-top: 28px;
+        /* ============================================
+           FOOTER DEL FORM
+           ============================================ */
+        .form-footer {
+            margin-top: 26px;
             padding-top: 20px;
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-            font-weight: 400;
+            border-top: 1px solid var(--line);
+            text-align: center;
+            font: 12px/1.5 var(--font);
+            color: var(--muted);
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 420px) {
-            .login-card {
-                padding: 36px 24px 28px;
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 820px) {
+            .shell {
+                grid-template-columns: 1fr;
+                min-height: auto;
+                max-width: 480px;
+            }
+
+            .intro {
+                min-height: 220px;
+                padding: 36px 32px;
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .intro h1 {
+                font-size: 30px;
+            }
+
+            .intro p.lead {
+                display: none;
+            }
+
+            .form-panel {
+                padding: 36px 32px;
+            }
+
+            .blob-teal-1,
+            .blob-teal-2 {
+                display: none;
+            }
+
+            .blob-cyan-1,
+            .blob-fuchsia-1 {
+                opacity: 0.6;
+            }
+        }
+
+        @media (max-width: 400px) {
+            body {
+                padding: 12px;
+            }
+
+            .shell {
                 border-radius: 18px;
             }
 
-            h1 {
-                font-size: 22px;
+            .intro,
+            .form-panel {
+                padding: 28px 22px;
             }
 
-            .logo {
-                width: 56px;
-                height: 56px;
-                border-radius: 16px;
-            }
-
-            .logo svg {
-                width: 30px;
-                height: 30px;
+            .form-panel h2 {
+                font-size: 24px;
             }
         }
 
+        /* ============================================
+           ACCESIBILIDAD
+           ============================================ */
         @media (prefers-reduced-motion: reduce) {
 
             *,
@@ -367,85 +595,142 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* Soporte para navegadores sin :focus-visible */
+        .toggle-password:focus {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 
 <body>
-    <div class="login-card">
-        <!-- Logo con ícono de diente -->
-        <div class="logo">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1 4.5 1.5 6.5.3 1.2.5 2.5.5 3.5 0 1.5 1 3 2.5 3s2-1 2-2.5c0-1 .5-2 1.5-2s1.5 1 1.5 2c0 1.5.5 2.5 2 2.5s2.5-1.5 2.5-3c0-1 .2-2.3.5-3.5.5-2 1.5-4 1.5-6.5 0-3.5-2.5-6-6-6-1.5 0-2.5.5-3 .5S13.5 2 12 2z" />
-            </svg>
-        </div>
+    <!-- Fondo decorativo -->
+    <div class="blob blob-cyan-1"></div>
+    <div class="blob blob-fuchsia-1"></div>
+    <div class="blob blob-teal-1"></div>
+    <div class="blob blob-teal-2"></div>
 
-        <h1>Clínica <span>Odontológica</span></h1>
-        <p class="subtitle">Universidad Pública de El Alto · U-TIC</p>
-
-        <div id="loginAlert" style="display:none;"></div>
-
-        <form id="loginForm" method="POST" action="{{ route('auth.login.post') }}" novalidate>
-            @csrf
-
-            <div class="form-group">
-                <label for="nombre_usuario">Usuario</label>
-                <input type="text" name="nombre_usuario" id="nombre_usuario"
-                    value="{{ old('nombre_usuario') }}" autofocus
-                    autocomplete="username" placeholder="Ingresa tu usuario" required>
-                <span class="field-error" data-error="nombre_usuario"></span>
+    <main class="shell">
+        <!-- ============ PANEL IZQUIERDO ============ -->
+        <section class="intro" aria-hidden="true">
+            <div class="mark">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1 4.5 1.5 6.5.3 1.2.5 2.5.5 3.5 0 1.5 1 3 2.5 3s2-1 2-2.5c0-1 .5-2 1.5-2s1.5 1 1.5 2c0 1.5.5 2.5 2 2.5s2.5-1.5 2.5-3c0-1 .2-2.3.5-3.5.5-2 1.5-4 1.5-6.5 0-3.5-2.5-6-6-6-1.5 0-2.5.5-3 .5S13.5 2 12 2z" />
+                </svg>
             </div>
 
-            <div class="form-group">
-                <label for="contrasena">Contraseña</label>
-                <div class="password-wrap">
-                    <input type="password" name="contrasena" id="contrasena"
-                        autocomplete="current-password" placeholder="••••••••" required>
-                    <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Mostrar u ocultar contraseña">
-                        <svg id="eye-closed" viewBox="0 0 24 24">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
-                        <svg id="eye-open" viewBox="0 0 24 24" style="display:none;">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                    </button>
+            <div>
+                <p class="eyebrow">Odontología · UPEA · U-TIC</p>
+                <h1>Un espacio <strong>claro</strong> para administrar la clínica.</h1>
+                <p class="lead">
+                    Ingresa al panel administrativo para consultar y organizar la operación
+                    <strong>académica y clínica</strong> de la Clínica Odontológica.
+                </p>
+            </div>
+
+            <div class="note">Acceso protegido para personal autorizado</div>
+        </section>
+
+        <!-- ============ PANEL DERECHO ============ -->
+        <section class="form-panel">
+            <h2>Iniciar sesión</h2>
+            <p class="subhead">Usa tus credenciales institucionales.</p>
+
+            <!-- Alerta global -->
+            <div id="globalAlert" class="alert" style="display:none;" role="alert" aria-live="polite"></div>
+
+            <form id="loginForm" method="POST" action="{{ route('auth.login.post') }}" novalidate>
+                @csrf
+
+                <!-- Usuario -->
+                <div class="field">
+                    <label for="nombre_usuario">Usuario</label>
+                    <input
+                        id="nombre_usuario"
+                        name="nombre_usuario"
+                        type="text"
+                        value="{{ old('nombre_usuario') }}"
+                        placeholder="Ingresa tu usuario"
+                        autocomplete="username"
+                        spellcheck="false"
+                        autocapitalize="none"
+                        required
+                        autofocus
+                        aria-describedby="error-nombre_usuario">
+                    <span class="field-error" id="error-nombre_usuario" data-error="nombre_usuario"></span>
                 </div>
-                <span class="field-error" data-error="contrasena"></span>
-            </div>
 
-            <button type="submit" id="btnLogin">
-                <span class="btn-text">Iniciar sesión</span>
-                <span class="spinner"></span>
-            </button>
-        </form>
+                <!-- Contraseña -->
+                <div class="field">
+                    <label for="contrasena">Contraseña</label>
+                    <div class="password-wrap">
+                        <input
+                            id="contrasena"
+                            name="contrasena"
+                            type="password"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required
+                            aria-describedby="error-contrasena">
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            onclick="togglePassword()"
+                            aria-label="Mostrar u ocultar contraseña"
+                            aria-pressed="false"
+                            tabindex="0">
+                            <svg id="eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                            <svg id="eye-open" viewBox="0 0 24 24" style="display:none;" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="field-error" id="error-contrasena" data-error="contrasena"></span>
+                </div>
 
-        <p class="hint">Sistema institucional · UPEA © 2026</p>
-    </div>
+                <button type="submit" id="btnLogin" class="btn-submit">
+                    <span class="btn-text">Entrar al panel</span>
+                    <span class="spinner" aria-hidden="true"></span>
+                </button>
+            </form>
+
+            <p class="form-footer">Sistema institucional · UPEA © 2026</p>
+        </section>
+    </main>
 
     <script>
+        /* ============================================
+           TOGGLE CONTRASEÑA
+           ============================================ */
         function togglePassword() {
             const input = document.getElementById('contrasena');
             const eyeOpen = document.getElementById('eye-open');
             const eyeClosed = document.getElementById('eye-closed');
+            const btn = document.querySelector('.toggle-password');
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.style.display = 'block';
-                eyeClosed.style.display = 'none';
-            } else {
-                input.type = 'password';
-                eyeOpen.style.display = 'none';
-                eyeClosed.style.display = 'block';
-            }
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            eyeOpen.style.display = isPassword ? 'block' : 'none';
+            eyeClosed.style.display = isPassword ? 'none' : 'block';
+            btn.setAttribute('aria-pressed', String(isPassword));
+            input.focus();
         }
 
+        /* ============================================
+           LOGIN AJAX CON VALIDACIÓN
+           ============================================ */
         (function() {
             const form = document.getElementById('loginForm');
-            const alertEl = document.getElementById('loginAlert');
+            const alertEl = document.getElementById('globalAlert');
             const btn = document.getElementById('btnLogin');
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+            /* ---------- Helpers ---------- */
             function mostrarAlerta(tipo, mensaje) {
                 alertEl.style.display = 'flex';
                 alertEl.className = 'alert alert-' + (tipo === 'error' ? 'danger' : 'success');
@@ -458,20 +743,47 @@
             }
 
             function limpiarErrores() {
-                form.querySelectorAll('[data-error]').forEach(el => el.textContent = '');
-                form.querySelectorAll('input').forEach(el => el.classList.remove('is-invalid'));
+                form.querySelectorAll('[data-error]').forEach(el => {
+                    el.textContent = '';
+                    el.classList.remove('visible');
+                });
+                form.querySelectorAll('input').forEach(el => {
+                    el.classList.remove('is-invalid');
+                    el.removeAttribute('aria-invalid');
+                });
             }
 
             function pintarErrores(errors) {
                 Object.entries(errors || {}).forEach(([campo, mensajes]) => {
                     const span = form.querySelector(`[data-error="${campo}"]`);
-                    if (span) span.textContent = Array.isArray(mensajes) ? mensajes[0] : mensajes;
-
                     const input = form.querySelector(`[name="${campo}"]`);
-                    if (input) input.classList.add('is-invalid');
+                    const texto = Array.isArray(mensajes) ? mensajes[0] : mensajes;
+
+                    if (span) {
+                        span.textContent = texto;
+                        span.classList.add('visible');
+                    }
+                    if (input) {
+                        input.classList.add('is-invalid');
+                        input.setAttribute('aria-invalid', 'true');
+                    }
                 });
             }
 
+            /* ---------- Validación en vivo ---------- */
+            form.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => {
+                    const span = form.querySelector(`[data-error="${input.name}"]`);
+                    if (span && span.textContent) {
+                        span.textContent = '';
+                        span.classList.remove('visible');
+                    }
+                    input.classList.remove('is-invalid');
+                    input.removeAttribute('aria-invalid');
+                });
+            });
+
+            /* ---------- Submit ---------- */
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 limpiarAlerta();
@@ -508,12 +820,11 @@
 
                     if (res.status === 422 && data.errors) {
                         pintarErrores(data.errors);
-                        mostrarAlerta('error', data.message || 'Revisa los campos.');
+                        mostrarAlerta('error', data.message || 'Revisa los campos marcados.');
                         return;
                     }
 
                     mostrarAlerta('error', data.message || 'Error al iniciar sesión.');
-
                 } catch (err) {
                     mostrarAlerta('error', 'Error de red. Verifica tu conexión.');
                     console.error(err);

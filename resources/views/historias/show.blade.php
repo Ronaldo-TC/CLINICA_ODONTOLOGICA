@@ -11,12 +11,41 @@
         <p>Clínica: {{ $registro->clinica?->especialidad }} · Periodo: {{ $registro->periodo?->gestion }}-{{ $registro->periodo?->semestre }}</p>
         <p>Estudiante: {{ $registro->estudiante?->nombre_completo }} · Docente: {{ $registro->docente?->nombre_completo }}</p>
         <div class="actions">
+            <a class="btn btn-secondary" href="#tratamientos">Tratamientos</a>
             @canany(['cajas.ver', 'cajas.gestionar'])<a class="btn btn-secondary" href="#cajas">Cajas</a>@endcanany
             @canany(['insumos.ver', 'insumos.gestionar'])<a class="btn btn-secondary" href="#insumos">Insumos</a>@endcanany
             @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-secondary" href="#esterilizaciones">Esterilizaciones</a>@endcanany
         </div>
         @if($errors->any())<p class="form-error" role="alert">{{ $errors->first() }}</p>@endif
     </div>
+</div>
+
+<div class="card" id="tratamientos" style="margin-top:20px;">
+    <div class="card-header"><h2>Tratamientos de esta historia</h2></div>
+    <div class="card-body"><p>El docente asignado autoriza el tratamiento. Después, el encargado de Caja puede buscar la ficha #{{ $registro->admision_id }} y emitir el recibo.</p></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Tratamiento</th><th>Pieza dental</th><th>Costo (Bs)</th><th>Estado</th><th>Autorización docente</th><th>Acciones</th></tr></thead>
+        <tbody>
+        @forelse($registro->tratamientosRealizados as $tratamiento)
+            <tr>
+                <td>#{{ $tratamiento->id }} · {{ $tratamiento->tratamiento?->nombre }} @if($tratamiento->observacion)<br><small>{{ $tratamiento->observacion }}</small>@endif</td>
+                <td>{{ $tratamiento->pieza_dental ?: 'Sin especificar' }}</td>
+                <td>{{ $tratamiento->costo_cobrado }}</td>
+                <td><span class="badge badge-info">{{ ucfirst(str_replace('_', ' ', $tratamiento->estado)) }}</span></td>
+                <td>@if($tratamiento->estaAutorizado()){{ $tratamiento->autorizador?->nombre_completo }}<br><small>{{ $tratamiento->fecha_autorizacion?->format('d/m/Y H:i') }}</small>@else Pendiente @endif</td>
+                <td>
+                    @if($puedeAutorizarTratamientos && in_array($tratamiento->estado, ['pendiente', 'propuesta'], true) && !$tratamiento->estaAutorizado())
+                        <form action="{{ route('tratamientos-realizados.autorizar', $tratamiento->id) }}" method="POST">
+                            @csrf<button type="submit" class="btn btn-sm btn-primary">Autorizar tratamiento</button>
+                        </form>
+                    @elseif($tratamiento->estaAutorizado() && in_array($tratamiento->estado, ['autorizado', 'en_proceso'], true))
+                        <small>Disponible para emitir recibo en Caja.</small>
+                    @endif
+                </td>
+            </tr>
+        @empty<tr><td colspan="6">Esta historia todavía no tiene tratamientos propuestos.</td></tr>@endforelse
+        </tbody>
+    </table></div>
 </div>
 
 @canany(['cajas.ver', 'cajas.gestionar'])

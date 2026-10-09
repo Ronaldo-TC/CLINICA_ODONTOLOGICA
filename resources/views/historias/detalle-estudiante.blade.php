@@ -119,13 +119,18 @@
 @canany(['insumos.ver', 'insumos.gestionar'])
 <div class="card" id="insumos" style="margin-top:16px">
     <div class="card-header"><h2>Insumos de este paciente</h2></div>
-    <div class="card-body"><p>Selecciona un tratamiento y sus materiales. El docente autoriza la solicitud y el encargado de insumos aprueba o rechaza antes de entregar.</p>
+    <div class="card-body"><p>Puedes solicitar insumos cuantas veces necesites para este paciente, incluso si tienes solicitudes pendientes. Cada solicitud se registra por separado. El docente autoriza la solicitud y el encargado de insumos aprueba o rechaza antes de entregar.</p>
         @if(!$cerrada) @canany(['insumos.crear', 'insumos.gestionar'])<button class="btn btn-primary" type="button" data-solicitar-designado data-historia="{{ $registro->id }}">Solicitar insumos por tratamiento</button>@endcanany @endif
     </div>
     @forelse($solicitudes as $solicitud)
         <div class="card-body">
             <h3>Solicitud #{{ $solicitud->id }} · {{ $solicitud->tratamiento?->nombre ?? $solicitud->tratamientoRealizado?->tratamiento?->nombre }} @if($solicitud->sesion_atencion_id) · Avance #{{ $solicitud->sesion_atencion_id }} @endif</h3>
             <p><span class="badge badge-info">{{ ucfirst($solicitud->estado) }}</span> @if($solicitud->motivo_rechazo) {{ $solicitud->motivo_rechazo }} @endif</p>
+            @if(!$cerrada)
+                @canany(['insumos.crear', 'insumos.gestionar'])
+                    <button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $registro->id }}" data-tratamiento="{{ $solicitud->tratamiento_id }}">Solicitar nuevamente</button>
+                @endcanany
+            @endif
             <div class="table-wrap"><table><thead><tr><th>Insumo</th><th>Solicitado</th><th>Entregado</th><th>Utilizado</th><th>Disponible para usar</th></tr></thead><tbody>
                 @foreach($solicitud->detalles as $detalle)<tr><td>{{ $detalle->insumo?->nombre }}</td><td>{{ $detalle->cantidad_solicitada }}</td><td>{{ $detalle->cantidad_entregada }}</td><td>{{ $detalle->consumos->sum('cantidad_usada') }}</td><td>{{ number_format((float) $detalle->cantidad_entregada - $detalle->consumos->sum('cantidad_usada'), 2) }}</td></tr>@endforeach
             </tbody></table></div>

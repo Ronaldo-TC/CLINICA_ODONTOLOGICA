@@ -8,7 +8,7 @@ export function piezasDeDenticion(denticion) {
     return PIEZAS_ADMISION.filter(pieza => denticion === 'mixto' || (Number(pieza) < 50 ? 'adulto' : 'infantil') === denticion);
 }
 
-export function actualizarPieza(datos, { pieza, cara, estado, modo = 'cara', color = 'rojo', quitar = false }) {
+export function actualizarPieza(datos, { pieza, cara, estado, modo = 'cara', color = 'rojo', quitar = false, alternar = false }) {
     const actualizado = structuredClone(datos);
     if (!PIEZAS_ADMISION.includes(String(pieza))) return actualizado;
     if (modo === 'borrar' || (modo === 'marca' && estado === 'sano')) {
@@ -18,7 +18,8 @@ export function actualizarPieza(datos, { pieza, cara, estado, modo = 'cara', col
     const diente = actualizado[pieza] || {};
     if (modo === 'marca') {
         const marcas = (diente.marcas || []).filter(marca => marca.estado !== estado);
-        if (!quitar) marcas.push({ estado, color });
+        const yaMarcada = (diente.marcas || []).some(marca => marca.estado === estado && marca.color === color);
+        if (!quitar && !(alternar && yaMarcada)) marcas.push({ estado, color });
         if (marcas.length) diente.marcas = marcas;
         else delete diente.marcas;
     } else if (CARAS_ADMISION.includes(cara)) {
@@ -73,6 +74,43 @@ export function prepararModeloAdmision(modelo) {
     return indice;
 }
 
+export function pintarMaterial(material, color) {
+    material.color.set(color);
+    material.vertexColors = false;
+    material.map = null;
+    material.alphaMap = null;
+    material.transparent = false;
+    material.opacity = 1;
+    material.depthWrite = true;
+    material.roughness = 0.72;
+    material.metalness = 0;
+    if (material.isMeshPhysicalMaterial) {
+        material.transmission = 0;
+        material.transmissionMap = null;
+        material.clearcoat = 0;
+        material.sheen = 0;
+    }
+    if (material.emissive) {
+        material.emissive.set(color);
+        material.emissiveIntensity = 0.12;
+    }
+    material.needsUpdate = true;
+}
+
+export function posicionEtiquetaEncia(indice, pieza) {
+    const diente = indice.dientes.get(String(pieza));
+    if (!diente) return null;
+    const posicion = diente.getWorldPosition(new THREE.Vector3());
+    const vestibular = indice.superficies.find(objeto => String(objeto.userData.fdi) === String(pieza) && objeto.userData.surface === 'V');
+    if (vestibular) {
+        const direccion = new THREE.Box3().setFromObject(vestibular).getCenter(new THREE.Vector3()).sub(posicion);
+        direccion.y = 0;
+        posicion.add(direccion.normalize().multiplyScalar(0.009));
+    }
+    posicion.y += diente.userData.arch === 'upper' ? 0.002 : -0.002;
+    return posicion;
+}
+
 export function aplicarEstadoModelo(indice, datos, catalogo, { denticion = 'adulto', raices = false, encias = true, huesos = false, seleccion = null } = {}) {
     indice.denticiones.forEach(objeto => objeto.visible = denticion === 'mixto' || objeto.userData.dentition === denticion);
     indice.encias.forEach(objeto => objeto.visible = encias);
@@ -85,19 +123,16 @@ export function aplicarEstadoModelo(indice, datos, catalogo, { denticion = 'adul
         const cara = objeto.userData.surface.toLowerCase();
         const diente = datos[pieza] || {};
         const estado = diente[cara] || 'sano';
-        const marca = (diente.marcas || []).find(item => ['corona', 'corona_temporal', 'endodoncia', 'discromia'].includes(item.estado));
+        const marca = (diente.marcas || []).find(item => catalogo[item.estado]?.color || ['corona_temporal', 'discromia'].includes(item.estado));
         const color = estado !== 'sano' ? catalogo[estado]?.color || '#dc2626' : marca ? (marca.color === 'azul' ? '#2563eb' : '#dc2626') : null;
         const materiales = Array.isArray(objeto.material) ? objeto.material : [objeto.material];
         materiales.forEach((material, index) => {
             const teniaColoresVertices = material.vertexColors;
             material.copy(objeto.userData.materialesOriginales[index]);
             if (color) {
-                material.color.set(color);
-                material.vertexColors = false;
-                material.transparent = false;
-                material.opacity = 1;
+                pintarMaterial(material, color);
             }
-            if (seleccion?.pieza === pieza && (!seleccion.cara || seleccion.cara === cara) && material.emissive) {
+            if (!color && seleccion?.pieza === pieza && (!seleccion.cara || seleccion.cara === cara) && material.emissive) {
                 material.emissive.set('#0e7490');
                 material.emissiveIntensity = 0.25;
             }

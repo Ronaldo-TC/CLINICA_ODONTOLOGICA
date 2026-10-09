@@ -251,6 +251,8 @@ class CajaController extends Controller
             ->with(['paciente', 'estudiante', 'clinica', 'tratamientosRealizados' => fn ($query) => $query->whereIn('estado', ['autorizado', 'en_proceso'])->whereNotNull('autorizado_por'), 'tratamientosRealizados.tratamiento'])
             ->orderByDesc('id')->get();
         abort_if($historias->isEmpty(), 404, 'No hay pacientes designados con esta ficha en la clínica seleccionada.');
+        $estudianteIds = $historias->pluck('estudiante_id')->unique();
+        $clinicaIds = $historias->pluck('clinica_id')->unique();
         $atenciones = $historias->flatMap->tratamientosRealizados;
         $pagos = Caja::query()->whereIn('tratamiento_realizado_id', $atenciones->pluck('id'))->where('habilitada', true)
             ->select('tratamiento_realizado_id')->selectRaw('SUM(cancelado) as total')->groupBy('tratamiento_realizado_id')->pluck('total', 'tratamiento_realizado_id');
@@ -258,6 +260,8 @@ class CajaController extends Controller
         return response()->json([
             'ficha' => (int) $data['ficha'],
             'paciente' => $historias->first()->paciente->nombre_completo,
+            'estudiante' => $estudianteIds->count() === 1 ? $historias->first()->estudiante?->nombre_completo : null,
+            'clinica_id' => $clinicaIds->count() === 1 ? (int) $clinicaIds->first() : null,
             'atenciones' => $historias->flatMap(function (HistoriaClinica $historia) use ($pagos): array {
                 return $historia->tratamientosRealizados->map(fn (TratamientoRealizado $atencion): array => [
                     'id' => $atencion->id, 'clinica_id' => $historia->clinica_id, 'clinica' => $historia->clinica->especialidad,

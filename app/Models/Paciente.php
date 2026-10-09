@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paciente extends Model
 {
+    public const CAMPOS_CONTACTO = ['telefono', 'estado_civil', 'escuela', 'ocupacion', 'direccion', 'emergencia', 'telefono_emergencia'];
+
     protected $table = 'pacientes';
 
     protected $fillable = [
@@ -15,6 +17,7 @@ class Paciente extends Model
         'apellido_materno',
         'genero',
         'fecha_nacimiento',
+        ...self::CAMPOS_CONTACTO,
     ];
 
     protected $casts = [
@@ -69,6 +72,7 @@ class Paciente extends Model
     {
         $n = mb_substr($this->nombre ?? '', 0, 1);
         $a = mb_substr($this->apellido_paterno ?? '', 0, 1);
-        return mb_strtoupper($n . $a);
+
+        return mb_strtoupper($n.$a);
     }
 }

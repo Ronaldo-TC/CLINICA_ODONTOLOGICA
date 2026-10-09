@@ -42,6 +42,30 @@ class CajaRecibosFichaTest extends TestCase
         $this->getJson(route('cajas.tabla', ['clinica_id' => $case['clinic']->id]))->assertOk()->assertJsonPath('total', 2);
     }
 
+    public function test_admission_lookup_autocompletes_assignment_without_selecting_a_clinic_or_having_authorized_treatments(): void
+    {
+        $case = $this->clinicalCase();
+
+        $this->actingAs($this->clinicalUser('cajas'))->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))
+            ->assertOk()->assertJsonPath('paciente', $case['history']->paciente->nombre_completo)
+            ->assertJsonPath('estudiante', $case['student']->nombre_completo)
+            ->assertJsonPath('clinica_id', $case['clinic']->id)->assertJsonCount(0, 'atenciones');
+    }
+
+    public function test_admission_with_multiple_designated_students_requires_selecting_the_clinic_for_student_autocomplete(): void
+    {
+        $case = $this->clinicalCase();
+        $other = $this->clinicalCase();
+        $other['history']->update(['admision_id' => $case['admission']->id, 'paciente_id' => $case['history']->paciente_id]);
+        $this->actingAs($this->clinicalUser('cajas'));
+
+        $this->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))->assertOk()
+            ->assertJsonPath('paciente', $case['history']->paciente->nombre_completo)
+            ->assertJsonPath('estudiante', null)->assertJsonPath('clinica_id', null);
+        $this->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id, 'clinica_id' => $other['clinic']->id]))->assertOk()
+            ->assertJsonPath('estudiante', $other['student']->nombre_completo)->assertJsonPath('clinica_id', $other['clinic']->id);
+    }
+
     public function test_duplicate_receipt_number_returns_422_without_adding_payment(): void
     {
         $case = $this->approvedProgress();

@@ -11,10 +11,10 @@ class Admision3dTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
 
-    public function test_admissions_offer_a_3d_form_in_another_window(): void
+    public function test_admissions_offer_a_3d_form_in_the_same_tab(): void
     {
         $this->actingAs($this->clinicalUser('admision'))->get(route('admisiones.index'))
-            ->assertSee('href="'.route('admisiones.create-3d').'" class="btn btn-primary" target="_blank" rel="noopener"', false)
+            ->assertSee('href="'.route('admisiones.create-3d').'" class="btn btn-primary">', false)
             ->assertSee('Nueva admisión 3D');
     }
 
@@ -27,6 +27,13 @@ class Admision3dTest extends TestCase
             ->assertSee('data-model-url="'.asset('models/odontograma.glb').'"', false)
             ->assertSee('action="'.route('admisiones.store').'"', false)
             ->assertSee('id="adm-3d-canvas"', false)
+            ->assertSee('id="adm-3d-pantalla"', false)
+            ->assertSee('id="adm-3d-deshacer"', false)
+            ->assertSee('id="adm-3d-rehacer"', false)
+            ->assertSee('id="adm-3d-vista"', false)
+            ->assertSee('data-3d-herramienta="implante"', false)
+            ->assertSee('data-3d-cara="o"', false)
+            ->assertSee(asset('models/piso-odontograma.svg'), false)
             ->assertSee('name="odontograma_pintado"', false)
             ->assertSee('name="odontograma_denticion"', false)
             ->assertSee('id="adm-paciente-buscar"', false)
@@ -49,9 +56,11 @@ class Admision3dTest extends TestCase
         $this->get(route('admisiones.create-3d'))->assertRedirectToRoute('auth.login');
     }
 
-    public function test_a_student_cannot_create_a_3d_admission(): void
+    public function test_a_student_without_creation_permission_cannot_create_a_3d_admission(): void
     {
-        $this->actingAs($this->clinicalUser('estudiante'))->get(route('admisiones.create-3d'))->assertForbidden();
+        $student = $this->clinicalUser('estudiante');
+        $student->roles->first()->revokePermissionTo(['admisiones.crear', 'admisiones.gestionar']);
+        $this->actingAs($student)->get(route('admisiones.create-3d'))->assertForbidden();
     }
 
     public function test_the_3d_form_preserves_old_dental_input(): void

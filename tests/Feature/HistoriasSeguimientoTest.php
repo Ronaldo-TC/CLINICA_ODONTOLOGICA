@@ -8,6 +8,7 @@ use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
 use App\Models\Remision;
+use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
@@ -59,6 +60,81 @@ class HistoriasSeguimientoTest extends TestCase
             ->assertSee('&lt;script&gt;Material propio&lt;/script&gt;', false)->assertDontSee('<script>Material propio</script>', false)
             ->assertSee('765411')->assertDontSee('765412')->assertDontSee('Material de otra clínica')
             ->assertSee('Material del paciente')->assertDontSee('Material de otro paciente')->assertSee('Autorizar solicitud');
+    }
+
+    public function test_assigned_teacher_authorizes_treatment_from_history_and_cashier_can_then_issue_a_receipt(): void
+    {
+        $this->freezeTime();
+        $case = $this->clinicalCase();
+        $treatment = $this->pendingTreatment($case);
+        $historyUrl = route('historias.show', $case['history']->id);
+        $cashier = $this->clinicalUser('cajas');
+        $receipt = ['tratamiento_realizado_id' => $treatment->id, 'ficha' => $case['admission']->id,
+            'clinica_id' => $case['clinic']->id, 'recibo' => 1900000110, 'cancelado' => 25, 'habilitada' => true];
+        $this->actingAs($cashier)->postJson(route('cajas.store'), $receipt)->assertUnprocessable()
+            ->assertJsonValidationErrors('tratamiento_realizado_id');
+        $this->assertDatabaseMissing('cajas', ['tratamiento_realizado_id' => $treatment->id]);
+        $this->teacher($case)->givePermissionTo('atenciones.autorizar');
+
+        $this->get(route('historias.index'))->assertSee($historyUrl.'#tratamientos', false)->assertSee('Ver tratamientos');
+        $this->get($historyUrl)->assertSee('Autorizar tratamiento')
+            ->assertSee('action="'.route('tratamientos-realizados.autorizar', $treatment->id).'"', false);
+        $this->from($historyUrl)->post(route('tratamientos-realizados.autorizar', $treatment->id))
+            ->assertRedirect($historyUrl)->assertSessionHas('success', 'Tratamiento autorizado para Cajas.');
+
+        $this->assertDatabaseHas('tratamientos_realizados', ['id' => $treatment->id, 'estado' => 'autorizado',
+            'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now()]);
+        $this->assertDatabaseMissing('cajas', ['tratamiento_realizado_id' => $treatment->id]);
+        $this->get($historyUrl)->assertDontSee('Autorizar tratamiento')->assertSee('Disponible para emitir recibo en Caja.');
+        $this->actingAs($cashier)->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))
+            ->assertOk()->assertJsonPath('atenciones.0.id', $treatment->id);
+        $response = $this->postJson(route('cajas.store'), $receipt)->assertCreated();
+        $this->assertDatabaseHas('cajas', ['id' => $response->json('id'), 'tratamiento_realizado_id' => $treatment->id,
+            'paciente_id' => $case['history']->paciente_id, 'usuario_id' => $cashier->id, 'cancelado' => 25]);
+    }
+
+    public function test_other_teacher_and_student_cannot_authorize_treatment_from_history(): void
+    {
+        $case = $this->clinicalCase();
+        $treatment = $this->pendingTreatment($case);
+        $otherTeacher = $this->clinicalUser('docente');
+        $otherTeacher->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
+        $otherTeacher->givePermissionTo(['historias.ver', 'atenciones.autorizar']);
+
+        $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertSee($case['treatment']->nombre)
+            ->assertDontSee('Autorizar tratamiento');
+        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertForbidden();
+        $case['student']->givePermissionTo(['historias.ver', 'atenciones.autorizar']);
+        $this->actingAs($case['student'])->get(route('historias.show', $case['history']->id))->assertDontSee('Autorizar tratamiento');
+        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertForbidden();
+        $this->assertDatabaseHas('tratamientos_realizados', ['id' => $treatment->id, 'estado' => 'pendiente', 'autorizado_por' => null]);
+    }
+
+    public function test_closed_history_hides_treatment_authorization_and_rejects_direct_approval(): void
+    {
+        $case = $this->clinicalCase();
+        $treatment = $this->pendingTreatment($case);
+        $case['history']->update(['estado' => 'cerrada']);
+        $this->teacher($case)->givePermissionTo('atenciones.autorizar');
+
+        $this->get(route('historias.show', $case['history']->id))->assertSee($case['treatment']->nombre)->assertDontSee('Autorizar tratamiento');
+        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertUnprocessable()
+            ->assertJsonValidationErrors('historia_clinica_id');
+        $this->assertDatabaseHas('tratamientos_realizados', ['id' => $treatment->id, 'estado' => 'pendiente', 'autorizado_por' => null]);
+    }
+
+    public function test_history_with_end_date_hides_treatment_authorization_and_rejects_direct_approval(): void
+    {
+        $this->freezeTime();
+        $case = $this->clinicalCase();
+        $treatment = $this->pendingTreatment($case);
+        $case['history']->update(['fecha_fin' => today()]);
+        $this->teacher($case)->givePermissionTo('atenciones.autorizar');
+
+        $this->get(route('historias.show', $case['history']->id))->assertDontSee('Autorizar tratamiento');
+        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertUnprocessable()
+            ->assertJsonValidationErrors('historia_clinica_id');
+        $this->assertDatabaseHas('tratamientos_realizados', ['id' => $treatment->id, 'estado' => 'pendiente', 'autorizado_por' => null]);
     }
 
     public function test_teacher_authorizes_from_history_and_warehouse_approves_from_request_detail(): void
@@ -186,6 +262,14 @@ class HistoriasSeguimientoTest extends TestCase
         $this->actingAs($case['teacher']);
 
         return $case['teacher'];
+    }
+
+    /** @param array<string, mixed> $case */
+    private function pendingTreatment(array $case): TratamientoRealizado
+    {
+        return TratamientoRealizado::create(['historia_clinica_id' => $case['history']->id,
+            'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id,
+            'pieza_dental' => '16', 'costo_cobrado' => 100, 'estado' => 'pendiente']);
     }
 
     /** @param array<string, mixed> $case */

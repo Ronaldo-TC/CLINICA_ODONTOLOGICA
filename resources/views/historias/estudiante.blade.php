@@ -32,7 +32,9 @@
                         <td>@canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#esterilizacion">Ver control</a>@endcanany</td>
                         <td><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#pagos">Ver pagos</a></td>
                         <td>@canany(['insumos.ver', 'insumos.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#insumos">Ver solicitudes</a>@endcanany
-                            @if($soloActivas) @canany(['insumos.crear', 'insumos.gestionar'])<button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $historia->id }}">Solicitar insumos</button>@endcanany @endif
+                            @if(!$historia->fecha_fin && !in_array($historia->estado, $estadosCerrados, true))
+                                @canany(['insumos.crear', 'insumos.gestionar'])<button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $historia->id }}">Solicitar insumos</button>@endcanany
+                            @endif
                         </td>
                     </tr>
                 @empty

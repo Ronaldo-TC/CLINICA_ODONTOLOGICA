@@ -69,13 +69,15 @@
                 </select>
                 <span class="form-error" data-error-for="motivo_consulta_id"></span>
             </div>
-            @foreach(['telefono' => ['Teléfono', 30], 'estado_civil' => ['Estado civil', 200], 'escuela' => ['Escuela', 200], 'ocupacion' => ['Ocupación', 200], 'direccion' => ['Dirección', 200], 'emergencia' => ['Contacto de emergencia', 200], 'telefono_emergencia' => ['Teléfono de emergencia', 30]] as $campo => [$etiqueta, $limite])
-                <div class="form-group">
-                    <label for="adm-{{ $campo }}">{{ $etiqueta }}</label>
-                    <input type="{{ str_starts_with($campo, 'telefono') ? 'tel' : 'text' }}" name="{{ $campo }}" id="adm-{{ $campo }}" maxlength="{{ $limite }}" class="form-control" value="{{ old($campo, $ficha?->$campo) }}">
-                    <span class="form-error" data-error-for="{{ $campo }}"></span>
-                </div>
-            @endforeach
+            @isset($admision)
+                @foreach(['telefono' => ['Teléfono', 30], 'estado_civil' => ['Estado civil', 200], 'escuela' => ['Escuela', 200], 'ocupacion' => ['Ocupación', 200], 'direccion' => ['Dirección', 200], 'emergencia' => ['Contacto de emergencia', 200], 'telefono_emergencia' => ['Teléfono de emergencia', 30]] as $campo => [$etiqueta, $limite])
+                    <div class="form-group">
+                        <label for="adm-{{ $campo }}">{{ $etiqueta }}</label>
+                        <input type="{{ str_starts_with($campo, 'telefono') ? 'tel' : 'text' }}" name="{{ $campo }}" id="adm-{{ $campo }}" maxlength="{{ $limite }}" class="form-control" value="{{ old($campo, $ficha?->$campo) }}">
+                        <span class="form-error" data-error-for="{{ $campo }}"></span>
+                    </div>
+                @endforeach
+            @endisset
         </div>
     </div>
     <div class="card">

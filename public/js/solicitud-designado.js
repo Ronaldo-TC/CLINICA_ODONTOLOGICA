@@ -14,6 +14,7 @@
     let historia = null;
     let catalogo = [];
     let edicion = null;
+    let tratamientoInicialId = null;
     let requestSequence = 0;
 
     function close() {
@@ -82,6 +83,8 @@
             if (Number(edicion?.registro?.historia_clinica_id) === Number(historia.id)) {
                 select.value = String(edicion.registro.tratamiento_id);
                 document.getElementById('designado-pieza').value = edicion.registro.pieza || '';
+            } else if (Number(historiaOrigenId) === Number(historia.id) && catalogo.some(item => String(item.id) === String(tratamientoInicialId))) {
+                select.value = String(tratamientoInicialId);
             } else if (catalogo.length === 1) {
                 select.value = String(catalogo[0].id);
             }
@@ -93,13 +96,14 @@
         }
     }
 
-    async function abrir(historiaId = null, data = null) {
+    async function abrir(historiaId = null, data = null, tratamientoId = null) {
         ++requestSequence;
         form.reset();
         historiaOrigenId = historiaId;
         historia = null;
         catalogo = [];
         edicion = data;
+        tratamientoInicialId = tratamientoId;
         error.textContent = '';
         select.replaceChildren(new Option('Seleccione un tratamiento', ''));
         select.disabled = true;
@@ -145,7 +149,7 @@
     select.addEventListener('change', materiales);
     document.addEventListener('click', event => {
         const button = event.target.closest('[data-solicitar-designado]');
-        if (button) abrir(button.dataset.historia);
+        if (button) abrir(button.dataset.historia, null, button.dataset.tratamiento);
     });
     modal.addEventListener('click', event => {
         if (event.target === modal || event.target.closest('[data-designado-close]')) close();

@@ -8,6 +8,7 @@ use App\Models\Admision;
 use App\Models\Archivo;
 use App\Models\Caja;
 use App\Models\Clinica;
+use App\Models\Especialidad;
 use App\Models\Esterilizacion;
 use App\Models\HistoriaClinica;
 use App\Models\InsumoSolicitado;
@@ -66,7 +67,14 @@ class HistoriaController extends Controller
         }
 
         $usuario = $request->user();
-        $tratamientoIds = $registro->tratamientosRealizados()->pluck('id');
+        $registro->load(['tratamientosRealizados.tratamiento', 'tratamientosRealizados.autorizador']);
+        $tratamientoIds = $registro->tratamientosRealizados->modelKeys();
+        $cerrada = in_array($registro->estado, self::ESTADOS_CERRADOS, true) || $registro->fecha_fin !== null;
+        $puedeAutorizarTratamientos = $registro->autorizado && ! $cerrada
+            && $usuario->canAny(['atenciones.autorizar', 'atenciones.gestionar'])
+            && (AccesoClinico::esAdministrador($usuario)
+                || ($usuario->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $usuario->id
+                    && Especialidad::query()->where('usuario_id', $usuario->id)->where('clinica_id', $registro->clinica_id)->where('habilitado', true)->exists()));
         $solicitudes = $usuario->canAny(['insumos.ver', 'insumos.gestionar'])
             ? AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)
                 ->where(function (Builder $query) use ($registro, $tratamientoIds): void {
@@ -97,7 +105,7 @@ class HistoriaController extends Controller
                 })->orderByDesc('id')->get()
             : collect();
 
-        return view('historias.show', compact('registro', 'solicitudes', 'pagos', 'esterilizaciones'));
+        return view('historias.show', compact('registro', 'solicitudes', 'pagos', 'esterilizaciones', 'puedeAutorizarTratamientos'));
     }
 
     protected function buildTablaQuery(Request $request): Builder
@@ -586,6 +594,7 @@ class HistoriaController extends Controller
         return $this->respuestaListadoEstudiante($request, 'historias.estudiante', $this->datosListadoEstudiante($request, $query) + [
             'titulo' => $soloActivas ? 'Mis Pacientes Designados' : 'Mis Historias Clínicas',
             'soloActivas' => $soloActivas,
+            'estadosCerrados' => self::ESTADOS_CERRADOS,
         ]);
     }
 

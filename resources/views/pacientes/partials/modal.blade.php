@@ -69,6 +69,16 @@
                     </div>
                 </div>
 
+                <div class="form-grid" style="margin-top:18px;">
+                    @foreach(['telefono' => ['Teléfono', 30], 'estado_civil' => ['Estado civil', 200], 'ocupacion' => ['Ocupación', 200], 'direccion' => ['Dirección', 200], 'emergencia' => ['Contacto de emergencia', 200], 'telefono_emergencia' => ['Teléfono de emergencia', 30]] as $campo => [$etiqueta, $limite])
+                    <div class="form-group">
+                        <label for="paciente-{{ $campo }}">{{ $etiqueta }}</label>
+                        <input type="{{ str_starts_with($campo, 'telefono') ? 'tel' : 'text' }}" id="paciente-{{ $campo }}" name="{{ $campo }}" class="form-control" maxlength="{{ $limite }}">
+                        <span class="form-error" data-error-for="{{ $campo }}"></span>
+                    </div>
+                    @endforeach
+                </div>
+
                 <div id="formPacienteError" class="alert alert-danger" style="display:none; margin-top:18px;">
                     <span class="alert-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -131,6 +141,10 @@
                 $btnText.textContent = 'Actualizar Paciente';
 
                 const p = data.registro || data;
+
+                ['telefono', 'estado_civil', 'ocupacion', 'direccion', 'emergencia', 'telefono_emergencia'].forEach((campo) => {
+                    $form.elements.namedItem(campo).value = p[campo] ?? '';
+                });
 
                 $form.ci.value = p.ci ?? '';
                 $form.nombre.value = p.nombre ?? '';

@@ -36,13 +36,16 @@ function harness(fetch) {
     form.reset = () => { Object.values(elements).forEach(element => {element.value = '';}); };
     form.querySelector = () => ({value: 'csrf'});
     const window = {dispatchEvent() {}, SolicitudesLista: {toast() {}}};
+    const document = Object.assign(new Element(), {
+        getElementById: id => elements[id], body: new Element(), createElement: () => new Element(), querySelector: () => null,
+    });
     runInNewContext(source, {
-        document: {getElementById: id => elements[id], addEventListener() {}, body: new Element(), createElement: () => new Element(), querySelector: () => null},
+        document,
         window, fetch, URLSearchParams,
         Option: class {constructor(label, value) {this.text = label; this.value = String(value);}},
         Event: class {constructor(type) {this.type = type;}},
     });
-    return {elements, form, window, inputs: () => elements['designado-materiales'].querySelectorAll()};
+    return {elements, form, window, document, inputs: () => elements['designado-materiales'].querySelectorAll()};
 }
 
 function response(clinic = 1) {
@@ -132,4 +135,38 @@ test('una clínica que ya no está asignada bloquea el envío y muestra el error
     assert.equal(ui.elements['designado-guardar'].disabled, true);
     assert.equal(ui.inputs().length, 0);
     assert.equal(ui.elements['designado-error'].textContent, 'La asignación está cerrada.');
+});
+
+test('solicitar nuevamente preselecciona el tratamiento y crea solicitudes independientes', async () => {
+    const submitted = [];
+    const ui = harness(async (url, options) => {
+        if (options.method) {
+            submitted.push({url, method: options.method, body: JSON.parse(options.body)});
+            return {ok: true, json: async () => ({success: true})};
+        }
+        const catalog = await response().json();
+        catalog.tratamientos.unshift({id: 19, nombre: 'Otro tratamiento', insumos: []});
+        return {ok: true, json: async () => catalog};
+    });
+    await ui.window.SolicitudDesignado.abrir(10, {registro: {id: 7, historia_clinica_id: 10, tratamiento_id: 20}, detalles: [{insumo_id: 30, cantidad_solicitada: 7}]});
+    const button = {dataset: {historia: '10', tratamiento: '20'}, closest: () => button};
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+        ui.document.listeners.get('click')({target: button});
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(ui.elements['designado-tratamiento'].value, '20');
+        assert.equal(ui.inputs()[0].value, '2');
+        ui.inputs()[0].value = '3';
+        await ui.form.emit('submit');
+        assert.equal(ui.elements.modalSolicitudDesignado.classList.contains('open'), false);
+    }
+
+    assert.equal(submitted.length, 2);
+    submitted.forEach(request => {
+        assert.equal(request.url, '/solicitudes-insumos');
+        assert.equal(request.method, 'POST');
+        assert.equal(request.body.historia_clinica_id, 10);
+        assert.equal(request.body.tratamiento_id, 20);
+        assert.deepEqual(request.body.detalles, [{insumo_id: 30, cantidad_solicitada: 3}]);
+    });
 });

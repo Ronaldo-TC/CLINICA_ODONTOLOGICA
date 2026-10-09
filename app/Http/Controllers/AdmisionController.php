@@ -418,6 +418,7 @@ class AdmisionController extends Controller
     protected function beforeStore(array $data): array
     {
         $this->validarResponsables($data);
+        $data += Paciente::findOrFail($data['paciente_id'])->only(Paciente::CAMPOS_CONTACTO);
         $data = $this->normalizarStrings($data);
         $data['consentimiento_datos'] = request()->boolean('consentimiento_datos') ? 1 : 0;
         $data['consentimiento_fotografias'] = request()->boolean('consentimiento_fotografias');

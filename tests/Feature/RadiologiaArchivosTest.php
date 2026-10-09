@@ -29,7 +29,14 @@ class RadiologiaArchivosTest extends TestCase
         Storage::disk('local')->assertExists($stored->ruta);
         $this->assertSame('dcm', $stored->extension);
         $this->actingAs($case['student'])->get(route('radiologia.archivos.ver', [$study->id, $stored->id]))->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+        $this->get(route('radiologia.visor', $study->id))->assertOk()
+            ->assertSee('id="dicom-pantalla"', false)
+            ->assertSee('data-tool="Angle"', false)
+            ->assertSee('data-tool="RectangleROI"', false)
+            ->assertSee('id="dicom-reproducir"', false)
+            ->assertSee('id="radiografia-viewport"', false);
         $this->actingAs($this->clinicalUser('estudiante'))->get(route('radiologia.archivos.ver', [$study->id, $stored->id]))->assertNotFound();
+        $this->get(route('radiologia.visor', $study->id))->assertNotFound();
         $this->actingAs($user)->postJson(route('radiologia.archivos.store', $study->id), ['archivos' => [UploadedFile::fake()->createWithContent('falso.dcm', '<script>bad</script>')]])->assertUnprocessable();
         $this->assertSame(1, $study->archivos()->count());
     }

@@ -313,12 +313,25 @@
         const $errorBox = document.getElementById('formAdmisionError');
         const $errorTxt = document.getElementById('formAdmisionErrorText');
 
+        function mostrarDatosContacto(visible) {
+            @json(\App\Models\Paciente::CAMPOS_CONTACTO).forEach((campo) => {
+                const input = $form.elements.namedItem(campo);
+                if (input) {
+                    input.closest('.form-group').style.display = visible ? '' : 'none';
+                    input.disabled = !visible;
+                }
+            });
+        }
+
+        mostrarDatosContacto(false);
+
         /* ============================================================
            API PÚBLICA
            ============================================================ */
         window.AdmisionModal = {
             async abrirCrear() {
                 resetForm();
+                mostrarDatosContacto(false);
                 $titulo.textContent = 'Nueva Admisión';
                 $id.value = '';
                 $btnText.textContent = 'Registrar Admisión';
@@ -331,6 +344,7 @@
 
             async abrirEdicion(data) {
                 resetForm();
+                mostrarDatosContacto(true);
                 $titulo.textContent = 'Editar Admisión #' + data.id;
                 $id.value = data.id;
                 $btnText.textContent = 'Actualizar Admisión';
