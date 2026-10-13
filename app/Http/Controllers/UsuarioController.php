@@ -220,14 +220,14 @@ class UsuarioController extends Controller
     /**
      * @return array{bool, string}
      */
-    protected function canDestroy(Usuario $model): array
+    protected function canDestroy(Usuario $model, string $accion = 'deshabilitar'): array
     {
         if ($model->id === auth()->id()) {
-            return [false, 'No puedes deshabilitar tu propio usuario.'];
+            return [false, "No puedes {$accion} tu propio usuario."];
         }
 
         if ($this->isLastActiveAdmin($model)) {
-            return [false, 'No puedes deshabilitar al último administrador activo.'];
+            return [false, "No puedes {$accion} al último administrador activo."];
         }
 
         return [true, ''];
@@ -270,6 +270,35 @@ class UsuarioController extends Controller
     /* ============================================================
        MÉTODOS ESPECÍFICOS
        ============================================================ */
+
+    public function eliminarDefinitivamente(Request $request, int|string $id): JsonResponse
+    {
+        $this->authorizeAction('eliminar');
+
+        return DB::transaction(function () use ($id): JsonResponse {
+            $usuario = Usuario::query()->lockForUpdate()->findOrFail($id);
+            [$puedeEliminar, $message] = $this->canDestroy($usuario, 'eliminar');
+
+            if (! $puedeEliminar) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+
+            if ($this->hasAssociatedRecords($usuario)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No puedes eliminar este usuario porque tiene registros asociados. Puedes deshabilitarlo para conservar su historial.',
+                ], 422);
+            }
+
+            $this->revokeActiveSessions($usuario);
+            $usuario->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario eliminado definitivamente.',
+            ]);
+        });
+    }
 
     public function habilitar(Request $request, $id)
     {
@@ -359,5 +388,31 @@ class UsuarioController extends Controller
             ]);
 
         $usuario->tokens()->delete();
+    }
+
+    private function hasAssociatedRecords(Usuario $usuario): bool
+    {
+        $connection = $usuario->getConnection();
+        $schema = $connection->getSchemaBuilder();
+        $accountTables = ['usuarios', 'sesiones', 'bitacoras', 'notificaciones', 'especialidades'];
+
+        foreach ($schema->getTables($schema->getCurrentSchemaName()) as $table) {
+            if (in_array($table['name'], $accountTables, true)) {
+                continue;
+            }
+
+            foreach ($schema->getForeignKeys($table['name']) as $foreignKey) {
+                if ($foreignKey['foreign_table'] !== $usuario->getTable()
+                    || $foreignKey['foreign_columns'] !== ['id']) {
+                    continue;
+                }
+
+                if ($connection->table($table['name'])->where($foreignKey['columns'][0], $usuario->id)->exists()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

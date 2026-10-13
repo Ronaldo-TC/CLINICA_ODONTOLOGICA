@@ -31,9 +31,9 @@
                         <td><a class="btn btn-sm btn-primary" href="{{ route('estudiante.historia', $historia->id) }}">Abrir historia</a><br><small>{{ $historia->archivos_count }} archivos · {{ $historia->tratamientos_realizados_count }} tratamientos</small></td>
                         <td>@canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#esterilizacion">Ver control</a>@endcanany</td>
                         <td><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#pagos">Ver pagos</a></td>
-                        <td>@canany(['insumos.ver', 'insumos.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#insumos">Ver solicitudes</a>@endcanany
+                        <td>@canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#insumos">Ver solicitudes</a>@endcanany
                             @if(!$historia->fecha_fin && !in_array($historia->estado, $estadosCerrados, true))
-                                @canany(['insumos.crear', 'insumos.gestionar'])<button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $historia->id }}">Solicitar insumos</button>@endcanany
+                                @canany(['solicitudes-insumos.crear', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $historia->id }}">Solicitar insumos</button>@endcanany
                             @endif
                         </td>
                     </tr>
@@ -47,7 +47,7 @@
     @endfragment
     </div>
 </div>
-@canany(['insumos.crear', 'insumos.gestionar'])
+@canany(['solicitudes-insumos.crear', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
     @include('solicitudes-insumos.partials.modal-designado')
 @endcanany
 @endsection

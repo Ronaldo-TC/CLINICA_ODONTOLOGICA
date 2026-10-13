@@ -12,7 +12,7 @@
             <div>
                 <strong>{{ $historia->paciente?->nombre_completo ?? '—' }}</strong>
                 <br>
-                <small style="color:var(--muted);">
+                <small class="table-value" style="color:var(--muted);">
                     CI: {{ $historia->paciente?->ci ?? '—' }}
                 </small>
             </div>
@@ -47,26 +47,26 @@
         <span class="badge badge-info">
             {{ $historia->tratamientos_realizados_count ?? 0 }}
         </span>
-        <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#tratamientos">Ver tratamientos</a>
+        <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#tratamientos"><x-icono nombre="tratamientos" /> Ver tratamientos</a>
     </td>
 
     <td>
         @canany(['cajas.ver', 'cajas.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#cajas">Ver recibos</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#cajas"><x-icono nombre="recibo" /> Ver recibos</a>
         @else
             <small>Sin acceso</small>
         @endcanany
     </td>
     <td>
-        @canany(['insumos.ver', 'insumos.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#insumos">Ver solicitudes</a>
+        @canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#insumos"><x-icono nombre="insumos" /> Ver solicitudes</a>
         @else
             <small>Sin acceso</small>
         @endcanany
     </td>
     <td>
         @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#esterilizaciones">Ver controles</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#esterilizaciones"><x-icono nombre="control" /> Ver controles</a>
         @else
             <small>Sin acceso</small>
         @endcanany
@@ -84,13 +84,13 @@
 
     <td>
         <div class="actions">
-            @if(!$historia->autorizado) @canany(['historias.autorizar','historias.gestionar'])<form method="POST" action="{{ route('historias.autorizar', $historia->id) }}">@csrf<button class="btn btn-sm btn-primary">Autorizar historia</button></form>@endcanany @endif
+            @if(!$historia->autorizado) @canany(['historias.autorizar','historias.gestionar'])<form method="POST" action="{{ route('historias.autorizar', $historia->id) }}">@csrf<button class="btn btn-sm btn-primary"><x-icono nombre="autorizar" /> Autorizar historia</button></form>@endcanany @endif
             <button type="button"
                 class="btn btn-sm btn-secondary"
                 data-action="archivos"
                 data-id="{{ $historia->id }}"
                 title="Ver archivos adjuntos">
-                Archivos
+                <x-icono nombre="archivos" /> Archivos
             </button>
 
             @can('historias.editar')
@@ -98,7 +98,7 @@
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $historia->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -108,7 +108,7 @@
                 data-action="eliminar"
                 data-id="{{ $historia->id }}"
                 data-nombre="Historia #{{ $historia->id }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

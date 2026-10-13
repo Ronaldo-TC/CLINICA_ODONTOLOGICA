@@ -422,7 +422,7 @@
         const clinicaId = btn.dataset.clinica;
         const nombre = btn.dataset.nombre || 'la asignación';
 
-        if (!confirm(`¿Eliminar ${nombre}?`)) return;
+        if (!await window.confirmarEliminacion(nombre)) return;
 
         btn.disabled = true;
         try {

@@ -34,7 +34,7 @@ class ServiciosClinicosTest extends TestCase
         $this->assertSame($proposal->id, $cash->detalles()->firstOrFail()->tratamiento_realizado_id);
     }
 
-    public function test_sterilization_requires_assigned_teacher_signature_before_receipt_and_pickup(): void
+    public function test_sterilization_requires_teacher_signature_and_blocks_pickup_without_a_released_cycle(): void
     {
         $case = $this->clinicalCase();
         $staff = $this->clinicalUser('esterilizacion');
@@ -43,12 +43,11 @@ class ServiciosClinicosTest extends TestCase
         $this->actingAs($staff)->postJson(route('esterilizacion.movimiento', $record->id), ['accion' => 'recibir'])->assertUnprocessable();
         $this->assertNull($record->fresh()->fecha_entrega);
         $this->actingAs($case['teacher'])->post(route('esterilizacion.autorizar', $record->id), ['firma_docente' => 'data:image/png;base64,AAAA'])->assertRedirect();
-        $this->actingAs($staff)->post(route('esterilizacion.movimiento', $record->id), ['accion' => 'recibir'])->assertRedirect();
+        $this->actingAs($staff)->post(route('esterilizacion.movimiento', $record->id), ['accion' => 'recibir', 'sobres_recibidos' => 2, 'paquetes_recibidos' => 1])->assertRedirect();
         $this->assertNotNull($record->fresh()->hora_entrega);
-        $this->post(route('esterilizacion.movimiento', $record->id), ['accion' => 'entregar'])->assertRedirect();
-        $this->assertSame($staff->id, $record->fresh()->entregado_por);
-        $this->assertNotNull($record->fresh()->hora_recojo);
-        $this->postJson(route('esterilizacion.movimiento', $record->id), ['accion' => 'entregar'])->assertUnprocessable();
+        $this->postJson(route('esterilizacion.movimiento', $record->id), ['accion' => 'entregar', 'confirmar_recojo' => 1])->assertUnprocessable();
+        $this->assertNull($record->fresh()->fecha_recojo);
+        $this->assertNull($record->fresh()->entregado_por);
     }
 
     public function test_remission_assignment_creates_history_with_consistent_specialty(): void

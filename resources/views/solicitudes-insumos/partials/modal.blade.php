@@ -142,10 +142,11 @@
 
         const URLS = {
             store: @json(route('solicitudes-insumos.store')),
-            tipos: (clinicaId) => `/insumos/tipos-por-clinica/${clinicaId}`,
-            insumos: (clinicaId, q) => `/insumos/buscar-insumos/${clinicaId}?q=${encodeURIComponent(q)}`,
+            tipos: (clinicaId) => @json(route('solicitudes-insumos.tipos-por-clinica', ['clinica' => '__CLINICA__'])).replace('__CLINICA__', encodeURIComponent(clinicaId)),
+            insumos: (clinicaId, q) => @json(route('solicitudes-insumos.buscar-insumos', ['clinica' => '__CLINICA__'])).replace('__CLINICA__', encodeURIComponent(clinicaId)) + `?q=${encodeURIComponent(q)}`,
             tratamientos: (clinicaId, q) =>
-                `/solicitudes-insumos/buscar-tratamientos?clinica_id=${encodeURIComponent(clinicaId || '')}&q=${encodeURIComponent(q)}`,
+                @json(route('solicitudes-insumos.buscar-tratamientos')) + `?clinica_id=${encodeURIComponent(clinicaId || '')}&q=${encodeURIComponent(q)}`
+                + (@json($historiaOrigenId ?? null) ? '&historia_clinica_id=' + encodeURIComponent(@json($historiaOrigenId ?? null)) : ''),
         };
 
         const $modal = document.getElementById('modalSolicitud');
@@ -167,6 +168,8 @@
 
         let contadorFilas = 0;
         let tipoSeleccionado = '';
+        let tiposSequence = 0;
+        let autocompleteTratamiento = null;
 
         /* ============================================================
            Utilidades
@@ -229,6 +232,7 @@
         }
 
         function reset() {
+            ++tiposSequence;
             $form.reset();
             $clinica.disabled = false;
             $tratInput.disabled = false;
@@ -250,6 +254,7 @@
            Tipos de insumo por clínica
            ============================================================ */
         async function cargarTipos(clinicaId, seleccionar) {
+            const sequence = ++tiposSequence;
             tipoSeleccionado = seleccionar || '';
 
             if (!clinicaId) {
@@ -268,6 +273,7 @@
                 });
                 if (!res.ok) throw new Error();
                 const tipos = await res.json();
+                if (sequence !== tiposSequence) return;
 
                 $tipo.innerHTML = '<option value="">Seleccione un tipo…</option>';
                 tipos.forEach((t) => {
@@ -284,13 +290,21 @@
                     tipoSeleccionado = String(tipos[0].id);
                 }
             } catch (err) {
+                if (sequence !== tiposSequence) return;
                 $tipo.innerHTML = '<option value="">Error al cargar tipos</option>';
             } finally {
-                $tipo.disabled = false;
+                if (sequence === tiposSequence) $tipo.disabled = false;
             }
         }
 
-        $clinica?.addEventListener('change', () => cargarTipos($clinica.value, ''));
+        $clinica?.addEventListener('change', () => {
+            resetTratamiento();
+            $pieza.value = '';
+            $tbody.innerHTML = '';
+            agregarFila();
+            actualizarResumen();
+            cargarTipos($clinica.value, '');
+        });
 
         /* ============================================================
            Filas de insumos con autocomplete
@@ -350,13 +364,14 @@
 
             const wrap = tr.querySelector('[data-autocomplete="insumo"]');
             inicializarAutocomplete(wrap, {
-                buscar: (q) => {
+                buscar: (q, signal) => {
                     const clinicaId = $clinica.value;
                     if (!clinicaId) {
                         toast('warning', 'Selecciona primero una clínica.');
                         return Promise.resolve([]);
                     }
                     return fetch(URLS.insumos(clinicaId, q), {
+                        signal,
                         headers: { 'Accept': 'application/json' },
                         credentials: 'same-origin',
                     }).then((r) => (r.ok ? r.json() : []));
@@ -423,8 +438,10 @@
             let controller = null;
             let indice = -1;
             let resultados = [];
+            let sequence = 0;
 
             const cerrarDropdown = () => {
+                $dropdown.hidden = true;
                 $dropdown.classList.remove('open');
                 $dropdown.innerHTML = '';
                 $input.setAttribute('aria-expanded', 'false');
@@ -432,6 +449,8 @@
             };
 
             const pintar = () => {
+                $dropdown.hidden = false;
+                $input.setAttribute('aria-expanded', 'true');
                 if (resultados.length === 0) {
                     $dropdown.innerHTML = '<div class="autocomplete-item autocomplete-empty">Sin resultados</div>';
                     $dropdown.classList.add('open');
@@ -450,6 +469,10 @@
             };
 
             const elegir = (item) => {
+                if (!item) return;
+                ++sequence;
+                clearTimeout(timer);
+                controller?.abort();
                 $input.value = item.texto;
                 wrap.classList.add('has-value');
                 cerrarDropdown();
@@ -457,27 +480,39 @@
             };
 
             async function buscar(termino) {
+                const currentSequence = ++sequence;
                 if (controller) controller.abort();
                 controller = new AbortController();
                 wrap.classList.add('loading');
 
                 try {
-                    const data = await opciones.buscar(termino);
+                    const data = await opciones.buscar(termino, controller.signal);
+                    if (currentSequence !== sequence) return;
                     resultados = Array.isArray(data) ? data : [];
                     indice = -1;
                     pintar();
                 } catch (err) {
-                    if (err.name !== 'AbortError') {
+                    if (currentSequence === sequence && err.name !== 'AbortError') {
                         resultados = [];
                         pintar();
                     }
                 } finally {
-                    wrap.classList.remove('loading');
+                    if (currentSequence === sequence) wrap.classList.remove('loading');
                 }
+            }
+
+            function limpiarBusqueda() {
+                ++sequence;
+                clearTimeout(timer);
+                controller?.abort();
+                resultados = [];
+                wrap.classList.remove('loading', 'has-value');
+                cerrarDropdown();
             }
 
             $input.addEventListener('input', () => {
                 const termino = $input.value.trim();
+                limpiarBusqueda();
 
                 // Al escribir se invalida la selección previa
                 opciones.alLimpiar();
@@ -518,6 +553,7 @@
             });
 
             $clear?.addEventListener('click', () => {
+                limpiarBusqueda();
                 $input.value = '';
                 wrap.classList.remove('has-value');
                 cerrarDropdown();
@@ -528,6 +564,8 @@
             document.addEventListener('click', (e) => {
                 if (!wrap.contains(e.target)) cerrarDropdown();
             });
+
+            return {limpiar: limpiarBusqueda};
         }
 
         /* ============================================================
@@ -538,8 +576,9 @@
         const $tratId = document.getElementById('solTratamientoId');
 
         if ($tratWrap) {
-            inicializarAutocomplete($tratWrap, {
-                buscar: (q) => fetch(URLS.tratamientos($clinica.value, q), {
+            autocompleteTratamiento = inicializarAutocomplete($tratWrap, {
+                buscar: (q, signal) => !$clinica.value ? Promise.resolve([]) : fetch(URLS.tratamientos($clinica.value, q), {
+                    signal,
                     headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin',
                 }).then((r) => (r.ok ? r.json() : [])),
@@ -553,6 +592,7 @@
         }
 
         function resetTratamiento() {
+            autocompleteTratamiento?.limpiar();
             cargarSesiones('');
             if ($tratInput) $tratInput.value = '';
             if ($tratId) $tratId.value = '';
@@ -714,15 +754,13 @@
                 $btnGuardarText.textContent = 'Enviar Solicitud';
                 if (contexto.clinica_id) {
                     $clinica.value = contexto.clinica_id;
-                    $clinica.disabled = true;
                     cargarTipos(contexto.clinica_id, '');
                 }
                 if (contexto.tratamiento_realizado_id) {
                     $tratId.value = contexto.tratamiento_realizado_id;
                     $tratInput.value = contexto.tratamiento_nombre || 'Tratamiento #' + contexto.tratamiento_realizado_id;
-                    $tratInput.disabled = true;
                     const clearTreatment = $tratWrap?.querySelector('[data-autocomplete-clear]');
-                    if (clearTreatment) clearTreatment.disabled = true;
+                    if (clearTreatment) clearTreatment.disabled = false;
                     $tratWrap?.classList.add('has-value');
                     $pieza.value = /^\d{1,2}$/.test(contexto.pieza || '') ? contexto.pieza : '';
                     cargarSesiones(contexto.tratamiento_realizado_id, contexto.sesion_atencion_id);

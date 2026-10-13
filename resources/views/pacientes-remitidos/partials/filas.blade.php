@@ -7,7 +7,7 @@
             <div>
                 <strong>{{ $remision->paciente?->nombre_completo ?? '—' }}</strong>
                 <br>
-                <small style="color:var(--muted);">CI: {{ $remision->paciente?->ci ?? '—' }}</small>
+                <small class="table-value" style="color:var(--muted);">CI: {{ $remision->paciente?->ci ?? '—' }}</small>
             </div>
         </div>
     </td>
@@ -28,17 +28,17 @@
         <div class="actions">
             @if ($remision->habilitado && $remision->estado === 'pendiente' && ($remision->historias_clinicas_count ?? 0) === 0)
             @canany(['remisiones.asignar', 'remisiones.gestionar'])
-            <a class="btn btn-sm btn-primary" href="{{ route('pacientes-remitidos.asignacion', $remision->id) }}">Asignar estudiante</a>
+            <a class="btn btn-sm btn-primary" href="{{ route('pacientes-remitidos.asignacion', $remision->id) }}"><x-icono nombre="asignar" /> Asignar estudiante</a>
             @endcanany
             @endif
             @if ($remision->admision_id)
             @canany(['admisiones.ver', 'admisiones.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}">Ver ficha</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}"><x-icono nombre="ficha" /> Ver ficha</a>
             @endcanany
             @endif
             @if (($remision->historias_clinicas_count ?? 0) > 0)
             @canany(['historias.ver', 'historias.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}">Historias</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}"><x-icono nombre="historia" /> Historias</a>
             @endcanany
             @endif
         </div>

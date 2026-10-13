@@ -13,7 +13,7 @@
         <div class="actions">
             <a class="btn btn-secondary" href="#tratamientos">Tratamientos</a>
             @canany(['cajas.ver', 'cajas.gestionar'])<a class="btn btn-secondary" href="#cajas">Cajas</a>@endcanany
-            @canany(['insumos.ver', 'insumos.gestionar'])<a class="btn btn-secondary" href="#insumos">Insumos</a>@endcanany
+            @canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<a class="btn btn-secondary" href="#insumos">Insumos</a>@endcanany
             @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-secondary" href="#esterilizaciones">Esterilizaciones</a>@endcanany
         </div>
         @if($errors->any())<p class="form-error" role="alert">{{ $errors->first() }}</p>@endif
@@ -69,7 +69,7 @@
 </div>
 @endcanany
 
-@canany(['insumos.ver', 'insumos.gestionar'])
+@canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
 <div class="card" id="insumos" style="margin-top:20px;">
     <div class="card-header"><h2>Insumos · Solicitudes del estudiante</h2></div>
     <div class="card-body"><p>El docente autoriza la solicitud y después el encargado de Insumos la aprueba o rechaza.</p></div>
@@ -98,7 +98,7 @@
         <tbody>@forelse($esterilizaciones as $control)<tr>
             <td>{{ $control->id }}</td><td>{{ $control->cantidad_sobres }} sobres · {{ $control->cantidad_paquetes }} paquetes<br>{{ $control->descripcion }}</td>
             <td>{{ $control->remision_id ? 'De este paciente' : 'Material general de la clínica y periodo' }}</td>
-            <td>{{ $control->autorizado ? 'Autorizado' : 'Pendiente de firma docente' }}</td>
+            <td>{{ $control->estado_proceso }}</td>
             <td>{{ $control->fecha_entrega?->format('d/m/Y') ?? 'Pendiente' }} {{ $control->hora_entrega }}</td>
             <td>{{ $control->fecha_recojo?->format('d/m/Y') ?? 'Pendiente' }} {{ $control->hora_recojo }}</td>
             <td><a class="btn btn-sm btn-secondary" href="{{ route('esterilizacion.control', $control->id) }}">Ver ficha</a></td>

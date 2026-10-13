@@ -114,6 +114,7 @@
             datos: (id) => `/usuarios/${id}/datos`,
             update: (id) => `/usuarios/${id}`,
             destroy: (id) => `/usuarios/${id}`,
+            eliminar: (id) => @json(route('usuarios.eliminar-definitivamente', ['usuario' => '__ID__'])).replace('__ID__', id),
             habilitar: (id) => `/usuarios/${id}/habilitar`,
         };
 
@@ -297,6 +298,9 @@
                 case 'habilitar':
                     habilitar(id, nombre);
                     break;
+                case 'deshabilitar':
+                    deshabilitar(id, nombre);
+                    break;
                 case 'eliminar':
                     eliminar(id, nombre);
                     break;
@@ -334,7 +338,13 @@
            HABILITAR
            ============================================================ */
         async function habilitar(id, nombre) {
-            if (!confirm(`¿Habilitar a "${nombre}"?`)) return;
+            if (!await window.Modal.confirm({
+                title: '¿Habilitar este usuario?',
+                record: nombre,
+                text: 'El usuario podrá iniciar sesión nuevamente.',
+                confirmText: 'Sí, habilitar',
+                variant: 'success',
+            })) return;
 
             setStatus('loading', 'Habilitando...');
 
@@ -365,10 +375,16 @@
         }
 
         /* ============================================================
-           ELIMINAR (soft delete = deshabilitar)
+           DESHABILITAR
            ============================================================ */
-        async function eliminar(id, nombre) {
-            if (!confirm(`¿Deshabilitar a "${nombre}"? Podrás reactivarlo después.`)) return;
+        async function deshabilitar(id, nombre) {
+            if (!await window.Modal.confirm({
+                title: '¿Deshabilitar este usuario?',
+                record: nombre,
+                text: 'El usuario dejará de tener acceso al sistema.\nPodrás habilitarlo nuevamente cuando lo necesites.',
+                confirmText: 'Sí, deshabilitar',
+                variant: 'warning',
+            })) return;
 
             setStatus('loading', 'Deshabilitando...');
 
@@ -394,6 +410,46 @@
             } catch (err) {
                 console.error('[Usuarios] Error al deshabilitar:', err);
                 toast('error', err.message || 'No se pudo deshabilitar.');
+                setStatus('idle');
+            }
+        }
+
+        /* ============================================================
+           ELIMINAR DEFINITIVAMENTE
+           ============================================================ */
+        async function eliminar(id, nombre) {
+            if (!await window.Modal.confirm({
+                title: '¿Eliminar este usuario?',
+                record: nombre,
+                text: 'Se eliminará definitivamente la cuenta del usuario.\nEsta acción no se puede deshacer.',
+                confirmText: 'Sí, eliminar',
+                variant: 'danger',
+            })) return;
+
+            setStatus('loading', 'Eliminando...');
+
+            try {
+                const res = await fetch(URLS.eliminar(id), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Error al eliminar.');
+                }
+
+                toast('success', data.message || 'Usuario eliminado.');
+                cargarTabla(1);
+            } catch (err) {
+                console.error('[Usuarios] Error al eliminar:', err);
+                toast('error', err.message || 'No se pudo eliminar.');
                 setStatus('idle');
             }
         }

@@ -19,7 +19,7 @@ $estadoPago = $canceladoAcumulado <= 0
         <td>
             <strong>{{ $caja->paciente_nombre_completo ?: '—' }}</strong>
             <br>
-            <small style="color:var(--muted);">
+            <small class="table-value" style="color:var(--muted);">
                 CI: {{ $caja->ci ?: '—' }}
             </small>
             <br><small>Ficha #{{ $caja->tratamientoRealizado?->historiaClinica?->admision_id }} · {{ $caja->tratamientoRealizado?->historiaClinica?->estudiante?->nombre_completo }}</small>
@@ -35,17 +35,17 @@ $estadoPago = $canceladoAcumulado <= 0
             </span>
         </td>
 
-        <td>
+        <td class="table-value">
             <strong>{{ number_format($caja->costo_total, 2) }}</strong> Bs
         </td>
 
-        <td>
+        <td class="table-value">
             {{ number_format($caja->cancelado, 2) }} Bs
         </td>
 
-        <td>{{ number_format($canceladoAcumulado, 2) }} Bs</td>
+        <td class="table-value">{{ number_format($canceladoAcumulado, 2) }} Bs</td>
 
-        <td>
+        <td class="table-value">
             @if ($saldo > 0)
             <span style="color:var(--danger); font-weight:700;">
                 {{ number_format($saldo, 2) }} Bs
@@ -72,7 +72,7 @@ $estadoPago = $canceladoAcumulado <= 0
                 @can('cajas.editar')
                 <button type="button" class="btn btn-sm btn-secondary"
                     data-action="editar" data-id="{{ $caja->id }}">
-                    Editar
+                    <x-icono nombre="editar" /> Editar
                 </button>
                 @endcan
 
@@ -81,7 +81,7 @@ $estadoPago = $canceladoAcumulado <= 0
                     data-action="eliminar"
                     data-id="{{ $caja->id }}"
                     data-nombre="Caja #{{ $caja->id }}">
-                    Eliminar
+                    <x-icono nombre="eliminar" /> Eliminar
                 </button>
                 @endcan
             </div>

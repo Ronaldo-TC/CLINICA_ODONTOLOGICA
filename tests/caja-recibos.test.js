@@ -12,20 +12,27 @@ class Element {
         this.disabled = false;
         this.listeners = new Map();
         this.dataset = {};
-        this.classList = {add() {}, remove() {}, contains() { return true; }};
+        this.children = [];
+        this.attributes = new Map();
+        this.classList = {add() {}, remove() {}, toggle() {}, contains() { return true; }};
     }
     addEventListener(name, handler) { this.listeners.set(name, handler); }
-    emit(name) { return this.listeners.get(name)?.({target: this, preventDefault() {}}); }
-    replaceChildren(...options) { this.options = options; this.value = String(options[0]?.value || ''); }
+    emit(name, details = {}) { return this.listeners.get(name)?.({target: this, preventDefault() {}, ...details}); }
+    replaceChildren(...options) { this.options = this.children = options; this.value = String(options[0]?.value || ''); }
     add(option) { this.options.push(option); }
+    append(...children) { this.children.push(...children); }
+    setAttribute(name, value) { this.attributes.set(name, value); }
+    removeAttribute(name) { this.attributes.delete(name); }
+    focus() {}
+    scrollIntoView() {}
 }
 
 function harness(fetch) {
-    const ids = ['modalCaja', 'formCajaId', 'caja-clinica', 'caja-ficha', 'caja-atencion', 'caja-paciente', 'caja-estudiante', 'caja-costo-total', 'caja-anterior', 'caja-total-cancelado', 'caja-saldo', 'formCajaErrorText', 'btnGuardarCaja', 'caja-buscar-ficha', 'modalCajaTitulo'];
+    const ids = ['modalCaja', 'formCajaId', 'caja-clinica', 'caja-ficha', 'caja-atencion', 'caja-paciente', 'caja-estudiante', 'caja-costo-total', 'caja-anterior', 'caja-total-cancelado', 'caja-saldo', 'formCajaErrorText', 'btnGuardarCaja', 'modalCajaTitulo', 'caja-paciente-buscar', 'caja-paciente-busqueda', 'caja-paciente-resultados', 'caja-paciente-buscar-estado'];
     const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
     const form = new Element();
     elements.formCaja = form;
-    form.dataset = {store: '/cajas', update: '/cajas/__ID__', ficha: '/cajas/buscar-ficha'};
+    form.dataset = {store: '/cajas', update: '/cajas/__ID__', ficha: '/cajas/buscar-ficha', pacientes: '/cajas/buscar-pacientes'};
     const names = {clinica_id: 'caja-clinica', ficha: 'caja-ficha', tratamiento_realizado_id: 'caja-atencion'};
     for (const [name, id] of Object.entries(names)) form[name] = elements[id];
     for (const name of ['tratamiento_id', 'cancelado', 'recibo', 'descripcion', 'tipo_pago', 'habilitada']) form[name] = new Element();
@@ -34,13 +41,23 @@ function harness(fetch) {
     let timerId = 0;
     const window = {dispatchEvent() {}};
     runInNewContext(source, {
-        document: {getElementById: id => elements[id], addEventListener() {}, body: new Element()}, window,
+        document: {getElementById: id => elements[id], createElement: () => new Element(), addEventListener() {}, body: new Element()}, window,
         fetch, URLSearchParams, Option: class {constructor(label, value) {this.text = label; this.value = value;}},
         Event: class {constructor(type) {this.type = type;}},
         setTimeout: callback => {timers.set(++timerId, callback); return timerId;}, clearTimeout: id => timers.delete(id),
         FormData: class extends Map {constructor(form) {super(Object.entries(form).filter(([, value]) => value instanceof Element && !value.disabled).map(([name, value]) => [name, value.value]));}},
     });
     return {elements, form, window, runTimer: () => {const callback = [...timers.values()].at(-1); timers.clear(); return callback?.();}};
+}
+
+function lookupFicha(ui) {
+    ui.form.ficha.emit('input');
+    return ui.runTimer();
+}
+
+function lookupPaciente(ui) {
+    ui.elements['caja-paciente-buscar'].emit('input');
+    return ui.runTimer();
 }
 
 function response(paciente = 'Paciente designado', id = 9, overrides = {}) {
@@ -53,7 +70,7 @@ test('la ficha completa el estudiante y paciente y suma el pago actual al cancel
     ui.window.CajaModal.abrirCrear();
     ui.form.clinica_id.value = '2';
     ui.form.ficha.value = '10';
-    await ui.elements['caja-buscar-ficha'].emit('click');
+    await lookupFicha(ui);
     assert.equal(ui.elements['caja-paciente'].value, 'Paciente designado');
     assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
     ui.form.cancelado.value = '20.10';
@@ -71,7 +88,7 @@ test('una respuesta antigua de ficha no reemplaza al paciente de la nueva búsqu
     ui.window.CajaModal.abrirCrear();
     ui.form.clinica_id.value = '2';
     ui.form.ficha.value = '10';
-    const first = ui.elements['caja-buscar-ficha'].emit('click');
+    const first = lookupFicha(ui);
     ui.form.ficha.value = '11';
     ui.form.ficha.emit('input');
     await ui.runTimer();
@@ -177,16 +194,165 @@ test('una ficha inexistente limpia los nombres anteriores y borrar la ficha canc
     assert.equal(ui.elements.formCajaErrorText.textContent, '');
 });
 
-test('buscar con el botón cancela la búsqueda automática pendiente', async () => {
+test('escribir la ficha varias veces realiza una sola búsqueda automática', async () => {
     const calls = [];
     const ui = harness(async url => {calls.push(url); return response();});
     ui.window.CajaModal.abrirCrear();
     ui.form.ficha.value = '10';
     ui.form.ficha.emit('input');
 
-    await ui.elements['caja-buscar-ficha'].emit('click');
+    ui.form.ficha.emit('input');
     await ui.runTimer();
 
     assert.equal(calls.length, 1);
     assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+});
+
+function patientResponse(overrides = {}) {
+    return {ok: true, json: async () => ({fichas: [
+        {ficha: 11, paciente: 'Ana Montes', ci: '739125', fecha: '08/10/2026'},
+        {ficha: 10, paciente: 'Ana Montes', ci: '739125', fecha: '01/10/2026'},
+    ], hay_mas: false, ...overrides})};
+}
+
+test('buscar por CI o nombre muestra las fichas y elegir una completa el recibo por AJAX', async () => {
+    const calls = [];
+    const ui = harness(async url => {
+        calls.push(url);
+        return url.includes('buscar-pacientes') ? patientResponse() : response('Ana Montes');
+    });
+    ui.window.CajaModal.abrirCrear();
+    ui.elements['caja-paciente-buscar'].value = '7391';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    assert.equal(calls.length, 0);
+    await ui.runTimer();
+    assert.deepEqual(calls, ['/cajas/buscar-pacientes?buscar=7391']);
+    assert.equal(ui.elements['caja-paciente-resultados'].hidden, false);
+    assert.equal(ui.elements['caja-paciente-resultados'].children.length, 2);
+    assert.equal(ui.elements['caja-paciente-resultados'].children[0].children[0].children[0].textContent, 'Ana Montes');
+    assert.match(ui.elements['caja-paciente-resultados'].children[0].children[0].children[1].textContent, /739125.*Ficha #11.*08\/10\/2026/);
+    assert.equal(ui.form.ficha.value, '');
+    assert.equal(ui.elements['caja-paciente'].value, '');
+    assert.equal(ui.elements['caja-estudiante'].value, '');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+
+    await ui.elements['caja-paciente-resultados'].children[1].emit('click');
+    assert.equal(ui.form.ficha.value, '10');
+    assert.equal(calls[1], '/cajas/buscar-ficha?ficha=10');
+    assert.equal(ui.elements['caja-paciente'].value, 'Ana Montes');
+    assert.equal(ui.elements['caja-estudiante'].value, 'Estudiante asignado');
+    assert.equal(ui.form.tratamiento_realizado_id.value, '9');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, false);
+    assert.equal(ui.elements['caja-paciente-buscar'].value, 'Ana Montes');
+    assert.equal(ui.elements['caja-paciente-resultados'].hidden, true);
+
+    ui.elements['caja-paciente-buscar'].value = 'Otro paciente';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    assert.equal(ui.form.ficha.value, '');
+    assert.equal(ui.elements['caja-paciente'].value, '');
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+});
+
+test('la búsqueda por nombre descarta fichas anteriores y la búsqueda directa descarta pacientes pendientes', async () => {
+    let resolvePatient;
+    let resolveFicha;
+    const ui = harness(url => {
+        if (url.includes('buscar-pacientes')) return new Promise(resolve => {resolvePatient = resolve;});
+        if (url.includes('ficha=10')) return new Promise(resolve => {resolveFicha = resolve;});
+        return Promise.resolve(response('Paciente correcto', 12));
+    });
+    ui.window.CajaModal.abrirCrear();
+    ui.form.ficha.value = '10';
+    const oldFicha = lookupFicha(ui);
+    ui.elements['caja-paciente-buscar'].value = 'Ana';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    const oldPatient = ui.runTimer();
+    resolveFicha(response('Paciente anterior'));
+    await oldFicha;
+    assert.equal(ui.elements['caja-paciente'].value, '');
+
+    ui.form.ficha.value = '11';
+    ui.form.ficha.emit('input');
+    await ui.runTimer();
+    resolvePatient(patientResponse());
+    await oldPatient;
+    assert.equal(ui.elements['caja-paciente'].value, 'Paciente correcto');
+    assert.equal(ui.elements['caja-paciente-resultados'].hidden, true);
+    assert.equal(ui.elements['caja-paciente-buscar'].value, '');
+});
+
+test('una respuesta de paciente antigua no reemplaza los resultados de un nombre más reciente', async () => {
+    let resolveOld;
+    const ui = harness(url => url.includes('buscar=Ana') ? new Promise(resolve => {resolveOld = resolve;})
+        : Promise.resolve(patientResponse({fichas: [{ficha: 20, paciente: 'Luis Rojas', ci: '888', fecha: null}]})));
+    ui.window.CajaModal.abrirCrear();
+    ui.elements['caja-paciente-buscar'].value = 'Ana';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    const first = ui.runTimer();
+    ui.elements['caja-paciente-buscar'].value = 'Luis';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    await ui.runTimer();
+    resolveOld(patientResponse());
+    await first;
+    assert.equal(ui.elements['caja-paciente-resultados'].children.length, 1);
+    assert.equal(ui.elements['caja-paciente-resultados'].children[0].children[0].children[0].textContent, 'Luis Rojas');
+});
+
+test('buscar paciente automáticamente usa la clínica seleccionada y cancelar impide reabrir resultados pendientes', async () => {
+    const calls = [];
+    let resolveSearch;
+    const ui = harness(url => {calls.push(url); return new Promise(resolve => {resolveSearch = resolve;});});
+    ui.window.CajaModal.abrirCrear();
+    ui.form.clinica_id.value = '2';
+    ui.elements['caja-paciente-buscar'].value = 'Ana Montes';
+    ui.elements['caja-paciente-buscar'].emit('input');
+    const pending = ui.runTimer();
+    await ui.runTimer();
+    assert.deepEqual(calls, ['/cajas/buscar-pacientes?buscar=Ana+Montes&clinica_id=2']);
+    ui.window.CajaModal.cerrar();
+    resolveSearch(patientResponse());
+    await pending;
+    assert.equal(ui.elements['caja-paciente-resultados'].hidden, true);
+    assert.equal(ui.elements['caja-paciente-resultados'].children.length, 0);
+});
+
+test('buscar paciente muestra errores y resultados vacíos sin habilitar el guardado', async () => {
+    const ui = harness(async url => url.includes('buscar=Error')
+        ? {ok: false, json: async () => ({errors: {buscar: ['Búsqueda inválida.']}})}
+        : patientResponse({fichas: []}));
+    ui.window.CajaModal.abrirCrear();
+    ui.elements['caja-paciente-buscar'].value = 'A';
+    await lookupPaciente(ui);
+    assert.equal(ui.elements['caja-paciente-resultados'].children.length, 0);
+    ui.elements['caja-paciente-buscar'].value = 'Error';
+    await lookupPaciente(ui);
+    assert.equal(ui.elements['caja-paciente-buscar-estado'].textContent, 'Búsqueda inválida.');
+    ui.elements['caja-paciente-buscar'].value = 'Nadie';
+    await lookupPaciente(ui);
+    assert.match(ui.elements['caja-paciente-buscar-estado'].textContent, /No se encontraron/);
+    assert.equal(ui.elements['caja-paciente-resultados'].hidden, true);
+    assert.equal(ui.elements.btnGuardarCaja.disabled, true);
+});
+
+test('Enter sólo completa el paciente con una opción elegida y cambiar clínica actualiza las coincidencias', async () => {
+    const calls = [];
+    const ui = harness(async url => {calls.push(url); return url.includes('buscar-pacientes') ? patientResponse({hay_mas: true}) : response('Ana Montes');});
+    ui.window.CajaModal.abrirCrear();
+    ui.elements['caja-paciente-buscar'].value = 'Ana';
+    await lookupPaciente(ui);
+    let prevented = false;
+    ui.elements['caja-paciente-buscar'].emit('keydown', {key: 'Enter', preventDefault() {prevented = true;}});
+    assert.equal(prevented, true);
+    assert.equal(calls.length, 1);
+    assert.equal(ui.form.ficha.value, '');
+    assert.match(ui.elements['caja-paciente-buscar-estado'].textContent, /primeras 20 fichas/);
+    ui.form.clinica_id.value = '3';
+    ui.form.clinica_id.emit('change');
+    await ui.runTimer();
+    assert.equal(calls[1], '/cajas/buscar-pacientes?buscar=Ana&clinica_id=3');
+    ui.elements['caja-paciente-buscar'].emit('keydown', {key: 'ArrowDown'});
+    assert.equal(ui.elements['caja-paciente-buscar'].attributes.get('aria-activedescendant'), 'caja-paciente-opcion-0');
+    await ui.elements['caja-paciente-buscar'].emit('keydown', {key: 'Enter'});
+    assert.equal(ui.form.ficha.value, '11');
+    assert.equal(ui.elements['caja-paciente'].value, 'Ana Montes');
 });

@@ -102,7 +102,7 @@ class MenuBuilder
                 'route' => 'solicitudes-insumos.index',
                 'icon' => 'clipboard',
                 'pattern' => 'solicitudes-insumos.*',
-                'permission' => 'insumos.ver',
+                'permission' => ['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'],
             ],
             [
                 'type' => 'link',
@@ -165,6 +165,7 @@ class MenuBuilder
             [
                 'type' => 'link', 'label' => 'Asignar especialidades', 'route' => 'especialidades.index',
                 'icon' => 'hospital', 'pattern' => 'especialidades.*', 'permission' => ['especialidades.ver', 'especialidades.gestionar'],
+                'exclude' => 'especialidades.mis-inscripciones',
             ],
 
             // Submenú: Seguridad → Usuarios / Roles
@@ -330,6 +331,63 @@ class MenuBuilder
             }
         }
 
-        return $final;
+        return self::organizarMenu($final);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private static function organizarMenu(array $items): array
+    {
+        $enlaces = [];
+        foreach ($items as $item) {
+            if (($item['type'] ?? 'link') === 'label') {
+                continue;
+            }
+            $enlaces[$item['route'] ?? $item['label']] = $item;
+        }
+
+        $menu = [];
+        if (isset($enlaces['dashboard'])) {
+            $menu[] = ['type' => 'label', 'label' => 'Principal'];
+            $menu[] = $enlaces['dashboard'];
+            unset($enlaces['dashboard']);
+        }
+
+        $secciones = [
+            ['label' => 'Configuración', 'rutas' => [
+                'Seguridad', 'clinicas.index', 'periodos.index', 'especialidades.index',
+                'tratamientos.index', 'bitacoras.index',
+            ]],
+            ['label' => 'Análisis', 'rutas' => [
+                'reportes.index', 'kardex.index', 'investigacion.index',
+            ]],
+            ['label' => 'Atención clínica', 'rutas' => [
+                'pacientes.index', 'admisiones.index', 'remisiones.index', 'pacientes-remitidos.index',
+                'historias.index', 'tratamientos-realizados.index', 'estudiante.admitidos',
+                'estudiante.derivados', 'estudiante.designados', 'estudiante.historias',
+                'especialidades.mis-inscripciones', 'radiologia.index',
+            ]],
+            ['label' => 'Operaciones', 'rutas' => [
+                'insumos.index', 'solicitudes-insumos.index', 'esterilizacion.index', 'cajas.index',
+            ]],
+        ];
+
+        foreach ($secciones as $seccion) {
+            $opciones = [];
+            foreach ($seccion['rutas'] as $ruta) {
+                if (isset($enlaces[$ruta])) {
+                    $opciones[] = $enlaces[$ruta];
+                    unset($enlaces[$ruta]);
+                }
+            }
+            if ($opciones !== []) {
+                $menu[] = ['type' => 'label', 'label' => $seccion['label']];
+                array_push($menu, ...$opciones);
+            }
+        }
+
+        return array_merge($menu, array_values($enlaces));
     }
 }

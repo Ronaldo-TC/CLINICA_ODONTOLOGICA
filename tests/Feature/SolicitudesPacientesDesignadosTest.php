@@ -6,7 +6,9 @@ use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
 use App\Models\Remision;
+use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
+use Database\Seeders\SolicitudesInsumosPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -17,6 +19,12 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         clinicalUser as private createClinicalUser;
     }
     use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+    }
 
     public function test_designated_student_requests_configured_materials_before_any_authorized_session(): void
     {
@@ -84,14 +92,14 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     public function test_only_assigned_teacher_authorizes_then_stock_staff_approves_and_delivers(): void
     {
         $case = $this->clinicalCase();
-        $case['teacher']->givePermissionTo(['insumos.autorizar', 'insumos.ver']);
+        $case['teacher']->givePermissionTo(['solicitudes-insumos.autorizar', 'solicitudes-insumos.ver']);
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
         $this->actingAs($case['student']);
         $id = $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertCreated()->json('id');
         $warehouse = $this->clinicalUser('insumos');
         $otherTeacher = $this->clinicalUser('docente');
-        $otherTeacher->givePermissionTo('insumos.autorizar');
+        $otherTeacher->givePermissionTo('solicitudes-insumos.autorizar');
         $otherTeacher->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
 
         $this->postJson(route('solicitudes-insumos.autorizar', $id))->assertForbidden();
@@ -143,6 +151,48 @@ class SolicitudesPacientesDesignadosTest extends TestCase
             ->assertJsonCount(1, 'tratamientos.0.insumos')->assertJsonPath('tratamientos.0.insumos.0.id', $secondMaterial->id);
     }
 
+    public function test_history_detail_lists_all_active_clinics_assigned_for_that_patient(): void
+    {
+        $case = $this->clinicalCase();
+        $second = $this->anotherClinic($case);
+        $second['clinic']->update(['especialidad' => 'Segunda clínica del paciente']);
+        $closed = $this->anotherClinic($case);
+        $closed['history']->update(['estado' => 'cerrada']);
+        $otherPatient = $this->clinicalCase();
+        $case['student']->especialidades()->attach($otherPatient['clinic']->id, ['habilitado' => true]);
+        $otherPatient['history']->update(['estudiante_id' => $case['student']->id]);
+        $otherStudent = $this->clinicalCase();
+        $otherStudent['history']->update(['paciente_id' => $case['history']->paciente_id]);
+
+        $expected = [$case['clinic']->id, $second['clinic']->id];
+        sort($expected);
+        $this->actingAs($case['student'])->get(route('estudiante.historia', $case['history']->id))
+            ->assertOk()->assertViewHas('clinicas', fn ($clinics): bool => $clinics->pluck('id')->sort()->values()->all() === $expected)
+            ->assertSee('Segunda clínica del paciente')->assertSee('historia_clinica_id=', false);
+    }
+
+    public function test_treatment_search_filters_by_selected_clinic_and_the_patient_in_the_open_history(): void
+    {
+        $case = $this->clinicalCase();
+        $second = $this->anotherClinic($case);
+        $otherPatient = $this->clinicalCase();
+        $case['student']->especialidades()->attach($otherPatient['clinic']->id, ['habilitado' => true]);
+        $otherPatient['history']->update(['estudiante_id' => $case['student']->id, 'clinica_id' => $second['clinic']->id]);
+        foreach ([$case, $second, $otherPatient] as $assignment) {
+            TratamientoRealizado::create(['historia_clinica_id' => $assignment['history']->id,
+                'tratamiento_id' => $assignment['treatment']->id, 'clinica_id' => $assignment['history']->clinica_id,
+                'estado' => 'autorizado', 'pieza_dental' => '16']);
+        }
+        $selected = $second['history']->tratamientosRealizados()->sole();
+        $this->actingAs($case['student']);
+        $url = route('solicitudes-insumos.buscar-tratamientos', ['historia_clinica_id' => $case['history']->id, 'clinica_id' => $second['clinic']->id]);
+        $this->getJson($url)->assertOk()->assertJsonCount(1)->assertJsonPath('0.id', $selected->id);
+        $second['history']->update(['fecha_fin' => today()]);
+        $this->getJson($url)->assertOk()->assertExactJson([]);
+
+        $this->actingAs($this->clinicalUser('estudiante'))->getJson($url)->assertNotFound();
+    }
+
     public function test_clinic_selector_excludes_other_students_and_closed_assignments(): void
     {
         $case = $this->clinicalCase();
@@ -168,8 +218,8 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     {
         $case = $this->clinicalCase();
         $second = $this->anotherClinic($case);
-        $case['teacher']->givePermissionTo('insumos.autorizar');
-        $second['teacher']->givePermissionTo('insumos.autorizar');
+        $case['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
+        $second['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
         $referral = Remision::create([
             'admision_id' => $second['admission']->id, 'paciente_id' => $second['history']->paciente_id,
             'clinica_id' => $second['clinic']->id, 'periodo_id' => $second['history']->periodo_id,
@@ -210,7 +260,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $this->postJson(route('solicitudes-insumos.store'), $data)->assertUnprocessable()->assertJsonValidationErrors('tratamiento_id');
 
         $id = $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertCreated()->json('id');
-        $case['student']->givePermissionTo('insumos.editar');
+        $case['student']->givePermissionTo('solicitudes-insumos.editar');
         $this->putJson(route('solicitudes-insumos.update', $id), $this->payload($second, $secondMaterial))->assertOk();
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $id, 'historia_clinica_id' => $second['history']->id, 'clinica_id' => $second['clinic']->id, 'estado' => 'pendiente']);
         $this->assertDatabaseMissing('insumos_solicitados_detalle', ['insumo_solicitado_id' => $id, 'insumo_id' => $material->id]);
@@ -220,7 +270,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     public function test_stock_staff_rejects_teacher_authorized_request_without_decrementing_stock(): void
     {
         $case = $this->clinicalCase();
-        $case['teacher']->givePermissionTo('insumos.autorizar');
+        $case['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
         $id = $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertCreated()->json('id');
@@ -266,7 +316,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     {
         $user = $this->createClinicalUser($role);
         if ($role === 'estudiante') {
-            $user->givePermissionTo(['historias.ver', 'insumos.ver', 'insumos.crear']);
+            $user->givePermissionTo(['historias.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.crear']);
         }
 
         return $user;

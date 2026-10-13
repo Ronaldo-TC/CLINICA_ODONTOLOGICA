@@ -142,8 +142,8 @@
                 <span class="crumb-current" aria-current="page">@yield('page-title', $crumbCurrent)</span>
             @endif
         </nav>
-        <h1 class="topbar-heading">@yield('page-title', 'Panel')</h1>
-        <p class="topbar-sub">@yield('page-subtitle', 'Bienvenido al sistema')</p>
+        <h1 class="topbar-heading">@yield('page-title', $crumbCurrent ?: 'Panel')</h1>
+        <p class="topbar-sub">@yield('page-subtitle', 'Clínica Odontológica · Gestión académica y clínica')</p>
     </div>
 
     {{-- ================= ACCIONES ================= --}}
@@ -931,6 +931,8 @@
                 const themeToggle = document.getElementById('themeToggle');
                 const themeSwitch = document.querySelector('[data-theme-switch]');
                 const themeLabel = document.querySelector('[data-theme-switch-label]');
+                const themeRoot = document.documentElement;
+                let themeTransitionTimer;
 
                 const isDark = () => document.documentElement.dataset.theme === 'dark';
 
@@ -950,12 +952,22 @@
                 };
 
                 const applyTheme = (theme) => {
-                    document.documentElement.dataset.theme = theme;
-                    document.documentElement.style.colorScheme = theme;
+                    const shouldAnimate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                    window.clearTimeout(themeTransitionTimer);
+                    themeRoot.classList.toggle('theme-transitioning', shouldAnimate);
+                    themeRoot.dataset.theme = theme;
+                    themeRoot.style.colorScheme = theme;
                     try {
                         localStorage.setItem(THEME_KEY, theme);
                     } catch { /* sin almacenamiento */ }
                     syncThemeControls();
+
+                    if (shouldAnimate) {
+                        themeTransitionTimer = window.setTimeout(() => {
+                            themeRoot.classList.remove('theme-transitioning');
+                        }, 320);
+                    }
                 };
 
                 syncThemeControls();

@@ -6,6 +6,10 @@
     const id = document.getElementById('formCajaId');
     const clinica = document.getElementById('caja-clinica');
     const ficha = document.getElementById('caja-ficha');
+    const buscarPaciente = document.getElementById('caja-paciente-buscar');
+    const busquedaPaciente = document.getElementById('caja-paciente-busqueda');
+    const resultadosPaciente = document.getElementById('caja-paciente-resultados');
+    const estadoPaciente = document.getElementById('caja-paciente-buscar-estado');
     const atencion = document.getElementById('caja-atencion');
     const paciente = document.getElementById('caja-paciente');
     const estudiante = document.getElementById('caja-estudiante');
@@ -19,6 +23,10 @@
     let designacion = null;
     let requestSequence = 0;
     let debounce = null;
+    let patientSequence = 0;
+    let patientDebounce = null;
+    let coincidencias = [];
+    let opcionActiva = -1;
 
     function resumen() {
         const acumulado = Math.round(Number(anterior.value || 0) * 100) +
@@ -86,6 +94,107 @@
         }
     }
 
+    function ocultarOpciones() {
+        resultadosPaciente.hidden = true;
+        resultadosPaciente.classList.remove('open');
+        buscarPaciente.setAttribute('aria-expanded', 'false');
+        buscarPaciente.removeAttribute('aria-activedescendant');
+        opcionActiva = -1;
+    }
+
+    function mostrarOpciones() {
+        if (!coincidencias.length) return;
+        resultadosPaciente.hidden = false;
+        resultadosPaciente.classList.add('open');
+        buscarPaciente.setAttribute('aria-expanded', 'true');
+    }
+
+    function limpiarBusquedaPaciente(borrarTexto = true) {
+        ++patientSequence;
+        clearTimeout(patientDebounce);
+        if (borrarTexto) buscarPaciente.value = '';
+        coincidencias = [];
+        resultadosPaciente.replaceChildren();
+        ocultarOpciones();
+        estadoPaciente.textContent = '';
+    }
+
+    async function buscarPorPaciente() {
+        clearTimeout(patientDebounce);
+        if (id.value) return;
+        limpiarBusquedaPaciente(false);
+        ++requestSequence;
+        clearTimeout(debounce);
+        ficha.value = '';
+        limpiarAtencion();
+        error.textContent = '';
+        save.disabled = true;
+        const buscar = buscarPaciente.value.trim();
+        if (buscar.length < 2) {
+            estadoPaciente.textContent = 'Ingrese al menos dos caracteres del CI o nombre del paciente.';
+            return;
+        }
+        const sequence = patientSequence;
+        estadoPaciente.textContent = 'Buscando pacientes…';
+        try {
+            const params = new URLSearchParams({buscar});
+            if (clinica.value) params.set('clinica_id', clinica.value);
+            const response = await fetch(form.dataset.pacientes + '?' + params, {headers: {Accept: 'application/json'}});
+            const result = await response.json();
+            if (sequence !== patientSequence) return;
+            if (!response.ok) throw new Error(Object.values(result.errors || {}).flat()[0] || result.message || 'No se pudo buscar al paciente.');
+            coincidencias = result.fichas;
+            coincidencias.forEach((item, index) => {
+                const opcion = document.createElement('button');
+                opcion.type = 'button';
+                opcion.tabIndex = -1;
+                opcion.id = 'caja-paciente-opcion-' + index;
+                opcion.className = 'autocomplete-item';
+                opcion.setAttribute('role', 'option');
+                opcion.setAttribute('aria-selected', 'false');
+                const info = document.createElement('span');
+                info.className = 'autocomplete-info';
+                const nombre = document.createElement('span');
+                nombre.className = 'autocomplete-name';
+                nombre.textContent = item.paciente;
+                const detalle = document.createElement('span');
+                detalle.className = 'autocomplete-meta';
+                detalle.textContent = 'CI: ' + item.ci + ' · Ficha #' + item.ficha + (item.fecha ? ' · ' + item.fecha : '');
+                info.append(nombre, detalle);
+                opcion.append(info);
+                opcion.addEventListener('click', () => elegirPaciente(item));
+                resultadosPaciente.append(opcion);
+            });
+            mostrarOpciones();
+            estadoPaciente.textContent = result.fichas.length
+                ? (result.hay_mas ? 'Se muestran las primeras 20 fichas. Escriba más caracteres para precisar la búsqueda.' : 'Seleccione la ficha de admisión que corresponde al recibo.')
+                : 'No se encontraron fichas con pacientes designados para esta búsqueda.';
+        } catch (failure) {
+            if (sequence === patientSequence) estadoPaciente.textContent = failure.message;
+        }
+    }
+
+    function changedPaciente() {
+        if (id.value) return;
+        limpiarBusquedaPaciente(false);
+        ++requestSequence;
+        clearTimeout(debounce);
+        ficha.value = '';
+        limpiarAtencion();
+        error.textContent = '';
+        save.disabled = true;
+        if (buscarPaciente.value.trim().length >= 2) patientDebounce = setTimeout(buscarPorPaciente, 300);
+    }
+
+    function elegirPaciente(item) {
+        if (id.value) return;
+        limpiarBusquedaPaciente(false);
+        buscarPaciente.value = item.paciente;
+        ficha.value = String(item.ficha);
+        buscarPaciente.focus();
+        return buscarFicha();
+    }
+
     function open() {
         modal.classList.add('open');
         document.body.classList.add('modal-open');
@@ -94,6 +203,7 @@
     function close() {
         ++requestSequence;
         clearTimeout(debounce);
+        limpiarBusquedaPaciente();
         modal.classList.remove('open');
         document.body.classList.remove('modal-open');
     }
@@ -102,8 +212,10 @@
         ++requestSequence;
         clearTimeout(debounce);
         form.reset();
+        limpiarBusquedaPaciente();
         id.value = '';
         clinica.disabled = ficha.readOnly = atencion.disabled = false;
+        buscarPaciente.disabled = false;
         error.textContent = '';
         save.disabled = true;
         limpiarAtencion();
@@ -129,6 +241,7 @@
             ['recibo', 'cancelado', 'descripcion', 'tipo_pago'].forEach(field => { form[field].value = caja[field] ?? ''; });
             form.habilitada.checked = !!caja.habilitada;
             clinica.disabled = ficha.readOnly = atencion.disabled = true;
+            buscarPaciente.disabled = true;
             elegirAtencion();
             save.disabled = false;
             document.getElementById('modalCajaTitulo').textContent = 'Editar recibo #' + caja.recibo;
@@ -137,9 +250,9 @@
         cerrar: close,
     };
 
-    document.getElementById('caja-buscar-ficha').addEventListener('click', buscarFicha);
     function changed() {
         if (id.value) return;
+        limpiarBusquedaPaciente();
         ++requestSequence;
         clearTimeout(debounce);
         limpiarAtencion();
@@ -148,7 +261,43 @@
         if (ficha.value) debounce = setTimeout(buscarFicha, 300);
     }
     ficha.addEventListener('input', changed);
-    clinica.addEventListener('change', changed);
+    clinica.addEventListener('change', () => {
+        if (!ficha.value && buscarPaciente.value) changedPaciente();
+        else changed();
+    });
+    buscarPaciente.addEventListener('input', changedPaciente);
+    buscarPaciente.addEventListener('focus', mostrarOpciones);
+    buscarPaciente.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (!resultadosPaciente.hidden && opcionActiva >= 0) return elegirPaciente(coincidencias[opcionActiva]);
+        } else if (['ArrowDown', 'ArrowUp'].includes(event.key) && coincidencias.length) {
+            event.preventDefault();
+            mostrarOpciones();
+            opcionActiva = opcionActiva < 0
+                ? (event.key === 'ArrowDown' ? 0 : coincidencias.length - 1)
+                : (opcionActiva + (event.key === 'ArrowDown' ? 1 : -1) + coincidencias.length) % coincidencias.length;
+            Array.from(resultadosPaciente.children).forEach((opcion, index) => {
+                opcion.classList.toggle('active', index === opcionActiva);
+                opcion.setAttribute('aria-selected', String(index === opcionActiva));
+            });
+            const opcion = resultadosPaciente.children[opcionActiva];
+            buscarPaciente.setAttribute('aria-activedescendant', opcion.id);
+            opcion.scrollIntoView({block: 'nearest'});
+        } else if (event.key === 'Escape' || event.key === 'Tab') {
+            if (event.key === 'Escape' && !resultadosPaciente.hidden) { event.preventDefault(); event.stopPropagation(); }
+            ++patientSequence;
+            clearTimeout(patientDebounce);
+            ocultarOpciones();
+        }
+    });
+    document.addEventListener('click', event => {
+        if (!busquedaPaciente.contains(event.target)) {
+            ++patientSequence;
+            clearTimeout(patientDebounce);
+            ocultarOpciones();
+        }
+    });
     atencion.addEventListener('change', elegirAtencion);
     form.cancelado.addEventListener('input', resumen);
     form.habilitada.addEventListener('change', resumen);

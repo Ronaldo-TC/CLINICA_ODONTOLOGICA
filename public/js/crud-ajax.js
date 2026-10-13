@@ -59,7 +59,7 @@
     window.CRUD = {
         toast,
         recargar: () => cargarTabla(1),
-        confirmar: (mensaje) => Promise.resolve(window.confirm(mensaje)),
+        confirmar: (mensaje) => window.Modal.confirm({ text: mensaje }),
     };
 
     /* ============================================================
@@ -309,9 +309,7 @@
     async function eliminar(id, nombre) {
         if (!id || !URLS.delete) return;
 
-        const confirmado = await window.CRUD.confirmar(
-            `¿Eliminar ${nombre}? Esta acción no se puede deshacer.`
-        );
+        const confirmado = await window.confirmarEliminacion(nombre);
         if (!confirmado) return;
 
         setStatus('loading', 'Eliminando...');

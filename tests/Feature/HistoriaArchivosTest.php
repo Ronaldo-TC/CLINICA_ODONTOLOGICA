@@ -11,6 +11,9 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Tests\TestCase;
 
 /**
@@ -20,6 +23,13 @@ use Tests\TestCase;
 class HistoriaArchivosTest extends TestCase
 {
     use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+        Storage::fake('public');
+    }
 
     private function admin(): ?Usuario
     {
@@ -153,7 +163,7 @@ class HistoriaArchivosTest extends TestCase
         $historia = $this->historiaDePrueba();
 
         // Mismo contenido en dos subidas
-        $contenido = str_repeat('PDF-DEMO-', 50);
+        $contenido = "%PDF-1.4\n".str_repeat('PDF-DEMO-', 50);
 
         $primera = UploadedFile::fake()->createWithContent('uno.pdf', $contenido);
         $segunda = UploadedFile::fake()->createWithContent('dos.pdf', $contenido);
@@ -227,5 +237,105 @@ class HistoriaArchivosTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertSame(0, Archivo::where('historia_clinica_id', $historia->id)->count());
+        Storage::disk('local')->assertMissing($archivo->ruta);
+    }
+
+    public function test_large_pdf_is_stored_privately_and_only_its_name_is_saved_in_the_database(): void
+    {
+        $historia = $this->historiaDePrueba();
+        $contenido = "%PDF-1.4\n".str_repeat('Documento de prueba ', 20000);
+        $pdf = UploadedFile::fake()->createWithContent('historia-clinica.pdf', $contenido);
+
+        $this->actingAs($this->admin())->postJson(route('historias.archivos.subir', $historia->id), ['archivo' => $pdf])
+            ->assertCreated()->assertJsonPath('success', true);
+
+        $registro = $historia->archivos()->sole();
+        $this->assertSame($registro->nombre_guardado, $historia->fresh()->archivo);
+        $this->assertSame('historia-clinica.pdf', $historia->fresh()->archivo_nombre);
+        $this->assertSame(strlen($contenido), $registro->tamano_bytes);
+        Storage::disk('local')->assertExists($registro->ruta);
+        Storage::disk('public')->assertMissing($registro->ruta);
+        $this->assertSame($contenido, Storage::disk('local')->get($registro->ruta));
+        $this->get(route('historias.archivos.descargar', [$historia->id, $registro->id]))
+            ->assertOk()->assertContent($contenido);
+    }
+
+    public function test_storage_failure_returns_500_without_creating_attachment_metadata(): void
+    {
+        $historia = $this->historiaDePrueba();
+        $disco = \Mockery::mock(FilesystemAdapter::class);
+        $disco->shouldReceive('exists')->once()->andReturn(false);
+        $disco->shouldReceive('putFileAs')->once()->andReturn(false);
+        $disco->shouldReceive('delete')->once()->andReturn(true);
+        Storage::shouldReceive('disk')->with('local')->andReturn($disco);
+        Exceptions::fake();
+
+        $this->actingAs($this->admin())->postJson(route('historias.archivos.subir', $historia->id), [
+            'archivo' => UploadedFile::fake()->create('documento.pdf', 100, 'application/pdf'),
+        ])->assertStatus(500)->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'No se pudo guardar el archivo. Intente nuevamente.');
+
+        $this->assertSame(0, $historia->archivos()->count());
+        $this->assertEmpty($historia->fresh()->archivo);
+        Exceptions::assertReported(\RuntimeException::class);
+    }
+
+    public function test_database_failure_removes_the_new_file_and_keeps_the_history_unchanged(): void
+    {
+        $historia = $this->historiaDePrueba();
+        Exceptions::fake();
+        Archivo::creating(function (): void {
+            throw new \RuntimeException('Error al registrar metadatos.');
+        });
+        try {
+            $this->actingAs($this->admin())->postJson(route('historias.archivos.subir', $historia->id), [
+                'archivo' => UploadedFile::fake()->create('documento.pdf', 100, 'application/pdf'),
+            ])->assertStatus(500)->assertJsonPath('success', false);
+        } finally {
+            Archivo::flushEventListeners();
+        }
+
+        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertSame(0, $historia->archivos()->count());
+        $this->assertEmpty($historia->fresh()->archivo);
+        Exceptions::assertReported(\RuntimeException::class);
+    }
+
+    public function test_legacy_backup_only_downloads_the_attachment_with_matching_contents(): void
+    {
+        $historia = $this->historiaDePrueba();
+        $contenido = "%PDF-1.4\nDocumento anterior";
+        $historia->update(['archivo' => base64_encode($contenido)]);
+        $registro = $historia->archivos()->create([
+            'nombre_original' => 'anterior.pdf', 'nombre_guardado' => 'anterior.pdf',
+            'ruta' => 'patients/anterior.pdf', 'extension' => 'pdf', 'tipo' => 'application/pdf',
+            'tamano_bytes' => strlen($contenido), 'hash' => hash('sha256', $contenido),
+        ]);
+
+        $this->actingAs($this->admin())->get(route('historias.archivos.descargar', [$historia->id, $registro->id]))
+            ->assertOk()->assertContent($contenido);
+        $registro->update(['hash' => hash('sha256', 'Otro documento')]);
+        $this->get(route('historias.archivos.descargar', [$historia->id, $registro->id]))->assertNotFound();
+    }
+
+    public function test_upload_recovers_a_legacy_backup_in_storage_before_saving_the_new_filename(): void
+    {
+        $historia = $this->historiaDePrueba();
+        $contenido = "%PDF-1.4\nDocumento anterior";
+        $historia->update(['archivo' => base64_encode($contenido)]);
+        $anterior = $historia->archivos()->create([
+            'nombre_original' => 'anterior.pdf', 'nombre_guardado' => 'anterior.pdf',
+            'ruta' => 'patients/anterior.pdf', 'extension' => 'pdf', 'tipo' => 'application/pdf',
+            'tamano_bytes' => strlen($contenido), 'hash' => hash('sha256', $contenido),
+        ]);
+
+        $this->actingAs($this->admin())->postJson(route('historias.archivos.subir', $historia->id), [
+            'archivo' => UploadedFile::fake()->createWithContent('nuevo.pdf', "%PDF-1.4\nNuevo documento"),
+        ])->assertCreated();
+
+        $this->assertSame($contenido, Storage::disk('local')->get($anterior->ruta));
+        $this->get(route('historias.archivos.descargar', [$historia->id, $anterior->id]))->assertOk()->assertContent($contenido);
+        $this->assertSame(2, $historia->archivos()->count());
+        $this->assertSame('nuevo.pdf', $historia->fresh()->archivo_nombre);
     }
 }

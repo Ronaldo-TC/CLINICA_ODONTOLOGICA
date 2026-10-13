@@ -7,7 +7,7 @@
     @endforeach
 </div>
 @if($filtrosReporte)
-<div class="report-note">
+<div class="report-note report-filters">
     <strong>Filtros aplicados</strong>
     @foreach($filtrosReporte as $etiqueta => $valor)<p>{{ $etiqueta }}: {{ $valor }}</p>@endforeach
 </div>
@@ -22,7 +22,7 @@
         <thead><tr>@foreach($columnas as $columna)<th scope="col">{{ $columna }}</th>@endforeach</tr></thead>
         <tbody>
             @forelse($filas as $fila)
-            <tr>@foreach($fila as $celda)<td>{{ $celda }}</td>@endforeach</tr>
+            <tr>@foreach($fila as $celda)<td @class(['report-value' => preg_match('/^#?\d[\d.,]*$/', $celda) || in_array($columnas[$loop->index], ['CI', 'Nacimiento', 'Fecha', 'Inicio', 'Asignación', 'Recepción', 'Recojo', 'Fecha de toma'], true)])>{{ $celda }}</td>@endforeach</tr>
             @empty
             <tr><td colspan="{{ count($columnas) }}">No hay registros para los filtros seleccionados.</td></tr>
             @endforelse

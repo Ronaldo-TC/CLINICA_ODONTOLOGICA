@@ -225,7 +225,7 @@ class InsumoController extends Controller
 
     public function tiposPorClinica(Request $request, $clinicaId)
     {
-        $this->authorizeAction('ver');
+        $this->authorizeCatalogLookup($request);
 
         return response()->json(
             InsumoTratamiento::where('clinica_id', $clinicaId)
@@ -243,7 +243,7 @@ class InsumoController extends Controller
 
     public function buscarInsumos(Request $request, $clinicaId)
     {
-        $this->authorizeAction('ver');
+        $this->authorizeCatalogLookup($request);
         $q = trim((string) $request->input('q'));
 
         $insumos = Insumo::where('clinica_id', $clinicaId)
@@ -296,9 +296,26 @@ class InsumoController extends Controller
 
     public function __construct(private SolicitudInsumoService $solicitudes) {}
 
+    private function authorizeSolicitudAction(string $action): void
+    {
+        $user = request()->user();
+        abort_unless($user?->hasRole('admin') || $user?->canAny([
+            'solicitudes-insumos.'.$action, 'solicitudes-insumos.gestionar', 'insumos.gestionar',
+        ]), 403);
+    }
+
+    private function authorizeCatalogLookup(Request $request): void
+    {
+        if ($request->routeIs('solicitudes-insumos.*')) {
+            $this->authorizeSolicitudAction('ver');
+        } else {
+            $this->authorizeAction('ver');
+        }
+    }
+
     public function solicitudes(Request $request): View
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $registros = $this->consultaSolicitudes($request)->paginate($this->perPage)->withQueryString();
 
         return view('solicitudes-insumos.index', ['registros' => $registros, 'items' => $registros] + $this->datosListadoSolicitudes($request));
@@ -306,7 +323,7 @@ class InsumoController extends Controller
 
     public function tablaSolicitudes(Request $request): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $registros = $this->filtrarSolicitudes($request)->paginate($this->perPage)->withQueryString();
 
         return response()->json([
@@ -318,7 +335,7 @@ class InsumoController extends Controller
 
     public function datosSolicitud(int $id): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $registro = $this->solicitudVisible($id);
 
         return response()->json(['success' => true, 'es_edicion' => true, 'registro' => $registro, 'id' => $registro->id] + $this->detalleSolicitud($registro));
@@ -326,7 +343,7 @@ class InsumoController extends Controller
 
     public function verSolicitud(int $id): View|JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $registro = $this->solicitudVisible($id);
 
         return $this->esAjax()
@@ -336,7 +353,7 @@ class InsumoController extends Controller
 
     public function eliminarSolicitud(Request $request, int $id): JsonResponse
     {
-        $this->authorizeAction('eliminar');
+        $this->authorizeSolicitudAction('eliminar');
 
         return DB::transaction(function () use ($request, $id): JsonResponse {
             $registro = $this->consultaSolicitudes($request)->lockForUpdate()->findOrFail($id);
@@ -352,7 +369,7 @@ class InsumoController extends Controller
 
     public function reporteSolicitudes(Request $request, ReporteModulo $reporte): Response
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $reporte->validarFiltros($request);
 
         return $reporte->generar($this->filtrarSolicitudes($request), 'solicitudes-insumos', $request);
@@ -436,7 +453,7 @@ class InsumoController extends Controller
 
     public function crearSolicitud(Request $request): JsonResponse
     {
-        $this->authorizeAction('crear');
+        $this->authorizeSolicitudAction('crear');
         $registro = $this->solicitudes->guardar($request->user(), $request->all());
 
         return response()->json(['success' => true, 'id' => $registro->id, 'message' => 'Solicitud registrada.'], 201);
@@ -444,7 +461,7 @@ class InsumoController extends Controller
 
     public function actualizarSolicitud(Request $request, int $id): JsonResponse
     {
-        $this->authorizeAction('editar');
+        $this->authorizeSolicitudAction('editar');
         $registro = $this->solicitudes->guardar($request->user(), $request->all(), $this->solicitudVisible($id));
 
         return response()->json(['success' => true, 'id' => $registro->id, 'message' => 'Solicitud actualizada.']);
@@ -470,7 +487,7 @@ class InsumoController extends Controller
 
     public function catalogoDesignado(Request $request): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $data = $request->validate([
             'historia_clinica_id' => ['required', 'integer'],
             'clinica_id' => ['nullable', 'integer'],
@@ -555,7 +572,7 @@ class InsumoController extends Controller
 
     public function buscarSesiones(Request $request): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
         $tratamientos = app(FlujoTratamiento::class)->tratamientosVisibles($request->user())->select('id');
 
         return response()->json(SesionAtencion::whereIn('tratamiento_realizado_id', $tratamientos)->where('autorizado', true)->where('tratamiento_realizado_id', $request->integer('tratamiento_realizado_id'))->orderByDesc('fecha')->get()->map(fn ($sesion) => ['id' => $sesion->id, 'texto' => '#'.$sesion->id.' ? '.$sesion->fecha->format('d/m/Y').' ? '.mb_substr($sesion->descripcion, 0, 80)]));
@@ -563,7 +580,12 @@ class InsumoController extends Controller
 
     public function buscarTratamientos(Request $request): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeSolicitudAction('ver');
+
+        $request->validate(['historia_clinica_id' => ['nullable', 'integer']]);
+        $origen = $request->filled('historia_clinica_id')
+            ? AccesoClinico::historias(HistoriaClinica::query(), $request->user())->findOrFail($request->integer('historia_clinica_id'))
+            : null;
 
         $q = trim((string) $request->input('q'));
         $clinica = $request->input('clinica_id');
@@ -571,6 +593,9 @@ class InsumoController extends Controller
         return response()->json(
             app(FlujoTratamiento::class)->tratamientosVisibles($request->user())
                 ->whereIn('estado', ['autorizado', 'en_proceso'])
+                ->when($origen, fn (Builder $query) => $query->whereHas('historiaClinica', fn (Builder $historia) => $historia
+                    ->where('paciente_id', $origen->paciente_id)->where('estudiante_id', $origen->estudiante_id)
+                    ->whereNull('fecha_fin')->whereNotIn('estado', ['cerrada', 'finalizada', 'culminada', 'completada', 'cancelada', 'completado', 'culminado', 'cancelado'])))
                 ->with(['tratamiento:id,nombre', 'historiaClinica:id,paciente_id'])
                 ->when($clinica, fn ($query) => $query->where('clinica_id', $clinica))
                 ->when($q !== '', function ($query) use ($q) {
@@ -615,7 +640,7 @@ class InsumoController extends Controller
 
     public function solicitudesApi(Request $request): JsonResponse
     {
-        $this->autorizarApi($request, 'insumos.ver');
+        $this->authorizeSolicitudAction('ver');
 
         $usuario = $request->user();
 
@@ -638,7 +663,7 @@ class InsumoController extends Controller
 
     public function crearSolicitudApi(Request $request): JsonResponse
     {
-        $this->autorizarApi($request, 'insumos.crear');
+        $this->authorizeSolicitudAction('crear');
         try {
             $solicitud = $this->solicitudes->guardar($request->user(), $request->all());
         } catch (ValidationException $exception) {

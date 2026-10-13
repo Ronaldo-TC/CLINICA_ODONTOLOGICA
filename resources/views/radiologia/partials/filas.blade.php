@@ -10,7 +10,7 @@
             <div>
                 <strong>{{ $rad->paciente?->nombre_completo ?? 'Sin paciente' }}</strong>
                 <br>
-                <small style="color:var(--muted);">
+                <small class="table-value" style="color:var(--muted);">
                     CI: {{ $rad->paciente?->ci ?? '—' }}
                 </small>
             </div>
@@ -57,11 +57,11 @@
 
     <td>
         <div class="actions">
-            <a class="btn btn-sm btn-secondary" href="{{ route('radiologia.visor', $rad->id) }}">Imágenes / DICOM</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('radiologia.visor', $rad->id) }}"><x-icono nombre="ver" /> Imágenes / DICOM</a>
             @can('radiologias.editar')
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $rad->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -70,7 +70,7 @@
                 data-action="eliminar"
                 data-id="{{ $rad->id }}"
                 data-nombre="Estudio #{{ $rad->id }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

@@ -38,6 +38,7 @@
     </td>
 
     <td>
+        <span class="badge badge-info">{{ $est->estado_proceso }}</span>
         @if ($est->habilitada)
         <span class="badge badge-success">Habilitada</span>
         @else
@@ -46,22 +47,24 @@
     </td>
 
     <td>
-        <div class="actions"><a class="btn btn-sm btn-secondary" href="{{ route('esterilizacion.control', $est->id) }}">Firma, entrega y recojo</a>
-            @can('esterilizaciones.editar')
+        <div class="actions"><a class="btn btn-sm btn-secondary" href="{{ route('esterilizacion.control', $est->id) }}"><x-icono nombre="control" /> Ver control</a>
+            @if(!$est->autorizado && !$est->fecha_entrega && !$est->fecha_recojo)
+            @canany(['esterilizaciones.editar', 'esterilizaciones.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $est->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
-            @endcan
+            @endcanany
 
-            @can('esterilizaciones.eliminar')
+            @canany(['esterilizaciones.eliminar', 'esterilizaciones.gestionar'])
             <button type="button" class="btn btn-sm btn-danger"
                 data-action="eliminar"
                 data-id="{{ $est->id }}"
                 data-nombre="Esterilización #{{ $est->id }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
-            @endcan
+            @endcanany
+            @endif
         </div>
     </td>
 </tr>

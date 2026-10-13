@@ -9,6 +9,7 @@ use App\Models\InsumoSolicitadoDetalle;
 use App\Models\InsumoTratamiento;
 use App\Models\Usuario;
 use App\Support\MenuBuilder;
+use Database\Seeders\SolicitudesInsumosPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -33,10 +34,16 @@ class FlujoSolicitudTest extends TestCase
         return $usuario;
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+    }
+
     public function test_flujo_completo_de_solicitud_de_insumos(): void
     {
         $case = $this->approvedProgress();
-        $case['teacher']->givePermissionTo('insumos.autorizar');
+        $case['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
         $estudiante = $case['student'];
         $admin = $this->usuarioConRol('admin');
 

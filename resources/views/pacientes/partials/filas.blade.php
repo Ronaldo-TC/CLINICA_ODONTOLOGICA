@@ -25,7 +25,7 @@
         @endif
     </td>
 
-    <td>
+    <td class="table-value">
         @if ($paciente->edad !== null)
         {{ $paciente->edad }} años
         @else
@@ -48,7 +48,7 @@
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $paciente->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -58,7 +58,7 @@
                 data-action="eliminar"
                 data-id="{{ $paciente->id }}"
                 data-nombre="{{ $paciente->nombre_completo }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

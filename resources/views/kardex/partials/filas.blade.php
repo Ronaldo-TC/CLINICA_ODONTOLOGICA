@@ -29,7 +29,7 @@ $saldo  = $costo - $pagado;
         <span class="badge badge-muted">{{ $paciente->total_tratamientos ?? 0 }}</span>
     </td>
 
-    <td>
+    <td class="table-value">
         <strong>{{ number_format($pagado, 2) }} Bs</strong>
     </td>
 
@@ -48,7 +48,7 @@ $saldo  = $costo - $pagado;
                 data-action="detalle"
                 data-id="{{ $paciente->id }}"
                 data-nombre="{{ $paciente->nombre_completo }}">
-                Ver detalle
+                <x-icono nombre="ver" /> Ver detalle
             </button>
         </div>
     </td>

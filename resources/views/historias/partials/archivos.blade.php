@@ -150,7 +150,8 @@
                     lista?.addEventListener('click', async (e) => {
                         const boton = e.target.closest('[data-eliminar]');
                         if (!boton) return;
-                        if (!confirm('¿Eliminar este archivo?')) return;
+                        const nombreArchivo = boton.closest('.archivo-item')?.querySelector('.archivo-nombre')?.textContent.trim();
+                        if (!await window.confirmarEliminacion(nombreArchivo || 'Archivo seleccionado')) return;
 
                         const id = boton.dataset.eliminar;
 

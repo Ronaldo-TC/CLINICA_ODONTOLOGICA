@@ -19,7 +19,7 @@ class SolicitudesInsumosPermisosTest extends TestCase
     {
         $this->freezeTime();
         $studentRoleId = DB::table('roles')->where('name', 'estudiante')->where('guard_name', 'web')->value('id');
-        $requestPermissionIds = DB::table('permissions')->where('guard_name', 'web')->whereIn('name', ['insumos.ver', 'insumos.crear'])->pluck('id');
+        $requestPermissionIds = DB::table('permissions')->where('guard_name', 'web')->whereIn('name', ['solicitudes-insumos.ver', 'solicitudes-insumos.crear'])->pluck('id');
         DB::table('role_has_permissions')->where('role_id', $studentRoleId)->whereIn('permission_id', $requestPermissionIds)->delete();
         $this->seed(SolicitudesInsumosPermissionsSeeder::class);
         $this->seed(SolicitudesInsumosPermissionsSeeder::class);
@@ -29,6 +29,13 @@ class SolicitudesInsumosPermisosTest extends TestCase
             'insumo_tratamiento_id' => $type->id, 'cantidad_numerica' => 10, 'cantidad' => 'pares', 'stock_minimo' => 0, 'costo_unitario' => 2]);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
         $this->actingAs($case['student']);
+
+        $this->getJson(route('insumos.buscar-insumos', $case['clinic']))->assertForbidden();
+        $this->getJson(route('solicitudes-insumos.tipos-por-clinica', $case['clinic']))->assertOk()->assertJsonFragment(['id' => $type->id]);
+        $this->getJson(route('solicitudes-insumos.buscar-insumos', ['clinica' => $case['clinic']->id, 'q' => 'Guantes']))
+            ->assertOk()->assertJsonCount(1)->assertJsonFragment(['id' => $material->id]);
+        $this->getJson(route('solicitudes-insumos.catalogo-designado', ['historia_clinica_id' => $case['history']->id]))
+            ->assertOk()->assertJsonPath('tratamientos.0.insumos.0.id', $material->id);
 
         foreach (['estudiante.designados', 'estudiante.historias'] as $listRoute) {
             $this->get(route($listRoute))->assertOk()->assertSee('Ver solicitudes')->assertSee('Solicitar insumos')

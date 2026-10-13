@@ -4,6 +4,19 @@
        ============================================================ */
     window.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+    window.confirmarEliminacion = function(nombre, { deshabilitar = false } = {}) {
+        return window.Modal.confirm({
+            title: deshabilitar ? '¿Deshabilitar este registro?' : '¿Eliminar este registro?',
+            record: nombre || 'Registro seleccionado',
+            text: deshabilitar
+                ? 'El registro quedará deshabilitado. Podrás reactivarlo después.'
+                : 'Al confirmar, se eliminará el registro seleccionado.\nEsta acción no se puede deshacer.',
+            confirmText: deshabilitar ? 'Sí, deshabilitar' : 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            variant: 'danger',
+        });
+    };
+
     /* ============================================================
        NOTA · El tema, los menús desplegables del topbar, el buscador
        global y el sidebar (drawer + filtro) se inicializan en sus
@@ -167,7 +180,7 @@
         const totalId = btn.dataset.total;
 
         if (!url) return;
-        if (!confirm(`¿Deshabilitar ${nombre}?`)) return;
+        if (!await window.confirmarEliminacion(nombre, { deshabilitar: true })) return;
 
         btn.disabled = true;
         btn.style.opacity = '0.5';

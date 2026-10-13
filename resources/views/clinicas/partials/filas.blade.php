@@ -32,7 +32,7 @@
         <div class="actions">
             @canany(['tratamientos.ver', 'tratamientos.gestionar'])
             <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.index', ['clinica_id' => $clinica->id]) }}">
-                Tratamientos
+                <x-icono nombre="tratamientos" /> Tratamientos
             </a>
             @endcanany
             @can('clinicas.editar')
@@ -40,7 +40,7 @@
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $clinica->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -50,7 +50,7 @@
                 data-action="eliminar"
                 data-id="{{ $clinica->id }}"
                 data-nombre="{{ $clinica->especialidad }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

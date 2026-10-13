@@ -23,7 +23,7 @@ class DashboardController extends Controller
             'tarjetas' => $user ? DashboardMetrics::tarjetas($user) : [],
             'pacientesPorMes' => DashboardMetrics::pacientesPorMes(),
             'topEspecialidades' => DashboardMetrics::topEspecialidades(),
-            'actividadReciente' => DashboardMetrics::actividadReciente(),
+            'actividadReciente' => $user ? DashboardMetrics::actividadReciente($user) : collect(),
             'proximosVencimientos' => DashboardMetrics::proximosVencimientos(),
         ]);
     }

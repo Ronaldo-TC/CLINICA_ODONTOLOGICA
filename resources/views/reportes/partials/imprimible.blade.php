@@ -189,12 +189,13 @@
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 12mm;
+                margin: 7mm 7mm 10mm;
             }
 
             body {
                 padding: 0;
                 font-size: 10.5px;
+                line-height: 1.25;
             }
 
             .no-imprimir {
@@ -202,16 +203,21 @@
             }
 
             .grid {
-                gap: 10px;
+                gap: 8px;
+                align-items: start;
             }
+
+            .encabezado { padding-bottom: 8px; margin-bottom: 10px; }
+            h1 { font-size: 18px; }
+            .encabezado p { font-size: 10px; }
 
             .reporte {
                 border-color: #cccccc;
-                padding: 9px 10px;
+                padding: 7px 8px;
+                break-inside: auto;
+                page-break-inside: auto;
             }
 
-            .reporte,
-            table,
             tr,
             .grafico {
                 break-inside: avoid;
@@ -219,8 +225,15 @@
             }
 
             .grafico {
-                height: 190px;
+                height: 170px;
             }
+
+            .reporte h2 { font-size: 12px; break-after: avoid; }
+            .reporte .total { font-size: 10px; margin-bottom: 6px; }
+            table { font-size: 10px; margin-top: 6px; break-inside: auto; }
+            th, td { padding: 3px 5px; overflow-wrap: anywhere; }
+            thead th { font-size: 9px; white-space: normal; }
+            td.numero { overflow-wrap: normal; }
 
             thead {
                 display: table-header-group;

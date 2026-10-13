@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             RoleHasPermissionsSeeder::class,
             FlujoClinicoPermissionsSeeder::class,
             SolicitudesInsumosPermissionsSeeder::class,
+            EsterilizacionPermissionsSeeder::class,
             EspecialidadesSeeder::class,
             InsumosTratamientoSeeder::class,
             TratamientosSeeder::class,

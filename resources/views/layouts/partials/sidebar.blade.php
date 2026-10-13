@@ -218,9 +218,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
     data-current-route="{{ $currentRoute }}"
     aria-label="Navegación principal">
     <script type="application/json" id="navMenuData">
-        {
-            !!json_encode($navIndex, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) !!
-        }
+        {!! json_encode($navIndex, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 
     {{-- ================= MARCA ================= --}}
@@ -278,7 +276,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
     @endif
 
     {{-- ================= FILTRO RÁPIDO ================= --}}
-    <!-- @if ($searchable > 0)
+    @if ($searchable > 0)
         <div class="sidebar-tools">
             <div class="sidebar-filter">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -286,7 +284,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
                 </svg>
                 <input type="search"
                     id="sidebarFilter"
-                    placeholder="Filtrar opciones…"
+                    placeholder="Buscar un módulo…"
                     autocomplete="off"
                     spellcheck="false"
                     aria-label="Filtrar opciones del menú"
@@ -300,13 +298,13 @@ return $entry['href'] !== null || ! empty($entry['children']);
                         {!! $icon('x') !!}
                     </svg>
                 </button>
+                <kbd class="kbd" aria-hidden="true">/</kbd>
             </div>
-            <p class="sidebar-hint">Pulsa <kbd class="kbd">/</kbd> para filtrar · <kbd class="kbd">Ctrl</kbd><kbd class="kbd">K</kbd> para buscar</p>
         </div>
-    @endif -->
+    @endif
 
     {{-- ================= NAVEGACIÓN ================= --}}
-    <nav class="sidebar-nav" id="sidebarNav">
+    <nav class="sidebar-nav" id="sidebarNav" aria-label="Módulos del sistema">
         @forelse ($menu as $item)
         @php
         $type = $item['type'] ?? 'link';
@@ -330,6 +328,9 @@ return $entry['href'] !== null || ! empty($entry['children']);
         foreach ($children as $child) {
         $childRoute = $child['route'] ?? null;
         $childPattern = $child['pattern'] ?? null;
+        if (! empty($child['exclude']) && request()->routeIs($child['exclude'])) {
+        continue;
+        }
         if (is_string($childRoute) && $childRoute !== '' && $currentRoute === $childRoute) {
         $groupActive = true;
         break;
@@ -346,6 +347,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
         <div class="nav-group {{ $groupActive ? 'is-active' : '' }}"
             data-nav-group
             data-nav-group-id="{{ $groupId }}"
+            data-nav-label="{{ mb_strtolower($label) }}"
             data-nav-search="{{ $groupTerms }}">
             <button type="button"
                 class="nav-item nav-item-toggle"
@@ -374,9 +376,10 @@ return $entry['href'] !== null || ! empty($entry['children']);
                 $childRoute = $child['route'] ?? null;
                 $childLabel = (string) ($child['label'] ?? '');
                 $childPattern = $child['pattern'] ?? null;
+                $childExcluded = ! empty($child['exclude']) && request()->routeIs($child['exclude']);
                 $childHasRoute = is_string($childRoute) && $childRoute !== '' && RouteFacade::has($childRoute);
                 $childHref = $childHasRoute ? route($childRoute) : '#';
-                $childActive = $childHasRoute && (
+                $childActive = $childHasRoute && ! $childExcluded && (
                 $currentRoute === $childRoute
                 || ($childPattern && request()->routeIs($childPattern))
                 );
@@ -448,7 +451,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
                     {!! $icon('search') !!}
                 </svg>
             </span>
-            <span class="shortcut-text">Buscar</span>
+            <span class="shortcut-text">Búsqueda global</span>
             <kbd class="kbd">Ctrl</kbd><kbd class="kbd">K</kbd>
         </button>
 
@@ -464,7 +467,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
 
         <p class="sidebar-meta">
             <span class="meta-dot" aria-hidden="true"></span>
-            {{ $roleName ? ucfirst((string) $roleName) : 'Sesión activa' }}
+            Sesión activa
         </p>
     </div>
 </aside>
@@ -517,7 +520,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
         sidebar.querySelectorAll('[data-nav-group]').forEach((group) => {
             const remembered = storedGroups[group.dataset.navGroupId || ''];
             const active = group.classList.contains('is-active');
-            setExpanded(group, typeof remembered === 'boolean' ? remembered : active);
+            setExpanded(group, active || remembered === true);
         });
 
         /* ---------------- Toggle de submenús (acordeón en escritorio) ---------------- */
@@ -550,12 +553,13 @@ return $entry['href'] !== null || ! empty($entry['children']);
             let visible = 0;
 
             sidebar.querySelectorAll('[data-nav-group]').forEach((group) => {
-                const childrenMatch = Array.from(group.querySelectorAll('.nav-item-child')).some((child) => {
-                    const match = term === '' || (child.dataset.navSearch || '').includes(term);
+                const selfMatch = (group.dataset.navLabel || '').includes(term);
+                let childrenMatch = false;
+                group.querySelectorAll('.nav-item-child').forEach((child) => {
+                    const match = term === '' || selfMatch || (child.dataset.navSearch || '').includes(term);
                     child.hidden = !match;
-                    return match;
+                    if (match) childrenMatch = true;
                 });
-                const selfMatch = (group.dataset.navSearch || '').includes(term);
                 const show = term === '' || childrenMatch || selfMatch;
                 group.hidden = !show;
                 if (show) visible++;

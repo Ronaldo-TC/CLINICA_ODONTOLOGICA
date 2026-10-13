@@ -13,7 +13,7 @@
 </tbody></table>
 @if($errors->any())<p class="form-error" role="alert">{{ $errors->first() }}</p>@endif
 @include('solicitudes-insumos.partials.revision', ['solicitud' => $registro])
-@canany(['insumos.consumir','insumos.gestionar'])
+@canany(['solicitudes-insumos.consumir','solicitudes-insumos.gestionar','insumos.gestionar'])
 @if($registro->sesion_atencion_id && in_array($registro->estado, ['parcial','entregado']))
 <form id="consumo-insumos" style="margin-top:20px">@csrf<h3>Registrar cantidades utilizadas</h3>
 @foreach($registro->detalles as $detalle)

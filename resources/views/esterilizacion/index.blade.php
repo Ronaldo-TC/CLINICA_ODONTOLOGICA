@@ -11,7 +11,7 @@
     </div>
     <div class="toolbar-actions">
         <x-boton-reporte ruta="esterilizacion.reporte" />
-        @can('esterilizaciones.crear')
+        @canany(['esterilizaciones.crear', 'esterilizaciones.gestionar'])
         <button type="button" class="btn btn-primary" id="btnNuevaEsterilizacion">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -20,7 +20,7 @@
             </svg>
             Nuevo Registro
         </button>
-        @endcan
+        @endcanany
     </div>
 </div>
 
@@ -64,7 +64,7 @@
             </div>
 
             <div class="form-group">
-                <label>Estado</label>
+                <label>Habilitación</label>
                 <select id="filtro-estado" class="form-control">
                     <option value="">Todos</option>
                     <option value="1">Habilitadas</option>
@@ -119,9 +119,9 @@
         const URLS = {
             tabla: @json(route('esterilizacion.tabla')),
             store: @json(route('esterilizacion.store')),
-            datos: (id) => `/esterilizacion/${id}/datos`,
-            update: (id) => `/esterilizacion/${id}`,
-            destroy: (id) => `/esterilizacion/${id}`,
+            datos: (id) => @json(route('esterilizacion.datos', ['esterilizacion' => '__ID__'])).replace('__ID__', id),
+            update: (id) => @json(route('esterilizacion.update', ['esterilizacion' => '__ID__'])).replace('__ID__', id),
+            destroy: (id) => @json(route('esterilizacion.destroy', ['esterilizacion' => '__ID__'])).replace('__ID__', id),
         };
 
         const $tbody = document.getElementById('tbodyEsterilizaciones');
@@ -303,7 +303,7 @@
         }
 
         async function eliminar(id, nombre) {
-            if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+            if (!await window.confirmarEliminacion(nombre)) return;
 
             setStatus('loading', 'Eliminando...');
 

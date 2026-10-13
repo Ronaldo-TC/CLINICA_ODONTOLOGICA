@@ -41,7 +41,7 @@
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $periodo->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -51,7 +51,7 @@
                 data-action="eliminar"
                 data-id="{{ $periodo->id }}"
                 data-nombre="{{ $periodo->nombre }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

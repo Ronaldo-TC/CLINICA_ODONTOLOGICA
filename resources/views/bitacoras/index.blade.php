@@ -33,6 +33,7 @@
             <div class="form-group">
                 <label>Buscar</label>
                 <input type="text" id="filtro-buscar" class="form-control"
+                    value="{{ request('buscar') }}"
                     placeholder="Usuario, IP o datos..."
                     autocomplete="off">
             </div>
@@ -42,7 +43,7 @@
                 <select id="filtro-tipo" class="form-control">
                     <option value="">Todos los tipos</option>
                     @foreach ($tipos as $tipo)
-                    <option value="{{ $tipo }}">{{ $tipo }}</option>
+                    <option value="{{ $tipo }}" @selected(request('tipo') === $tipo)>{{ ucfirst($tipo) }}</option>
                     @endforeach
                 </select>
             </div>
@@ -52,19 +53,19 @@
                 <select id="filtro-estado" class="form-control">
                     <option value="">Todos los estados</option>
                     @foreach ($estados as $estado)
-                    <option value="{{ $estado }}">{{ $estado }}</option>
+                    <option value="{{ $estado }}" @selected(request('estado') === $estado)>{{ $estado }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Desde</label>
-                <input type="date" id="filtro-desde" class="form-control">
+                <input type="date" id="filtro-desde" class="form-control" value="{{ request('desde') }}">
             </div>
 
             <div class="form-group">
                 <label>Hasta</label>
-                <input type="date" id="filtro-hasta" class="form-control">
+                <input type="date" id="filtro-hasta" class="form-control" value="{{ request('hasta') }}">
             </div>
 
             <div class="form-group">
@@ -84,9 +85,10 @@
                     <th>Fecha</th>
                     <th>Usuario</th>
                     <th>Tipo</th>
-                    <th>Datos</th>
+                    <th>Acción realizada</th>
                     <th>Estado</th>
                     <th>IP</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tbodyBitacoras">
@@ -95,7 +97,7 @@
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->links() }}</div>
 </div>
 
 @endsection
@@ -123,7 +125,7 @@
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
 
         let debounceTimer = null;
-        let cargando = false;
+        let peticionActual = null;
 
         function setStatus(state, text) {
             if (!$status) return;
@@ -136,8 +138,9 @@
         }
 
         async function cargarTabla(page = 1) {
-            if (cargando) return;
-            cargando = true;
+            peticionActual?.abort();
+            const peticion = new AbortController();
+            peticionActual = peticion;
 
             setStatus('loading', 'Cargando...');
             $tbody?.classList.add('loading');
@@ -157,11 +160,12 @@
                         'Accept': 'application/json',
                     },
                     credentials: 'same-origin',
+                    signal: peticion.signal,
                 });
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
                 const data = await res.json();
+                if (peticionActual !== peticion) return;
+                if (!res.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || `HTTP ${res.status}`);
 
                 $tbody.innerHTML = data.filas || '';
                 $pagWrap.innerHTML = data.paginacion || '';
@@ -169,17 +173,20 @@
 
                 setStatus('idle');
             } catch (err) {
+                if (err.name === 'AbortError' || peticionActual !== peticion) return;
                 console.error('[Bitacoras] Error al cargar:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="6">
+                <tr><td colspan="7">
                     <div class="empty-state">
                         <p>Error al cargar bitácoras.</p>
                     </div>
                 </td></tr>`;
-                setStatus('error', 'Error al cargar');
+                setStatus('error', err.message || 'Error al cargar');
             } finally {
-                $tbody?.classList.remove('loading');
-                cargando = false;
+                if (peticionActual === peticion) {
+                    $tbody?.classList.remove('loading');
+                    peticionActual = null;
+                }
             }
         }
 

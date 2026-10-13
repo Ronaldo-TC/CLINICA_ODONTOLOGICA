@@ -24,7 +24,7 @@ class ReportePdf
             return response()->view($vista, $datos, 200, $cabeceras);
         }
 
-        $pdf = Pdf::view($vista, $datos)->format('a4')->margins(9, 9, 14, 9)
+        $pdf = Pdf::view($vista, $datos)->format('a4')->margins(7, 7, 10, 7)
             ->footerView('reportes.footer', ['codigo' => $datos['codigo']])
             ->dontCache()->waitUntilReady('window.pdfReady === true', 20000)
             ->withBrowsershot(function (Browsershot $browser): void {

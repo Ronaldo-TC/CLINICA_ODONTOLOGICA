@@ -1,6 +1,6 @@
 @props(['ruta'])
-<a href="{{ route($ruta, array_merge(request()->query(), ['formato' => 'pdf'])) }}" data-reporte-modulo data-formato="pdf" data-base="{{ route($ruta) }}" class="btn btn-secondary">Generar PDF</a>
-<a href="{{ route($ruta, request()->query()) }}" data-reporte-modulo data-base="{{ route($ruta) }}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">Vista previa</a>
+<a href="{{ route($ruta, array_merge(request()->query(), ['formato' => 'pdf'])) }}" data-reporte-modulo data-formato="pdf" data-base="{{ route($ruta) }}" class="btn btn-secondary"><x-icono nombre="pdf" /> Generar PDF</a>
+<a href="{{ route($ruta, request()->query()) }}" data-reporte-modulo data-base="{{ route($ruta) }}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener"><x-icono nombre="ver" /> Vista previa</a>
 @once
 @push('scripts')
 <script>

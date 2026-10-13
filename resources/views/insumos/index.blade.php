@@ -311,7 +311,7 @@
         }
 
         async function eliminar(id, nombre) {
-            if (!confirm(`¿Eliminar "${nombre}"?`)) return;
+            if (!await window.confirmarEliminacion(nombre)) return;
             setStatus('loading', 'Eliminando...');
             try {
                 const res = await fetch(URLS.destroy(id), {

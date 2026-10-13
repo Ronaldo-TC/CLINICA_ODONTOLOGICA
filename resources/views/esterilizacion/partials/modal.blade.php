@@ -36,7 +36,7 @@
                     </div>
 
                     <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="est-estudiante-buscar">Estudiante</label>
+                        <label for="est-estudiante-buscar">Estudiante <span class="req">*</span></label>
                         <div class="autocomplete-wrap" id="wrapEstudiante">
                             <input type="hidden" name="estudiante_id" id="est-estudiante-id">
                             <input type="text" id="est-estudiante-buscar"
@@ -70,19 +70,7 @@
                         <span class="form-error" data-error-for="cantidad_paquetes"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="est-fecha-entrega">Fecha de entrega</label>
-                        <input type="date" id="est-fecha-entrega" name="fecha_entrega"
-                            class="form-control">
-                        <span class="form-error" data-error-for="fecha_entrega"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="est-fecha-recojo">Fecha de recojo</label>
-                        <input type="date" id="est-fecha-recojo" name="fecha_recojo"
-                            class="form-control">
-                        <span class="form-error" data-error-for="fecha_recojo"></span>
-                    </div>
+                    <p style="grid-column: 1 / -1;">La firma docente, recepción, ciclo, liberación y recojo se registran desde la ficha de control. Las fechas y responsables se guardan automáticamente.</p>
 
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="est-info">Información</label>
@@ -139,10 +127,11 @@
         'use strict';
 
         const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const ESTUDIANTE_ACTUAL = @json($estudianteActual);
 
         const URLS = {
             store: @json(route('esterilizacion.store')),
-            update: (id) => `/esterilizacion/${id}`,
+            update: (id) => @json(route('esterilizacion.update', ['esterilizacion' => '__ID__'])).replace('__ID__', id),
             datosIniciales: @json(route('esterilizacion.datos-iniciales')),
             buscarUsuarios: @json(route('esterilizacion.buscar-usuarios')),
         };
@@ -185,8 +174,6 @@
                 $form.cantidad_paquetes.value = e.cantidad_paquetes ?? 0;
                 $form.info.value = e.info ?? '';
                 $form.descripcion.value = e.descripcion ?? '';
-                $form.fecha_entrega.value = e.fecha_entrega?.substring(0, 10) ?? '';
-                $form.fecha_recojo.value = e.fecha_recojo?.substring(0, 10) ?? '';
                 $form.habilitada.checked = !!e.habilitada;
 
                 if (e.estudiante) {
@@ -218,11 +205,10 @@
                 if (!res.ok) throw new Error();
                 const data = await res.json();
 
-                $form.clinica_id.innerHTML = '<option value="">Seleccione...</option>' +
-                    data.clinicas.map((c) => `<option value="${c.id}">${c.texto}</option>`).join('');
-
-                $form.periodo_id.innerHTML = '<option value="">Seleccione...</option>' +
-                    data.periodos.map((p) => `<option value="${p.id}">${p.texto}</option>`).join('');
+                $form.clinica_id.replaceChildren(new Option('Seleccione...', ''),
+                    ...data.clinicas.map((clinica) => new Option(clinica.texto, clinica.id)));
+                $form.periodo_id.replaceChildren(new Option('Seleccione...', ''),
+                    ...data.periodos.map((periodo) => new Option(periodo.texto, periodo.id)));
 
                 datosInicialesCargados = true;
             } catch (err) {
@@ -301,18 +287,30 @@
                     return;
                 }
 
-                $dropdown.innerHTML = items.map((item) => `
-                <div class="autocomplete-item"
-                     data-id="${item.id}"
-                     data-texto="${item.texto}"
-                     data-extra="${item.extra || ''}">
-                    <div class="autocomplete-avatar">${item.texto.substring(0, 2).toUpperCase()}</div>
-                    <div class="autocomplete-info">
-                        <span class="autocomplete-name">${item.texto}</span>
-                        ${item.extra ? `<span class="autocomplete-meta">${item.extra}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                $dropdown.replaceChildren();
+                items.forEach((item) => {
+                    const option = document.createElement('div');
+                    option.className = 'autocomplete-item';
+                    option.dataset.id = item.id;
+                    option.dataset.texto = item.texto;
+                    const avatar = document.createElement('div');
+                    avatar.className = 'autocomplete-avatar';
+                    avatar.textContent = item.texto.substring(0, 2).toUpperCase();
+                    const info = document.createElement('div');
+                    info.className = 'autocomplete-info';
+                    const name = document.createElement('span');
+                    name.className = 'autocomplete-name';
+                    name.textContent = item.texto;
+                    info.append(name);
+                    if (item.extra) {
+                        const meta = document.createElement('span');
+                        meta.className = 'autocomplete-meta';
+                        meta.textContent = item.extra;
+                        info.append(meta);
+                    }
+                    option.append(avatar, info);
+                    $dropdown.append(option);
+                });
 
                 $dropdown.classList.add('open');
 
@@ -394,6 +392,13 @@
             document.getElementById('est-estudiante-buscar').value = '';
             document.getElementById('est-estudiante-id').value = '';
             document.getElementById('wrapEstudiante').classList.remove('has-value');
+            if (ESTUDIANTE_ACTUAL) {
+                document.getElementById('est-estudiante-id').value = ESTUDIANTE_ACTUAL.id;
+                document.getElementById('est-estudiante-buscar').value = ESTUDIANTE_ACTUAL.nombre_completo;
+                document.getElementById('est-estudiante-buscar').readOnly = true;
+                document.getElementById('wrapEstudiante').classList.add('has-value');
+                document.querySelector('#wrapEstudiante .autocomplete-clear').hidden = true;
+            }
             $form.habilitada.checked = true;
             clearErrors();
             $errorBox.style.display = 'none';

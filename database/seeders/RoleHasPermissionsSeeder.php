@@ -15,13 +15,13 @@ class RoleHasPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        $roles      = DB::table('roles')->pluck('id', 'name');
-        $permisos   = DB::table('permissions')->pluck('id', 'name');
+        $roles = DB::table('roles')->where('guard_name', 'web')->pluck('id', 'name');
+        $permisos = DB::table('permissions')->where('guard_name', 'web')->pluck('id', 'name');
 
         // Admin: TODOS los permisos
         if (isset($roles['admin'])) {
-            $rows = $permisos->map(fn($pid) => [
-                'role_id'       => $roles['admin'],
+            $rows = $permisos->map(fn ($pid) => [
+                'role_id' => $roles['admin'],
                 'permission_id' => $pid,
             ])->values()->all();
 
@@ -72,9 +72,7 @@ class RoleHasPermissionsSeeder extends Seeder
                 'sesiones.ver',
                 'sesiones.gestionar',
                 'tratamientos.ver',
-                'cajas.ver',
-                'insumos.ver',
-                'insumos.gestionar',
+                'solicitudes-insumos.ver',
                 'esterilizaciones.ver',
                 'esterilizaciones.gestionar',
                 'radiologias.ver',
@@ -87,8 +85,8 @@ class RoleHasPermissionsSeeder extends Seeder
                 'historias.editar',
                 'sesiones.ver',
                 'sesiones.crear',
-                'insumos.ver',
-                'insumos.crear',
+                'solicitudes-insumos.ver',
+                'solicitudes-insumos.crear',
                 'esterilizaciones.ver',
                 'esterilizaciones.crear',
                 'radiologias.ver',
@@ -101,8 +99,8 @@ class RoleHasPermissionsSeeder extends Seeder
                 'historias.editar',
                 'sesiones.ver',
                 'sesiones.crear',
-                'insumos.ver',
-                'insumos.crear',
+                'solicitudes-insumos.ver',
+                'solicitudes-insumos.crear',
                 'esterilizaciones.ver',
                 'esterilizaciones.crear',
                 'radiologias.ver',
@@ -168,12 +166,13 @@ class RoleHasPermissionsSeeder extends Seeder
                 }
 
                 $pivote[] = [
-                    'role_id'       => $rolId,
+                    'role_id' => $rolId,
                     'permission_id' => $permisos[$codigo],
                 ];
             }
         }
 
         DB::table('role_has_permissions')->insertOrIgnore($pivote);
+        $this->call(SolicitudesInsumosPermissionsSeeder::class);
     }
 }

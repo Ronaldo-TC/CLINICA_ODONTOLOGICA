@@ -42,46 +42,46 @@
     </td>
     <td>
         <div class="actions">
-            <a class="btn btn-sm btn-secondary" href="{{ route('solicitudes-insumos.show', $sol->id) }}">Ver solicitud</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('solicitudes-insumos.show', $sol->id) }}"><x-icono nombre="ficha" /> Ver solicitud</a>
             @if (in_array($sol->estado, ['pendiente', 'rechazado'], true))
             @if((int) $sol->usuario_id === auth()->id() || auth()->user()->hasAnyRole(['admin', 'subadmin']))
-            @canany(['insumos.editar', 'insumos.gestionar'])
+            @canany(['solicitudes-insumos.editar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
-                data-action="editar" data-id="{{ $sol->id }}">Editar</button>
+                data-action="editar" data-id="{{ $sol->id }}"><x-icono nombre="editar" /> Editar</button>
             @endcanany
             @endif
             @endif
 
             @if ($sol->estado === 'pendiente')
-            @can('insumos.autorizar')
+            @can('solicitudes-insumos.autorizar')
             <button type="button" class="btn btn-sm btn-primary"
-                data-action="autorizar" data-id="{{ $sol->id }}">Autorizar</button>
+                data-action="autorizar" data-id="{{ $sol->id }}"><x-icono nombre="autorizar" /> Autorizar</button>
             <button type="button" class="btn btn-sm btn-danger"
-                data-action="rechazar" data-id="{{ $sol->id }}">Rechazar</button>
+                data-action="rechazar" data-id="{{ $sol->id }}"><x-icono nombre="rechazar" /> Rechazar</button>
             @endcan
             @endif
 
             @if ($sol->estado === 'autorizado' && auth()->user()->hasAnyRole(['insumos', 'admin', 'subadmin']))
-            @canany(['insumos.aprobar', 'insumos.gestionar'])
-            <button type="button" class="btn btn-sm btn-primary" data-action="aprobar" data-id="{{ $sol->id }}">Aprobar en Insumos</button>
+            @canany(['solicitudes-insumos.aprobar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
+            <button type="button" class="btn btn-sm btn-primary" data-action="aprobar" data-id="{{ $sol->id }}"><x-icono nombre="autorizar" /> Aprobar en Insumos</button>
             @endcanany
             @endif
             @if(in_array($sol->estado, ['autorizado', 'aprobado'], true) && auth()->user()->hasAnyRole(['insumos', 'admin', 'subadmin']))
-            @canany(['insumos.rechazar', 'insumos.gestionar'])
-            <button type="button" class="btn btn-sm btn-danger" data-action="rechazar" data-id="{{ $sol->id }}">Rechazar en Insumos</button>
+            @canany(['solicitudes-insumos.rechazar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
+            <button type="button" class="btn btn-sm btn-danger" data-action="rechazar" data-id="{{ $sol->id }}"><x-icono nombre="rechazar" /> Rechazar en Insumos</button>
             @endcanany
             @endif
             @if (in_array($sol->estado, ['aprobado','parcial'], true) || ($sol->estado === 'autorizado' && $sol->sesion_atencion_id))
-            @can('insumos.entregar')
+            @can('solicitudes-insumos.entregar')
             <button type="button" class="btn btn-sm btn-primary"
-                data-action="entregar" data-id="{{ $sol->id }}">Entregar</button>
+                data-action="entregar" data-id="{{ $sol->id }}"><x-icono nombre="entregar" /> Entregar</button>
             @endcan
             @endif
 
             @if (in_array($sol->estado, ['pendiente', 'rechazado'], true))
-            @can('insumos.eliminar')
+            @can('solicitudes-insumos.eliminar')
             <button type="button" class="btn btn-sm btn-danger"
-                data-action="eliminar" data-id="{{ $sol->id }}">Eliminar</button>
+                data-action="eliminar" data-id="{{ $sol->id }}"><x-icono nombre="eliminar" /> Eliminar</button>
             @endcan
             @endif
         </div>

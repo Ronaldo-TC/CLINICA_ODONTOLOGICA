@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasCrudAjax;
+use App\Models\Admision;
 use App\Models\Caja;
 use App\Models\Clinica;
 use App\Models\HistoriaClinica;
 use App\Models\Tratamiento;
 use App\Models\TratamientoRealizado;
+use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -242,9 +244,44 @@ class CajaController extends Controller
         return (int) round($monto * 100);
     }
 
+    public function buscarPacientes(Request $request): JsonResponse
+    {
+        $this->authorizeLookup();
+        $data = $request->validate([
+            'buscar' => ['required', 'string', 'min:2', 'max:100'],
+            'clinica_id' => ['nullable', 'integer', 'exists:clinicas,id'],
+        ], ['buscar.min' => 'Ingrese al menos dos caracteres del CI o nombre del paciente.']);
+        $terminos = preg_split('/\s+/u', trim($data['buscar']), -1, PREG_SPLIT_NO_EMPTY);
+        $fichas = Admision::query()
+            ->whereHas('historiasClinicas', fn (Builder $query) => $query
+                ->when(isset($data['clinica_id']), fn (Builder $query) => $query->where('clinica_id', $data['clinica_id'])))
+            ->whereHas('paciente', function (Builder $query) use ($terminos): void {
+                foreach ($terminos as $termino) {
+                    $query->where(function (Builder $query) use ($termino): void {
+                        $query->where('ci', 'like', "%{$termino}%")
+                            ->orWhere('nombre', 'like', "%{$termino}%")
+                            ->orWhere('apellido_paterno', 'like', "%{$termino}%")
+                            ->orWhere('apellido_materno', 'like', "%{$termino}%");
+                    });
+                }
+            })
+            ->with('paciente:id,ci,nombre,apellido_paterno,apellido_materno')
+            ->orderByDesc('id')->limit(21)->get(['id', 'paciente_id', 'fecha_admision']);
+
+        return response()->json([
+            'fichas' => $fichas->take(20)->map(fn (Admision $admision): array => [
+                'ficha' => $admision->id,
+                'paciente' => $admision->paciente->nombre_completo,
+                'ci' => (string) $admision->paciente->ci,
+                'fecha' => $admision->fecha_admision?->format('d/m/Y'),
+            ])->values(),
+            'hay_mas' => $fichas->count() > 20,
+        ]);
+    }
+
     public function buscarFicha(Request $request): JsonResponse
     {
-        $this->authorizeAction('ver');
+        $this->authorizeLookup();
         $data = $request->validate(['ficha' => ['required', 'integer', 'min:1'], 'clinica_id' => ['nullable', 'integer', 'exists:clinicas,id']]);
         $historias = HistoriaClinica::query()->where('admision_id', $data['ficha'])
             ->when($request->filled('clinica_id'), fn (Builder $query) => $query->where('clinica_id', $data['clinica_id']))
@@ -272,6 +309,17 @@ class CajaController extends Controller
                 ])->all();
             })->values(),
         ]);
+    }
+
+    private function authorizeLookup(): void
+    {
+        $user = auth()->user() ?? Usuario::find(session('user_id'));
+
+        abort_unless(
+            $user?->canAny(['cajas.ver', 'cajas.crear', 'cajas.gestionar']) || $user?->hasRole('admin'),
+            403,
+            'No tienes permiso para consultar pacientes de caja.'
+        );
     }
 
     protected function canDestroy($model): array

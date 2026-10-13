@@ -12,7 +12,7 @@
     <div class="toolbar-actions">
         <x-boton-reporte ruta="solicitudes-insumos.reporte" />
         <a href="{{ route('insumos.index') }}" class="btn btn-secondary">📦 Ver Catálogo</a>
-        @can('insumos.crear')
+        @can('solicitudes-insumos.crear')
         <button type="button" class="btn btn-primary" id="btnNuevaSolicitud">
             + Nueva Solicitud
         </button>
@@ -397,7 +397,7 @@
         }
 
         async function eliminar(id) {
-            if (!confirm('¿Eliminar esta solicitud?')) return;
+            if (!await window.confirmarEliminacion(`Solicitud #${id}`)) return;
             try {
                 const res = await fetch(URLS.destroy(id), {
                     method: 'DELETE',

@@ -366,10 +366,12 @@ Route::middleware(['auth.session'])->group(function () {
    ============================================================ */
     Route::prefix('solicitudes-insumos')->name('solicitudes-insumos.')->controller(InsumoController::class)->group(function () {
 
-        Route::middleware('permission:insumos.ver|insumos.gestionar')->group(function () {
+        Route::middleware('permission:solicitudes-insumos.ver|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {
             Route::get('/', 'solicitudes')->name('index');
             Route::get('/reporte', 'reporteSolicitudes')->name('reporte');
             Route::get('/tabla', 'tablaSolicitudes')->name('tabla');
+            Route::get('/tipos-por-clinica/{clinica}', 'tiposPorClinica')->name('tipos-por-clinica');
+            Route::get('/buscar-insumos/{clinica}', 'buscarInsumos')->name('buscar-insumos');
             Route::get('/buscar-tratamientos', 'buscarTratamientos')->name('buscar-tratamientos');
             Route::get('/buscar-sesiones', 'buscarSesiones')->name('buscar-sesiones');
             Route::get('/catalogo-designado', 'catalogoDesignado')->name('catalogo-designado');
@@ -377,23 +379,23 @@ Route::middleware(['auth.session'])->group(function () {
             Route::get('/{id}', 'verSolicitud')->name('show');
         });
 
-        Route::middleware('permission:insumos.crear|insumos.gestionar')->group(function () {
+        Route::middleware('permission:solicitudes-insumos.crear|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {
             Route::post('/', 'crearSolicitud')->name('store');
         });
 
-        Route::middleware('permission:insumos.editar|insumos.gestionar')->group(function () {
+        Route::middleware('permission:solicitudes-insumos.editar|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {
             Route::put('/{id}', 'actualizarSolicitud')->name('update');
         });
 
-        Route::post('/{id}/autorizar', 'autorizarSolicitud')->middleware('permission:insumos.autorizar|insumos.gestionar')->name('autorizar');
-        Route::post('/{id}/aprobar', 'aprobarSolicitud')->middleware('permission:insumos.aprobar|insumos.gestionar')->name('aprobar');
-        Route::post('/{id}/rechazar', 'rechazarSolicitud')->middleware('permission:insumos.rechazar|insumos.gestionar')->name('rechazar');
-        Route::post('/{id}/consumir', 'consumirSolicitud')->middleware('permission:insumos.consumir|insumos.gestionar')->name('consumir');
-        Route::middleware('permission:insumos.entregar|insumos.gestionar')->group(function () {
+        Route::post('/{id}/autorizar', 'autorizarSolicitud')->middleware('permission:solicitudes-insumos.autorizar|solicitudes-insumos.gestionar|insumos.gestionar')->name('autorizar');
+        Route::post('/{id}/aprobar', 'aprobarSolicitud')->middleware('permission:solicitudes-insumos.aprobar|solicitudes-insumos.gestionar|insumos.gestionar')->name('aprobar');
+        Route::post('/{id}/rechazar', 'rechazarSolicitud')->middleware('permission:solicitudes-insumos.rechazar|solicitudes-insumos.gestionar|insumos.gestionar')->name('rechazar');
+        Route::post('/{id}/consumir', 'consumirSolicitud')->middleware('permission:solicitudes-insumos.consumir|solicitudes-insumos.gestionar|insumos.gestionar')->name('consumir');
+        Route::middleware('permission:solicitudes-insumos.entregar|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {
             Route::post('/{id}/entregar', 'entregarSolicitud')->name('entregar');
         });
 
-        Route::middleware('permission:insumos.eliminar|insumos.gestionar')->group(function () {
+        Route::middleware('permission:solicitudes-insumos.eliminar|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {
             Route::delete('/{id}', 'eliminarSolicitud')->name('destroy');
         });
     });
@@ -404,6 +406,10 @@ Route::middleware(['auth.session'])->group(function () {
         Route::get('/{esterilizacion}/control', 'control')->middleware('permission:esterilizaciones.ver|esterilizaciones.gestionar')->name('control');
         Route::post('/{esterilizacion}/autorizar', 'autorizar')->middleware('permission:esterilizaciones.autorizar|esterilizaciones.gestionar')->name('autorizar');
         Route::post('/{esterilizacion}/movimiento', 'movimiento')->middleware('permission:esterilizaciones.gestionar')->name('movimiento');
+        Route::post('/{esterilizacion}/preparar', 'preparar')->middleware('permission:esterilizaciones.gestionar')->name('preparar');
+        Route::post('/{esterilizacion}/ciclos', 'registrarCiclo')->middleware('permission:esterilizaciones.gestionar')->name('ciclos.store');
+        Route::post('/{esterilizacion}/ciclos/{ciclo}/revision', 'revisarCiclo')->middleware('permission:esterilizaciones.gestionar')->name('ciclos.revisar');
+        Route::post('/{esterilizacion}/ciclos/{ciclo}/liberar', 'liberar')->middleware('permission:esterilizaciones.gestionar')->name('ciclos.liberar');
 
         Route::middleware('permission:esterilizaciones.ver|esterilizaciones.gestionar')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -467,11 +473,15 @@ Route::middleware(['auth.session'])->group(function () {
        ============================================================ */
     Route::prefix('cajas')->name('cajas.')->controller(CajaController::class)->group(function () {
 
+        Route::middleware('permission:cajas.ver|cajas.crear|cajas.gestionar')->group(function () {
+            Route::get('/buscar-ficha', 'buscarFicha')->name('buscar-ficha');
+            Route::get('/buscar-pacientes', 'buscarPacientes')->name('buscar-pacientes');
+        });
+
         Route::middleware('permission:cajas.ver|cajas.gestionar')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/reporte', 'reporte')->name('reporte');
             Route::get('/tabla', 'tabla')->name('tabla');
-            Route::get('/buscar-ficha', 'buscarFicha')->name('buscar-ficha');
             Route::get('/{caja}/datos', 'datos')->name('datos');
             Route::get('/{caja}', 'show')->name('show');
         });
@@ -578,6 +588,7 @@ Route::middleware(['auth.session'])->group(function () {
         });
 
         Route::middleware('permission:usuarios.eliminar|usuarios.gestionar')->group(function () {
+            Route::delete('/{usuario}/eliminar', 'eliminarDefinitivamente')->name('eliminar-definitivamente');
             Route::delete('/{usuario}', 'destroy')->name('destroy');
         });
     });

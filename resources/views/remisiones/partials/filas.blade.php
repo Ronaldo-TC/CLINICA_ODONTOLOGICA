@@ -10,7 +10,7 @@
             <div>
                 <strong>{{ $remision->paciente?->nombre_completo ?? '—' }}</strong>
                 <br>
-                <small style="color:var(--muted);">CI: {{ $remision->paciente?->ci ?? '—' }}</small>
+                <small class="table-value" style="color:var(--muted);">CI: {{ $remision->paciente?->ci ?? '—' }}</small>
             </div>
         </div>
     </td>
@@ -59,18 +59,18 @@
         <div class="actions">
             @if ($remision->admision_id)
             @canany(['admisiones.ver', 'admisiones.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}">Ver ficha</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}"><x-icono nombre="ficha" /> Ver ficha</a>
             @endcanany
             @endif
             @if (($remision->historias_clinicas_count ?? 0) > 0)
             @canany(['historias.ver', 'historias.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}">Historias</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}"><x-icono nombre="historia" /> Historias</a>
             @endcanany
             @endif
             @canany(['remisiones.editar', 'remisiones.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="editar" data-id="{{ $remision->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcanany
 
@@ -79,7 +79,7 @@
                 data-action="eliminar"
                 data-id="{{ $remision->id }}"
                 data-nombre="Remisión #{{ $remision->id }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcanany
         </div>

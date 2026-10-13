@@ -11,7 +11,7 @@
 
 <div class="actions" style="margin-top:14px;">
     @if($solicitud->estado === 'pendiente' && $supervisor && $historiaVigente)
-        @canany(['insumos.autorizar', 'insumos.gestionar'])
+        @canany(['solicitudes-insumos.autorizar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             <form method="POST" action="{{ route('solicitudes-insumos.autorizar', $solicitud->id) }}">
                 @csrf
                 <button class="btn btn-primary">Autorizar solicitud</button>
@@ -19,7 +19,7 @@
         @endcanany
     @endif
     @if($solicitud->estado === 'autorizado' && $encargado)
-        @canany(['insumos.aprobar', 'insumos.gestionar'])
+        @canany(['solicitudes-insumos.aprobar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             <form method="POST" action="{{ route('solicitudes-insumos.aprobar', $solicitud->id) }}">
                 @csrf
                 <button class="btn btn-primary">Aprobar en Insumos</button>
@@ -28,7 +28,7 @@
     @endif
     @if(($solicitud->estado === 'pendiente' && $supervisor && $historiaVigente)
         || ($encargado && in_array($solicitud->estado, ['autorizado', 'aprobado'], true) && $solicitud->entregas_count === 0))
-        @canany(['insumos.rechazar', 'insumos.gestionar'])
+        @canany(['solicitudes-insumos.rechazar', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             <form method="POST" action="{{ route('solicitudes-insumos.rechazar', $solicitud->id) }}">
                 @csrf
                 <label class="form-group">Motivo del rechazo (opcional)

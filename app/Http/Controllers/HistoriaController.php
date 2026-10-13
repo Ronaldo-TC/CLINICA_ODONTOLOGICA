@@ -75,7 +75,7 @@ class HistoriaController extends Controller
             && (AccesoClinico::esAdministrador($usuario)
                 || ($usuario->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $usuario->id
                     && Especialidad::query()->where('usuario_id', $usuario->id)->where('clinica_id', $registro->clinica_id)->where('habilitado', true)->exists()));
-        $solicitudes = $usuario->canAny(['insumos.ver', 'insumos.gestionar'])
+        $solicitudes = $usuario->canAny(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             ? AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)
                 ->where(function (Builder $query) use ($registro, $tratamientoIds): void {
                     $query->where('historia_clinica_id', $registro->id)
@@ -94,7 +94,7 @@ class HistoriaController extends Controller
                 ->orderByDesc('id')->get()
             : collect();
         $esterilizaciones = $usuario->canAny(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
-            ? Esterilizacion::query()->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
+            ? Esterilizacion::query()->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
                 ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
                 ->when(! AccesoClinico::esAdministrador($usuario) && $usuario->hasAnyRole(['docente', 'jefe-catedra']), fn (Builder $query) => $query->where('docente_id', $usuario->id))
                 ->where(function (Builder $query) use ($registro): void {
@@ -339,11 +339,10 @@ class HistoriaController extends Controller
 
     /**
      * POST /historias/{id}/archivos
-     * Sube un PDF/JPG/PNG (máx. 10 MB). Guarda el binario en la base (columna
-     * `archivo`) para no depender del enlace simbólico de storage, y registra
-     * la fila en `archivos` con hash SHA-256 para evitar duplicados.
+     * Guarda un PDF/JPG/PNG (máx. 10 MB) en storage privado y registra
+     * únicamente su nombre y metadatos en la base de datos.
      */
-    public function subirArchivo(Request $request, $id): JsonResponse
+    public function subirArchivo(Request $request, int|string $id): JsonResponse
     {
         $this->authorizeAction('editar');
 
@@ -359,10 +358,9 @@ class HistoriaController extends Controller
 
         $file = $request->file('archivo');
 
-        $contenido = file_get_contents($file->getRealPath());
-        $hash = hash('sha256', $contenido);
-        $bytes = strlen($contenido);
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+        $hash = hash_file('sha256', $file->getRealPath());
+        $bytes = $file->getSize();
+        $extension = strtolower($file->extension());
 
         // ¿Ya existe este mismo archivo en la historia?
         $existente = $historia->archivos()->where('hash', $hash)->first();
@@ -379,17 +377,24 @@ class HistoriaController extends Controller
         $nombreGuardado = "historia_{$historia->id}_{$hash}.{$extension}";
         $ruta = "patients/{$pacienteId}/{$nombreGuardado}";
 
-        DB::beginTransaction();
-
+        $disco = Storage::disk('local');
+        $archivoNuevo = false;
         try {
-            // Copia en disco (si el almacenamiento está disponible)
-            try {
-                Storage::disk('local')->put($ruta, $contenido);
-            } catch (\Throwable $e) {
-                report($e);
+            $respaldo = $historia->archivo ? base64_decode($historia->archivo, true) : false;
+            if ($respaldo !== false) {
+                $anterior = $historia->archivos()->where('hash', hash('sha256', $respaldo))->first();
+                if ($anterior?->ruta && ! $disco->exists($anterior->ruta) && ! $disco->put($anterior->ruta, $respaldo)) {
+                    throw new \RuntimeException('No se pudo conservar el documento anterior en storage.');
+                }
             }
 
-            $archivo = Archivo::create([
+            $archivoNuevo = ! $disco->exists($ruta);
+            if (! $disco->putFileAs("patients/{$pacienteId}", $file, $nombreGuardado)) {
+                throw new \RuntimeException('No se pudo escribir el documento en storage.');
+            }
+
+            $archivo = DB::transaction(function () use ($historia, $file, $nombreGuardado, $ruta, $extension, $bytes, $hash): Archivo {
+                $archivo = Archivo::create([
                 'paciente_id' => $historia->paciente_id,
                 'historia_clinica_id' => $historia->id,
                 'nombre_original' => $file->getClientOriginalName(),
@@ -403,14 +408,14 @@ class HistoriaController extends Controller
                 'clinica_id' => $historia->clinica_id,
             ]);
 
-            // El binario también queda en la historia (respaldo en la BD)
             $historia->update([
-                'archivo' => base64_encode($contenido),
+                'archivo' => $nombreGuardado,
                 'archivo_nombre' => mb_substr((string) $file->getClientOriginalName(), 0, 100),
                 'archivo_hash' => substr($hash, 0, 50),
             ]);
 
-            DB::commit();
+                return $archivo;
+            });
 
             return response()->json([
                 'success' => true,
@@ -418,14 +423,18 @@ class HistoriaController extends Controller
                 'archivo' => $this->formatearArchivo($archivo),
             ], 201);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
+            if ($archivoNuevo) {
+                try {
+                    $disco->delete($ruta);
+                } catch (\Throwable $errorAlLimpiar) {
+                    report($errorAlLimpiar);
+                }
+            }
 
             return response()->json([
                 'success' => false,
-                'message' => app()->environment('production')
-                    ? 'No se pudo guardar el archivo.'
-                    : 'Error: '.$e->getMessage(),
+                'message' => 'No se pudo guardar el archivo. Intente nuevamente.',
             ], 500);
         }
     }
@@ -434,10 +443,10 @@ class HistoriaController extends Controller
      * GET /historias/{id}/archivos/{archivo}
      * Descarga o previsualiza el adjunto.
      */
-    public function descargarArchivo($id, $archivo)
+    public function descargarArchivo(int|string $id, int|string $archivo): \Illuminate\Http\Response
     {
         $this->authorizeAction('ver');
-        $this->findOrFail($id);
+        $historia = $this->findOrFail($id);
 
         $registro = Archivo::where('historia_clinica_id', $id)->findOrFail($archivo);
 
@@ -450,13 +459,17 @@ class HistoriaController extends Controller
         }
 
         if ($contenido === null) {
-            $historia = HistoriaClinica::find($id);
-            $contenido = $historia?->archivo ? base64_decode($historia->archivo) : null;
+            $respaldo = $historia->archivo ? base64_decode($historia->archivo, true) : false;
+            if ($respaldo !== false && $registro->hash && hash_equals($registro->hash, hash('sha256', $respaldo))) {
+                $contenido = $respaldo;
+            }
         }
 
         abort_if($contenido === null, 404, 'El archivo no está disponible.');
 
         return response($contenido)
+            ->header('Cache-Control', 'private, no-store')
+            ->header('X-Content-Type-Options', 'nosniff')
             ->header('Content-Type', $registro->tipo ?: 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="'.($registro->nombre_original ?: 'archivo').'"');
     }
@@ -554,9 +567,12 @@ class HistoriaController extends Controller
         $vista = view('historias.detalle-estudiante', [
             'registro' => $registro,
             'cerrada' => $cerrada,
-            'clinicas' => collect([$registro->clinica]),
+            'clinicas' => Clinica::query()->whereIn('id', HistoriaClinica::query()
+                ->where('paciente_id', $registro->paciente_id)->where('estudiante_id', $registro->estudiante_id)
+                ->whereNull('fecha_fin')->whereNotIn('estado', self::ESTADOS_CERRADOS)->select('clinica_id'))
+                ->orderBy('especialidad')->get(),
             'catalogo' => Tratamiento::where('clinica_id', $registro->clinica_id)->orderBy('nombre')->get(),
-            'solicitudes' => $request->user()->canAny(['insumos.ver', 'insumos.gestionar'])
+            'solicitudes' => $request->user()->canAny(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
                 ? InsumoSolicitado::where('usuario_id', $request->user()->id)
                     ->where(fn (Builder $query) => $query->where('historia_clinica_id', $registro->id)->orWhereIn('tratamiento_realizado_id', $tratamientoIds))
                     ->with(['detalles.insumo', 'detalles.consumos', 'tratamientoRealizado.tratamiento', 'tratamiento'])->orderByDesc('id')->get()
@@ -566,7 +582,7 @@ class HistoriaController extends Controller
                     ->orWhereHas('detalles', fn (Builder $detalle) => $detalle->whereIn('tratamiento_realizado_id', $tratamientoIds));
             })->orderByDesc('id')->get(),
             'esterilizaciones' => $request->user()->canAny(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
-                ? Esterilizacion::where('estudiante_id', $request->user()->id)->where('clinica_id', $registro->clinica_id)
+                ? Esterilizacion::with('ultimoCiclo')->where('estudiante_id', $request->user()->id)->where('clinica_id', $registro->clinica_id)
                     ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
                     ->where(function (Builder $query) use ($registro): void {
                         $query->whereNull('remision_id');

@@ -39,6 +39,7 @@
         td { white-space:pre-wrap; }
         tr:nth-child(even) td { background:#f9fbfa; }
         .report-table { overflow-x:auto; }
+        .report-value { white-space:nowrap; overflow-wrap:normal; font-variant-numeric:tabular-nums; }
         .report-note { background:var(--soft); border-left:3px solid var(--teal); padding:7px 10px; margin:9px 0; }
         .report-warning { background:#fff8e5; border-left:3px solid #ca8a04; padding:10px 14px; }
         .report-footer { margin-top:18px; padding-top:8px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; font-size:9px; color:var(--muted); }
@@ -58,20 +59,49 @@
         .diente.es-ausente .diente-ausente { display:block; }
         .odontograma-hint { display:none; }
         @media(max-width:720px) { .report-paper { padding:20px; } .report-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .report-header { flex-wrap:wrap; } .report-reference { text-align:left; } }
-        @page { size:A4 {{ ($horizontal ?? false) ? 'landscape' : 'portrait' }}; margin:9mm 9mm 14mm; }
+        @page { size:A4 {{ ($horizontal ?? false) ? 'landscape' : 'portrait' }}; margin:7mm 7mm 10mm; }
         @media print {
-            body { background:white; font-size:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+            body { background:white; font-size:10.5px; line-height:1.25; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
             .report-actions, .odontograma-controles { display:none !important; }
-            .report-paper { margin:0; padding:0; max-width:none; box-shadow:none; }
-            .report-table, .odontograma-desplazable { overflow:visible !important; }
+            .report-paper { width:100%; margin:0; padding:0; max-width:none; box-shadow:none; }
+            .report-header { gap:10px; padding-bottom:6px; }
+            .brand-mark { padding:6px; }
+            .eyebrow { font-size:9px; letter-spacing:.6px; }
+            .report-reference { font-size:9px; }
+            h1 { font-size:17px; margin:8px 0 4px; }
+            h2 { font-size:12px; margin:9px 0 5px; padding-bottom:3px; }
+            h3 { font-size:10.5px; margin:6px 0 3px; }
+            p { margin:2px 0; orphans:2; widows:2; }
+            .report-metrics { gap:5px; margin:7px 0; }
+            .report-metric { padding:5px 7px; min-width:100px; }
+            .report-metric span { font-size:9px; }
+            .report-metric strong { font-size:13px; }
+            .report-grid { gap:4px 10px; margin:5px 0; }
+            .report-field dt { font-size:9px; margin-bottom:2px; }
+            .report-note, .report-warning { padding:5px 7px; margin:6px 0; }
+            .report-filters p { display:inline; margin:0; }
+            .report-filters p::before { content:' · '; }
+            .report-table, .odontograma-desplazable { max-width:100%; overflow:visible !important; }
+            table { min-width:0; max-width:100%; margin:5px 0; font-size:9.5px; line-height:1.25; break-inside:auto; }
+            th, td { padding:3px 4px; }
+            th { font-size:9.5px; }
+            tbody { break-inside:auto; }
             thead { display:table-header-group; }
             tr, .report-metric, .report-field, .report-signatures, .odontograma-cuadrante { break-inside:avoid; }
             h2, h3 { break-after:avoid; }
-            .report-admission + .report-admission { break-before:auto; }
+            .report-admission { break-inside:auto; }
+            .report-admission + .report-admission { margin-top:10px; padding-top:5px; break-before:auto; }
+            .report-signatures { gap:16px; margin-top:10px; font-size:9px; }
+            .report-signatures div { padding-top:5px; }
             .report-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
             .report-header { flex-wrap:nowrap; }
             .report-reference { text-align:right; }
-            .report-footer { break-inside:avoid; }
+            .report-footer { margin-top:10px; padding-top:5px; break-inside:avoid; }
+            .report-paper .odontograma { padding:6px 0; }
+            .report-paper .odontograma .odontograma-arcada { min-width:0; gap:8px; }
+            .report-paper .odontograma .odontograma-cuadrante { min-width:0; padding:5px; }
+            .report-paper .odontograma .odontograma-titulo { font-size:9px; margin-bottom:4px; }
+            .report-paper .odontograma .odontograma-denticion-titulo { font-size:10px; margin-bottom:5px; }
             .report-paper .odontograma .odontograma-piezas { gap:2px; }
             .report-paper .odontograma .diente { width:34px; flex-basis:34px; }
             .report-paper .odontograma .diente-imagen { width:34px; height:62px; }

@@ -52,6 +52,7 @@
         html,
         body {
             min-height: 100vh;
+            min-height: 100dvh;
         }
 
         body {
@@ -62,7 +63,8 @@
             place-items: center;
             padding: 24px;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -70,6 +72,14 @@
         /* ============================================
            FONDO DECORATIVO (sin GPU, sin blur)
            ============================================ */
+        .login-backdrop {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .blob {
             position: absolute;
             border-radius: 50%;
@@ -116,13 +126,13 @@
         .shell {
             position: relative;
             z-index: 1;
-            width: min(1000px, 100%);
-            min-height: 640px;
+            width: min(1080px, 100%);
+            min-height: 680px;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.05fr 1fr;
             background: var(--surface);
             border: 1px solid var(--line);
-            border-radius: var(--radius-lg);
+            border-radius: 28px;
             box-shadow:
                 var(--shadow-sm),
                 var(--shadow-md),
@@ -147,12 +157,13 @@
            PANEL IZQUIERDO (INTRO)
            ============================================ */
         .intro {
-            padding: clamp(36px, 5vw, 64px);
+            padding: clamp(32px, 4.5vw, 52px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             background: linear-gradient(160deg, #eaf6f5 0%, #f5ecf5 100%);
-            border-right: 1px solid var(--line);
+            color: var(--ink);
+            border-right: 0;
             position: relative;
             overflow: hidden;
         }
@@ -168,16 +179,52 @@
             opacity: 0.6;
         }
 
+        .intro::before {
+            content: '';
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            border: 1px solid rgba(10, 125, 118, 0.1);
+            border-radius: 50%;
+            bottom: -190px;
+            right: -160px;
+            box-shadow: 0 0 0 60px rgba(10, 125, 118, 0.025), 0 0 0 120px rgba(10, 125, 118, 0.025);
+            pointer-events: none;
+        }
+
+        .intro-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 36px;
+        }
+
+        .intro-brand strong {
+            display: block;
+            font-size: 15px;
+            letter-spacing: -0.02em;
+        }
+
+        .intro-brand span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 3px;
+            letter-spacing: 0.08em;
+        }
+
         .intro>* {
             position: relative;
             z-index: 1;
         }
 
         .mark {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            border-radius: 16px;
             background: linear-gradient(135deg, var(--teal), var(--cyan));
+            border: 1px solid rgba(255, 255, 255, 0.18);
             display: grid;
             place-items: center;
             box-shadow:
@@ -200,11 +247,11 @@
         }
 
         h1 {
-            max-width: 360px;
-            font-size: clamp(32px, 4.2vw, 48px);
-            line-height: 1.05;
-            font-weight: 300;
-            letter-spacing: -0.025em;
+            max-width: 410px;
+            font-size: clamp(34px, 4vw, 46px);
+            line-height: 1.14;
+            font-weight: 600;
+            letter-spacing: -0.045em;
             color: var(--ink);
         }
 
@@ -231,6 +278,40 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-top: 28px;
+        }
+
+        .intro-features {
+            display: grid;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        .intro-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        .intro-feature svg {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            padding: 6px;
+            border-radius: 9px;
+            background: var(--teal-soft);
+            color: var(--teal);
+        }
+
+        .form-kicker {
+            margin-bottom: 16px;
+            color: var(--teal);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
 
         .note::before {
@@ -254,7 +335,7 @@
         }
 
         .form-panel h2 {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 600;
             letter-spacing: -0.02em;
             margin-bottom: 6px;
@@ -330,9 +411,8 @@
         .field label {
             display: block;
             margin-bottom: 8px;
-            font: 700 11px var(--font);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font: 600 13px var(--font);
+            letter-spacing: 0;
             color: var(--ink);
         }
 
@@ -344,7 +424,7 @@
             outline: 0;
             color: var(--ink);
             font: 16px var(--font);
-            background: #fff;
+            background: var(--surface-soft);
             transition:
                 border-color 0.15s ease,
                 box-shadow 0.15s ease,
@@ -361,6 +441,7 @@
 
         .field input:focus {
             border-color: var(--teal);
+            background: #fff;
             box-shadow: 0 0 0 4px rgba(10, 125, 118, 0.12);
         }
 
@@ -452,9 +533,8 @@
             color: #fff;
             background: var(--teal);
             cursor: pointer;
-            font: 700 13px var(--font);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font: 650 14px var(--font);
+            letter-spacing: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -539,6 +619,16 @@
                 padding: 36px 32px;
                 border-right: none;
                 border-bottom: 1px solid var(--line);
+                gap: 18px;
+            }
+
+            .intro-brand {
+                margin-bottom: 0;
+            }
+
+            .intro-features,
+            .intro .note {
+                display: none;
             }
 
             .intro h1 {
@@ -606,27 +696,49 @@
 
 <body>
     <!-- Fondo decorativo -->
+    <div class="login-backdrop" aria-hidden="true">
     <div class="blob blob-cyan-1"></div>
     <div class="blob blob-fuchsia-1"></div>
     <div class="blob blob-teal-1"></div>
     <div class="blob blob-teal-2"></div>
+    </div>
 
     <main class="shell">
         <!-- ============ PANEL IZQUIERDO ============ -->
-        <section class="intro" aria-hidden="true">
+        <section class="intro">
+            <div class="intro-brand">
             <div class="mark">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1 4.5 1.5 6.5.3 1.2.5 2.5.5 3.5 0 1.5 1 3 2.5 3s2-1 2-2.5c0-1 .5-2 1.5-2s1.5 1 1.5 2c0 1.5.5 2.5 2 2.5s2.5-1.5 2.5-3c0-1 .2-2.3.5-3.5.5-2 1.5-4 1.5-6.5 0-3.5-2.5-6-6-6-1.5 0-2.5.5-3 .5S13.5 2 12 2z" />
                 </svg>
             </div>
+                <div>
+                    <strong>Clínica Odontológica</strong>
+                    <span>UPEA · U-TIC</span>
+                </div>
+            </div>
 
             <div>
-                <p class="eyebrow">Odontología · UPEA · U-TIC</p>
-                <h1>Un espacio <strong>claro</strong> para administrar la clínica.</h1>
+                <p class="eyebrow">Gestión clínica y académica</p>
+                <h1>La atención comienza con una <strong>buena gestión.</strong></h1>
                 <p class="lead">
                     Ingresa al panel administrativo para consultar y organizar la operación
                     <strong>académica y clínica</strong> de la Clínica Odontológica.
                 </p>
+                <div class="intro-features">
+                    <div class="intro-feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M17 6a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5"/></svg>
+                        Admisión y registro de pacientes
+                    </div>
+                    <div class="intro-feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+                        Historias y seguimiento clínico
+                    </div>
+                    <div class="intro-feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3 9 9-5 9 5-9 5-9-5ZM6 11v6c4 3 8 3 12 0v-6M21 9v8"/></svg>
+                        Especialidades y gestión académica
+                    </div>
+                </div>
             </div>
 
             <div class="note">Acceso protegido para personal autorizado</div>
@@ -634,6 +746,7 @@
 
         <!-- ============ PANEL DERECHO ============ -->
         <section class="form-panel">
+            <p class="form-kicker">Tu espacio de trabajo</p>
             <h2>Iniciar sesión</h2>
             <p class="subhead">Usa tus credenciales institucionales.</p>
 

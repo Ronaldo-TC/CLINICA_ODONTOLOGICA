@@ -53,6 +53,9 @@
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $usuario->id }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="m16 3 5 5-12 12H4v-5L16 3Z" />
+                </svg>
                 Editar
             </button>
             @endcan
@@ -64,6 +67,9 @@
                 data-action="habilitar"
                 data-id="{{ $usuario->id }}"
                 data-nombre="{{ $usuario->nombre_completo }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="m5 12 4 4L19 6" />
+                </svg>
                 Habilitar
             </button>
             @endif
@@ -72,11 +78,29 @@
             @can('usuarios.eliminar')
             @if ($usuario->habilitado && $usuario->id !== auth()->id())
             <button type="button"
+                class="btn btn-sm btn-warning"
+                data-action="deshabilitar"
+                data-id="{{ $usuario->id }}"
+                data-nombre="{{ $usuario->nombre_completo }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m6 6 12 12" />
+                </svg>
+                Deshabilitar
+            </button>
+            @endif
+
+            @if ($usuario->id !== auth()->id())
+            <button type="button"
                 class="btn btn-sm btn-danger"
                 data-action="eliminar"
                 data-id="{{ $usuario->id }}"
                 data-nombre="{{ $usuario->nombre_completo }}">
-                Deshabilitar
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v7M14 10v7" />
+                </svg>
+                Eliminar
             </button>
             @endif
             @endcan

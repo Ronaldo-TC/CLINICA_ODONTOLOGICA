@@ -7,6 +7,7 @@ use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
 use App\Models\SesionAtencion;
 use App\Models\TratamientoRealizado;
+use Database\Seeders\SolicitudesInsumosPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -15,10 +16,16 @@ class InsumosWorkflowTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+    }
+
     public function test_only_supervisor_approves_and_warehouse_delivers_with_partial_stock_tracking(): void
     {
         $case = $this->clinicalCase();
-        $case['teacher']->givePermissionTo(['insumos.autorizar', 'insumos.ver']);
+        $case['teacher']->givePermissionTo(['solicitudes-insumos.autorizar', 'solicitudes-insumos.ver']);
         $treatment = TratamientoRealizado::create(['historia_clinica_id' => $case['history']->id, 'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id, 'estado' => 'en_proceso', 'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now(), 'pieza_dental' => '16']);
         $session = SesionAtencion::create(['tratamiento_realizado_id' => $treatment->id, 'estudiante_id' => $case['student']->id, 'docente_id' => $case['teacher']->id, 'fecha' => today(), 'descripcion' => 'Avance aprobado', 'autorizado' => true, 'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now()]);
         $type = InsumoTratamiento::create(['clinica_id' => $case['clinic']->id, 'nombre' => 'Tipo prueba', 'descripcion' => 'Material']);
@@ -50,7 +57,7 @@ class InsumosWorkflowTest extends TestCase
         $this->get(route('solicitudes-insumos.show', $id))->assertOk()->assertSee('Material prueba');
         $this->actingAs($case['teacher'])->getJson('/api/v1/solicitudes-insumos')->assertOk()->assertJsonFragment(['id' => $id]);
         $otherTeacher = $this->clinicalUser('docente');
-        $otherTeacher->givePermissionTo('insumos.ver');
+        $otherTeacher->givePermissionTo('solicitudes-insumos.ver');
         $this->actingAs($otherTeacher)->getJson('/api/v1/solicitudes-insumos')->assertOk()->assertJsonMissing(['id' => $id]);
 
         $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.consumir', $id), ['detalles' => [['detalle_id' => $detail->id, 'cantidad_usada' => 3]]])->assertOk();

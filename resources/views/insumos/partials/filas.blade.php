@@ -14,8 +14,8 @@
         <small style="color:var(--muted);">{{ $insumo->cantidad }}</small>
         <div style="font-size:11px;color:var(--muted);">Mín: {{ number_format($insumo->stock_minimo, 2) }}</div>
     </td>
-    <td>{{ number_format($insumo->costo_unitario, 2) }} Bs</td>
-    <td><strong>{{ number_format($insumo->cantidad_numerica * $insumo->costo_unitario, 2) }}</strong> Bs</td>
+    <td class="table-value">{{ number_format($insumo->costo_unitario, 2) }} Bs</td>
+    <td class="table-value"><strong>{{ number_format($insumo->cantidad_numerica * $insumo->costo_unitario, 2) }}</strong> Bs</td>
     <td>
         @if ($insumo->agotado)
         <span class="badge badge-danger">Agotado</span>
@@ -29,15 +29,15 @@
         <div class="actions">
             @canany(['insumos.editar', 'insumos.gestionar'])
             <button type="button" class="btn btn-sm btn-secondary"
-                data-action="editar" data-id="{{ $insumo->id }}">Editar</button>
+                data-action="editar" data-id="{{ $insumo->id }}"><x-icono nombre="editar" /> Editar</button>
             <button type="button" class="btn btn-sm btn-secondary"
                 data-action="ajustar" data-id="{{ $insumo->id }}"
-                data-nombre="{{ $insumo->nombre }}">± Stock</button>
+                data-nombre="{{ $insumo->nombre }}"><x-icono nombre="stock" /> ± Stock</button>
             @endcanany
             @canany(['insumos.eliminar', 'insumos.gestionar'])
             <button type="button" class="btn btn-sm btn-danger"
                 data-action="eliminar" data-id="{{ $insumo->id }}"
-                data-nombre="{{ $insumo->nombre }}">Eliminar</button>
+                data-nombre="{{ $insumo->nombre }}"><x-icono nombre="eliminar" /> Eliminar</button>
             @endcanany
         </div>
     </td>

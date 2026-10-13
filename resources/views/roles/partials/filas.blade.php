@@ -44,7 +44,7 @@ $esProtegido = in_array($rol->name, ['admin', 'subadmin'], true);
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $rol->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcan
 
@@ -55,7 +55,7 @@ $esProtegido = in_array($rol->name, ['admin', 'subadmin'], true);
                 data-action="permisos"
                 data-id="{{ $rol->id }}"
                 data-nombre="{{ $rol->name }}">
-                Permisos
+                <x-icono nombre="permisos" /> Permisos
             </button>
             @endif
             @endcan
@@ -67,7 +67,7 @@ $esProtegido = in_array($rol->name, ['admin', 'subadmin'], true);
                 data-action="eliminar"
                 data-id="{{ $rol->id }}"
                 data-nombre="{{ $rol->name }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endif
             @endcan

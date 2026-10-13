@@ -1,14 +1,23 @@
 ﻿<div class="modal-backdrop" id="modalCaja">
     <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modalCajaTitulo">
-        <form id="formCaja" data-store="{{ route('cajas.store') }}" data-update="{{ route('cajas.update', '__ID__') }}" data-ficha="{{ route('cajas.buscar-ficha') }}">
+        <form id="formCaja" data-store="{{ route('cajas.store') }}" data-update="{{ route('cajas.update', '__ID__') }}" data-ficha="{{ route('cajas.buscar-ficha') }}" data-pacientes="{{ route('cajas.buscar-pacientes') }}">
             @csrf
             <input type="hidden" name="caja_id" id="formCajaId">
             <input type="hidden" name="tratamiento_id">
             <div class="modal-header"><h3 id="modalCajaTitulo">Nuevo recibo</h3><button type="button" class="modal-close" data-caja-close aria-label="Cerrar">×</button></div>
             <div class="modal-body">
                 <div class="form-grid">
+                    <div class="form-group" style="grid-column:1 / -1;">
+                        <label for="caja-paciente-buscar">Buscar por CI o nombre del paciente</label>
+                        <div class="autocomplete-wrap" id="caja-paciente-busqueda">
+                            <input type="search" id="caja-paciente-buscar" class="form-control" maxlength="100" autocomplete="off" placeholder="Ingrese CI, nombre o apellidos" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="caja-paciente-resultados" aria-describedby="caja-paciente-buscar-ayuda">
+                            <div id="caja-paciente-resultados" class="autocomplete-dropdown" role="listbox" aria-label="Pacientes y fichas de admisión encontrados" hidden></div>
+                        </div>
+                        <small id="caja-paciente-buscar-ayuda">Escriba al menos dos caracteres y seleccione la ficha del paciente, o busque directamente por número de ficha.</small>
+                        <p id="caja-paciente-buscar-estado" role="status" aria-live="polite"></p>
+                    </div>
+                    <div class="form-group"><label for="caja-ficha">Número de ficha de admisión <span class="req">*</span></label><input type="number" id="caja-ficha" name="ficha" min="1" class="form-control" required aria-describedby="caja-ficha-ayuda"><small id="caja-ficha-ayuda">Al ingresar la ficha se completan automáticamente el estudiante y el paciente designados.</small></div>
                     <div class="form-group"><label for="caja-clinica">Clínica <span class="req">*</span></label><select id="caja-clinica" name="clinica_id" class="form-control" required><option value="">Seleccione una clínica</option>@foreach($clinicas as $clinica)<option value="{{ $clinica->id }}">{{ $clinica->especialidad }}</option>@endforeach</select></div>
-                    <div class="form-group"><label for="caja-ficha">Número de ficha de admisión <span class="req">*</span></label><input type="number" id="caja-ficha" name="ficha" min="1" class="form-control" required aria-describedby="caja-ficha-ayuda"><small id="caja-ficha-ayuda">Al ingresar la ficha se completan automáticamente el estudiante y el paciente designados.</small><button type="button" class="btn btn-sm btn-secondary" id="caja-buscar-ficha">Buscar ficha</button></div>
                     <div class="form-group" style="grid-column:1 / -1;"><label for="caja-atencion">Tratamiento autorizado del paciente <span class="req">*</span></label><select id="caja-atencion" name="tratamiento_realizado_id" class="form-control" required><option value="">Busque primero la ficha</option></select></div>
                     <div class="form-group"><label for="caja-estudiante">Estudiante designado</label><input id="caja-estudiante" class="form-control" readonly></div>
                     <div class="form-group"><label for="caja-paciente">Paciente designado</label><input id="caja-paciente" class="form-control" readonly></div>
@@ -28,6 +37,14 @@
         </form>
     </div>
 </div>
+@push('styles')
+<style>
+    #caja-paciente-resultados .autocomplete-item { width: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; }
+    #caja-paciente-resultados .autocomplete-item:hover,
+    #caja-paciente-resultados .autocomplete-item.active { background: var(--surface-soft); }
+    #caja-paciente-resultados .autocomplete-info { pointer-events: none; }
+</style>
+@endpush
 @push('scripts')
 <script src="{{ asset('js/caja-recibos.js') }}" defer></script>
 @endpush

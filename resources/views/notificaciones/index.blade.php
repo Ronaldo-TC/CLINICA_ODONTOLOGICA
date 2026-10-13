@@ -31,7 +31,7 @@
     <div class="card-header">
         <h2>Bandeja de notificaciones</h2>
         <button type="button" class="btn btn-sm btn-secondary" id="btnLeerTodas">
-            Marcar todas como leídas
+            <x-icono nombre="leer" /> Marcar todas como leídas
         </button>
     </div>
 
@@ -70,14 +70,14 @@
                         <div class="actions">
                             @if ($n->url)
                             <a href="{{ $n->url }}" class="btn btn-sm btn-secondary"
-                                data-action="abrir" data-id="{{ $n->id }}">Abrir</a>
+                                data-action="abrir" data-id="{{ $n->id }}"><x-icono nombre="abrir" /> Abrir</a>
                             @endif
                             @unless ($n->leida)
                             <button type="button" class="btn btn-sm btn-primary"
-                                data-action="leer" data-id="{{ $n->id }}">Marcar leída</button>
+                                data-action="leer" data-id="{{ $n->id }}"><x-icono nombre="leer" /> Marcar leída</button>
                             @endunless
                             <button type="button" class="btn btn-sm btn-danger"
-                                data-action="eliminar" data-id="{{ $n->id }}">Eliminar</button>
+                                data-action="eliminar" data-id="{{ $n->id }}"><x-icono nombre="eliminar" /> Eliminar</button>
                         </div>
                     </td>
                 </tr>
@@ -171,7 +171,7 @@
 
             if (accion === 'eliminar') {
                 e.preventDefault();
-                if (!confirm('¿Eliminar esta notificación?')) return;
+                if (!await window.confirmarEliminacion('Notificación seleccionada')) return;
                 try {
                     const res = await fetch(`${URL_BASE}/${id}`, {
                         method: 'DELETE',

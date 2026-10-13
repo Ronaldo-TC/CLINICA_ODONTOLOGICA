@@ -10,6 +10,7 @@ use App\Models\InsumoTratamiento;
 use App\Models\Remision;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
+use Database\Seeders\SolicitudesInsumosPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -17,6 +18,12 @@ use Tests\TestCase;
 class HistoriasSeguimientoTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+    }
 
     public function test_history_list_and_ajax_rows_link_each_follow_up_column_to_its_history(): void
     {
@@ -142,7 +149,7 @@ class HistoriasSeguimientoTest extends TestCase
         $case = $this->clinicalCase();
         $solicitud = $this->supplyRequest($case);
         $warehouse = $this->clinicalUser('insumos');
-        $warehouse->givePermissionTo(['insumos.ver', 'insumos.aprobar', 'insumos.rechazar']);
+        $warehouse->givePermissionTo(['solicitudes-insumos.ver', 'solicitudes-insumos.aprobar', 'solicitudes-insumos.rechazar']);
         $detailUrl = route('solicitudes-insumos.show', $solicitud->id);
         $historyUrl = route('historias.show', $case['history']->id);
         $this->actingAs($warehouse)->get($detailUrl)->assertOk()->assertDontSee('Aprobar en Insumos')->assertDontSee('Autorizar solicitud');
@@ -172,7 +179,7 @@ class HistoriasSeguimientoTest extends TestCase
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $first->id, 'estado' => 'rechazado', 'rechazado_por' => $case['teacher']->id, 'motivo_rechazo' => 'Cantidad a corregir']);
         $this->postJson(route('solicitudes-insumos.autorizar', $second->id))->assertOk();
         $warehouse = $this->clinicalUser('insumos');
-        $warehouse->givePermissionTo(['insumos.ver', 'insumos.rechazar']);
+        $warehouse->givePermissionTo(['solicitudes-insumos.ver', 'solicitudes-insumos.rechazar']);
         $this->actingAs($warehouse)->from(route('solicitudes-insumos.show', $second->id))
             ->post(route('solicitudes-insumos.rechazar', $second->id), ['motivo' => 'Sin disponibilidad'])->assertRedirect();
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $second->id, 'estado' => 'rechazado', 'rechazado_por' => $warehouse->id, 'motivo_rechazo' => 'Sin disponibilidad']);
@@ -184,7 +191,7 @@ class HistoriasSeguimientoTest extends TestCase
         $solicitud = $this->supplyRequest($case);
         $otherTeacher = $this->clinicalUser('docente');
         $otherTeacher->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
-        $otherTeacher->givePermissionTo(['historias.ver', 'insumos.ver', 'insumos.autorizar']);
+        $otherTeacher->givePermissionTo(['historias.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar']);
 
         $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertOk()
             ->assertViewHas('solicitudes', fn ($rows): bool => $rows->isEmpty())->assertDontSee('Autorizar solicitud');
@@ -227,7 +234,7 @@ class HistoriasSeguimientoTest extends TestCase
     {
         $case = $this->clinicalCase();
         $solicitud = $this->supplyRequest($case);
-        $case['student']->givePermissionTo('insumos.autorizar');
+        $case['student']->givePermissionTo('solicitudes-insumos.autorizar');
 
         $this->actingAs($case['student'])->get(route('historias.show', $case['history']->id))->assertOk()
             ->assertSee('Guantes')->assertDontSee('Autorizar solicitud')->assertDontSee('Aprobar en Insumos');
@@ -258,7 +265,7 @@ class HistoriasSeguimientoTest extends TestCase
     /** @param array<string, mixed> $case */
     private function teacher(array $case): Usuario
     {
-        $case['teacher']->givePermissionTo(['historias.ver', 'insumos.ver', 'insumos.autorizar', 'insumos.rechazar', 'cajas.ver', 'esterilizaciones.ver']);
+        $case['teacher']->givePermissionTo(['historias.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar', 'cajas.ver', 'esterilizaciones.ver']);
         $this->actingAs($case['teacher']);
 
         return $case['teacher'];

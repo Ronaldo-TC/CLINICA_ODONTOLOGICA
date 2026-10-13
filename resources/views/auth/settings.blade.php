@@ -35,7 +35,7 @@
                     <input class="form-control" id="new_password" name="new_password"
                         type="password" minlength="8" required autocomplete="new-password">
                     <div id="password-strength" style="margin-top: 6px;"></div>
-                    <small style="color: #666;">
+                    <small class="form-hint">
                         Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.
                     </small>
                     @error('new_password') <span class="form-error">{{ $message }}</span> @enderror
@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div class="form-actions" style="margin-top: 20px;">
+            <div class="form-actions">
                 <button class="btn btn-primary" type="submit">Actualizar contraseña</button>
             </div>
         </form>
@@ -56,7 +56,7 @@
 </div>
 
 {{-- SESIONES ACTIVAS --}}
-<div class="card" style="margin-top: 20px;">
+<div class="card">
     <div class="card-header">
         <div>
             <h3>Sesiones activas</h3>
@@ -74,33 +74,33 @@
     </div>
     <div class="card-body">
         @if($sesionesActivas->isEmpty())
-        <p style="color: #666; text-align: center; padding: 20px;">
+        <p class="account-empty">
             No hay sesiones activas registradas.
         </p>
         @else
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
+        <div class="table-wrap">
+            <table>
                 <thead>
-                    <tr style="background: #f8f9fa; text-align: left;">
-                        <th style="padding: 10px; border-bottom: 1px solid #eee;">IP</th>
-                        <th style="padding: 10px; border-bottom: 1px solid #eee;">Dispositivo</th>
-                        <th style="padding: 10px; border-bottom: 1px solid #eee;">Inicio</th>
-                        <th style="padding: 10px; border-bottom: 1px solid #eee;">Acciones</th>
+                    <tr>
+                        <th>IP</th>
+                        <th>Dispositivo</th>
+                        <th>Inicio</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($sesionesActivas as $sesion)
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <td>
                             {{ $sesion->ip }}
                         </td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 12px;">
+                        <td>
                             {{ \Illuminate\Support\Str::limit($sesion->user_agent, 50) }}
                         </td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 12px;">
+                        <td>
                             {{ \Carbon\Carbon::parse($sesion->inicio)->format('d/m/Y H:i') }}
                         </td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <td>
                             <form method="POST"
                                 action="{{ route('auth.settings.sessions.close', $sesion->id) }}"
                                 style="display: inline;">
@@ -122,7 +122,7 @@
 </div>
 
 {{-- BITÁCORA DE ACTIVIDAD --}}
-<div class="card" style="margin-top: 20px;">
+<div class="card">
     <div class="card-header">
         <div>
             <h3>Actividad reciente</h3>
@@ -131,32 +131,32 @@
     </div>
     <div class="card-body">
         @if($bitacora->isEmpty())
-        <p style="color: #666; text-align: center; padding: 20px;">
+        <p class="account-empty">
             No hay actividad registrada.
         </p>
         @else
-        <ul style="list-style: none; padding: 0; margin: 0;">
+        <ul class="activity-list">
             @foreach($bitacora as $entrada)
             @php
             $tipo = $entrada->tipo;
             if (\Illuminate\Support\Str::contains($tipo, ['LOGIN'])) {
-            $badgeBg = '#d4edda'; $badgeColor = '#155724';
+            $badgeClass = 'badge-success';
             } elseif (\Illuminate\Support\Str::contains($tipo, ['LOGOUT'])) {
-            $badgeBg = '#fff3cd'; $badgeColor = '#856404';
+            $badgeClass = 'badge-warning';
             } elseif (\Illuminate\Support\Str::contains($tipo, ['FALLIDO', 'BLOQUEADO'])) {
-            $badgeBg = '#f8d7da'; $badgeColor = '#721c24';
+            $badgeClass = 'badge-danger';
             } else {
-            $badgeBg = '#e2e3e5'; $badgeColor = '#383d41';
+            $badgeClass = 'badge-muted';
             }
             @endphp
-            <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <span style="display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; background: {{ $badgeBg }}; color: {{ $badgeColor }};">
+            <li>
+                <div class="activity-detail">
+                    <span class="badge {{ $badgeClass }}">
                         {{ $tipo }}
                     </span>
-                    <span style="font-size: 13px;">{{ $entrada->datos }}</span>
+                    <span>{{ $entrada->datos }}</span>
                 </div>
-                <span style="font-size: 11px; color: #999; white-space: nowrap;">
+                <span class="activity-time">
                     {{ \Carbon\Carbon::parse($entrada->fecha)->diffForHumans() }}
                 </span>
             </li>
@@ -214,7 +214,7 @@
         const level = levels[Math.min(strength, 4)];
 
         strengthDiv.innerHTML = `
-            <div style="background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden;">
+            <div style="background: var(--surface-soft); border-radius: 4px; height: 6px; overflow: hidden;">
                 <div style="background: ${level.color}; width: ${level.width}; height: 100%; transition: all 0.3s;"></div>
             </div>
             <span style="color: ${level.color}; font-weight: bold; font-size: 12px; margin-top: 4px; display: inline-block;">

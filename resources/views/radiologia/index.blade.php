@@ -307,7 +307,7 @@
         }
 
         async function eliminar(id, nombre) {
-            if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+            if (!await window.confirmarEliminacion(nombre)) return;
 
             setStatus('loading', 'Eliminando...');
 

@@ -51,11 +51,29 @@
 
 @section('content')
 
+<div class="welcome-card dashboard-welcome">
+    <div>
+        <p class="welcome-eyebrow">Tu clínica, de un vistazo</p>
+        <h2 class="welcome-title">Bienvenido, <strong>{{ $user?->nombre_completo ?? 'usuario' }}</strong></h2>
+        <p class="welcome-text">Consulta la actividad, los indicadores y los próximos vencimientos de tu área.</p>
+    </div>
+    <div class="dashboard-date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="3" />
+            <path d="M16 3v4M8 3v4M3 11h18" />
+        </svg>
+        <div>
+            <span>Hoy</span>
+            <strong>{{ now()->translatedFormat('d \d\e F \d\e Y') }}</strong>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-toolbar">
     <div class="toolbar-info">
         <span class="toolbar-dot live"></span>
         <span id="crud-total-label">
-            {{ count($tarjetas) }} indicador(es) para tu rol · {{ now()->translatedFormat('d \d\e F \d\e Y') }}
+            {{ count($tarjetas) }} indicador(es) para tu rol
         </span>
     </div>
     <div class="toolbar-actions">
@@ -99,14 +117,16 @@
 @endif
 
 {{-- ================= GRÁFICOS ================= --}}
-<div class="metrics-grid">
-    <div class="card" style="grid-column: span 2; min-width:0;">
+<div class="metrics-grid dashboard-charts">
+    <div class="card">
         <div class="card-header">
             <h2>Pacientes por mes</h2>
             <span class="card-meta">Últimos 12 meses · <strong id="totalPacientesAnio">{{ array_sum($pacientesPorMes['valores']) }}</strong> admisiones</span>
         </div>
         <div class="card-body">
-            <canvas id="graficoPacientesMes" height="110" aria-label="Admisiones por mes" role="img"></canvas>
+            <div class="dashboard-chart">
+                <canvas id="graficoPacientesMes" aria-label="Admisiones por mes" role="img"></canvas>
+            </div>
             <div class="table-wrap" id="tablaPacientesMes" hidden>
                 <table>
                     <thead>
@@ -131,7 +151,9 @@
             <span class="card-meta">Por admisiones</span>
         </div>
         <div class="card-body">
-            <canvas id="graficoEspecialidades" height="200" aria-label="Admisiones por especialidad" role="img"></canvas>
+            <div class="dashboard-chart">
+                <canvas id="graficoEspecialidades" aria-label="Admisiones por especialidad" role="img"></canvas>
+            </div>
             <div class="table-wrap" id="tablaEspecialidades" hidden>
                 <table>
                     <thead>
@@ -154,12 +176,15 @@
 </div>
 
 {{-- ================= ACTIVIDAD Y VENCIMIENTOS ================= --}}
-<div class="metrics-grid">
+<div class="metrics-grid dashboard-activity">
     <div class="card" style="min-width:0;">
         <div class="card-header">
             <h2>Actividad reciente</h2>
+            <span class="badge badge-muted">{{ $user?->hasRole('admin') ? 'Todos los usuarios' : 'Mi bitácora' }}</span>
             @if (Route::has('bitacoras.index'))
+            @canany(['bitacoras.ver', 'bitacoras.gestionar'])
             <a href="{{ route('bitacoras.index') }}" class="card-meta">Ver bitácora</a>
+            @endcanany
             @endif
         </div>
         <div class="table-wrap">
@@ -176,9 +201,9 @@
                     @forelse ($actividadReciente as $a)
                     <tr>
                         <td><small>{{ \Illuminate\Support\Carbon::parse($a->fecha)->format('d/m/Y H:i') }}</small></td>
-                        <td><small>{{ $a->nombre_completo ?? 'Sistema' }}</small></td>
+                        <td><small>{{ $a->usuario_nombre }}</small></td>
                         <td><span class="badge badge-info">{{ $a->tipo }}</span></td>
-                        <td><small>{{ \Illuminate\Support\Str::limit((string) $a->datos, 70) }}</small></td>
+                        <td><small>{{ \Illuminate\Support\Str::limit($a->descripcion, 70) }}</small></td>
                     </tr>
                     @empty
                     <tr>
@@ -232,6 +257,148 @@
 
 @endsection
 
+@push('styles')
+<style>
+    .dashboard-welcome {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 28px;
+        background: linear-gradient(115deg, var(--surface), var(--surface-soft));
+        overflow: hidden;
+    }
+
+    .dashboard-welcome::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(var(--cyan), var(--teal));
+    }
+
+    .dashboard-welcome .welcome-title {
+        font-size: clamp(23px, 2.4vw, 30px);
+        font-weight: 550;
+        letter-spacing: -0.04em;
+        overflow-wrap: anywhere;
+    }
+
+    .dashboard-welcome .welcome-eyebrow {
+        margin-bottom: 10px;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+    }
+
+    .dashboard-welcome .welcome-text {
+        font-size: 13px;
+        margin-top: 10px;
+    }
+
+    .dashboard-date {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+    }
+
+    .dashboard-date svg {
+        width: 24px;
+        height: 24px;
+        color: var(--teal);
+    }
+
+    .dashboard-date span,
+    .dashboard-date strong {
+        display: block;
+        font-size: 12px;
+    }
+
+    .dashboard-date span {
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .dashboard-charts {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+
+    .dashboard-activity {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 1100px) {
+        .stats-grid:has(> .stat-card:nth-child(6):last-child) {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .dashboard-charts > .card,
+    .dashboard-activity > .card {
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    .dashboard-chart {
+        position: relative;
+        height: 260px;
+        min-width: 0;
+    }
+
+    .dashboard-charts table,
+    .dashboard-activity table {
+        min-width: 0;
+    }
+
+    .dashboard-charts th,
+    .dashboard-charts td,
+    .dashboard-activity td {
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-welcome {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .dashboard-date {
+            padding: 12px 14px;
+        }
+
+        .dashboard-charts,
+        .dashboard-activity {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-toolbar {
+            padding: 14px;
+            gap: 12px;
+        }
+
+        .dashboard-toolbar .toolbar-info {
+            align-items: flex-start;
+            line-height: 1.6;
+        }
+
+        .dashboard-toolbar .toolbar-dot {
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .dashboard-chart {
+            height: 220px;
+        }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
@@ -248,7 +415,11 @@
         const hayChart = () => typeof window.Chart !== 'undefined';
 
         function respaldo(idTabla) {
-            document.getElementById(idTabla)?.removeAttribute('hidden');
+            const tabla = document.getElementById(idTabla);
+            if (tabla) {
+                tabla.removeAttribute('hidden');
+                tabla.previousElementSibling?.setAttribute('hidden', '');
+            }
         }
 
         function pintar() {
@@ -345,7 +516,9 @@
                 }
 
                 // Redibujar: se destruyen los gráficos previos
-                Object.values(Chart.instances || {}).forEach((c) => c.destroy());
+                if (hayChart()) {
+                    Object.values(Chart.instances || {}).forEach((c) => c.destroy());
+                }
                 pintar();
                 window.mostrarToast?.('success', 'Panel actualizado');
             } catch (err) {

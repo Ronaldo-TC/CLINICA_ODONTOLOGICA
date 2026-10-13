@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Bitacora;
 use App\Models\Caja;
 use App\Models\HistoriaClinica;
 use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\Periodo;
 use App\Models\Usuario;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -481,12 +483,13 @@ class DashboardMetrics
     /**
      * Últimas entradas de bitácora.
      */
-    public static function actividadReciente(int $limite = 8)
+    public static function actividadReciente(Usuario $usuario, int $limite = 8): Collection
     {
-        return DB::table('bitacoras')
-            ->leftJoin('usuarios', 'usuarios.id', '=', 'bitacoras.usuario_id')
-            ->select('bitacoras.id', 'bitacoras.tipo', 'bitacoras.datos', 'bitacoras.fecha', 'bitacoras.estado', 'usuarios.nombre_completo')
-            ->orderByDesc('bitacoras.fecha')
+        return Bitacora::query()
+            ->visiblePara($usuario)
+            ->with('usuario:id,nombre_usuario,nombre_completo')
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
             ->limit($limite)
             ->get();
     }

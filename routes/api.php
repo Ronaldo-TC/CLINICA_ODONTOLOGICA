@@ -38,8 +38,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::controller(InsumoController::class)->group(function (): void {
             Route::get('/insumos', 'catalogoApi')->middleware('permission:insumos.ver')->name('insumos.index');
             Route::prefix('solicitudes-insumos')->name('solicitudes.')->group(function (): void {
-                Route::get('/', 'solicitudesApi')->middleware('permission:insumos.ver')->name('index');
-                Route::post('/', 'crearSolicitudApi')->middleware('permission:insumos.crear')->name('store');
+                Route::get('/', 'solicitudesApi')->middleware('permission:solicitudes-insumos.ver|solicitudes-insumos.gestionar|insumos.gestionar')->name('index');
+                Route::post('/', 'crearSolicitudApi')->middleware('permission:solicitudes-insumos.crear|solicitudes-insumos.gestionar|insumos.gestionar')->name('store');
             });
         });
 

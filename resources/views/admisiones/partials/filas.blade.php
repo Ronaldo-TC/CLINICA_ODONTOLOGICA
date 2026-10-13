@@ -12,7 +12,7 @@
             <div>
                 <strong>{{ $admision->paciente?->nombre_completo ?? '—' }}</strong>
                 <br>
-                <small style="color:var(--muted);">
+                <small class="table-value" style="color:var(--muted);">
                     CI: {{ $admision->paciente?->ci ?? '—' }}
                 </small>
             </div>
@@ -47,13 +47,13 @@
 
     <td>
         <div class="actions">
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.ficha-pdf', ['admision' => $admision->id, 'formato' => 'pdf']) }}">PDF de la ficha</a>
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', ['admision' => $admision->id, 'formato' => 'pdf']) }}">PDF del paciente</a>
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', $admision->id) }}" target="_blank" rel="noopener">Reporte del paciente</a>
-            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $admision->id) }}">Ver ficha</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.ficha-pdf', ['admision' => $admision->id, 'formato' => 'pdf']) }}"><x-icono nombre="pdf" /> PDF de la ficha</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', ['admision' => $admision->id, 'formato' => 'pdf']) }}"><x-icono nombre="pdf" /> PDF del paciente</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.reporte-paciente', $admision->id) }}" target="_blank" rel="noopener"><x-icono nombre="reporte" /> Reporte del paciente</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $admision->id) }}"><x-icono nombre="ficha" /> Ver ficha</a>
             @can('admisiones.editar')
             <a href="{{ route('admisiones.edit', $admision->id) }}" class="btn btn-sm btn-secondary">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </a>
             @endcan
 
@@ -63,7 +63,7 @@
                 data-action="eliminar"
                 data-id="{{ $admision->id }}"
                 data-nombre="Admisión #{{ $admision->id }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcan
         </div>

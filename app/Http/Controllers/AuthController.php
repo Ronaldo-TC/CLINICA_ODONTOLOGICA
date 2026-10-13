@@ -122,6 +122,7 @@ class AuthController extends Controller
 
             // 8. ⚠️ CRÍTICO: Loguear en el guard web (Spatie lo necesita)
             Auth::guard('web')->login($user);
+            $request->attributes->set('bitacora.usuario', $user);
 
             // 9. Actualizar último login
             //    (NO se guarda 'sesion' porque la columna es varchar(50) y el token
@@ -450,6 +451,8 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken($request->input('device_name') ?: 'auth-token')->plainTextToken;
+
+        $request->attributes->set('bitacora.usuario', $user);
 
         return response()->json([
             'access_token' => $token,

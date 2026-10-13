@@ -12,6 +12,104 @@ class CajaRecibosFichaTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
 
+    public function test_cashier_searches_by_partial_ci_or_full_name_and_selects_the_admission(): void
+    {
+        $case = $this->approvedProgress();
+        $case['history']->paciente->update(['ci' => 'AJAX739125', 'nombre' => 'AmaliaCajaAjax', 'apellido_paterno' => 'Montes', 'apellido_materno' => 'Rojas']);
+        $case['admission']->update(['fecha_admision' => '2026-10-08']);
+        $this->actingAs($this->clinicalUser('cajas'));
+
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => '7391']))
+            ->assertOk()->assertJsonCount(1, 'fichas')
+            ->assertJsonPath('fichas.0.ficha', $case['admission']->id)
+            ->assertJsonPath('fichas.0.ci', 'AJAX739125')
+            ->assertJsonPath('fichas.0.fecha', '08/10/2026');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Rojas AmaliaCajaAjax Montes']))
+            ->assertOk()->assertJsonCount(1, 'fichas')
+            ->assertJsonPath('fichas.0.paciente', 'AmaliaCajaAjax Montes Rojas');
+        $this->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))
+            ->assertOk()->assertJsonPath('estudiante', $case['student']->nombre_completo)
+            ->assertJsonPath('atenciones.0.id', $case['realized']->id);
+        $this->get(route('cajas.index'))->assertSee('Buscar por CI o nombre del paciente')
+            ->assertSee('role="combobox"', false)->assertSee('role="listbox"', false)
+            ->assertDontSee('id="caja-buscar-paciente"', false)->assertDontSee('id="caja-buscar-ficha"', false);
+    }
+
+    public function test_patient_search_lists_multiple_admissions_once_and_filters_by_clinic(): void
+    {
+        $case = $this->clinicalCase();
+        $other = $this->clinicalCase();
+        $patient = $case['history']->paciente;
+        $patient->update(['nombre' => 'VariasFichasCajaAjax']);
+        $other['admission']->update(['paciente_id' => $patient->id]);
+        $other['history']->update(['paciente_id' => $patient->id]);
+        $extraHistory = $case['history']->replicate();
+        $extraHistory->save();
+        $unassignedAdmission = $case['admission']->replicate();
+        $unassignedAdmission->save();
+        $this->actingAs($this->clinicalUser('cajas'));
+
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'VariasFichasCajaAjax']))
+            ->assertOk()->assertJsonCount(2, 'fichas')
+            ->assertJsonPath('fichas.0.ficha', $other['admission']->id)
+            ->assertJsonPath('fichas.1.ficha', $case['admission']->id);
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'VariasFichasCajaAjax', 'clinica_id' => $case['clinic']->id]))
+            ->assertOk()->assertJsonCount(1, 'fichas')
+            ->assertJsonPath('fichas.0.ficha', $case['admission']->id);
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'SinResultadosCajaAjax']))
+            ->assertOk()->assertJsonCount(0, 'fichas')->assertJsonPath('hay_mas', false);
+    }
+
+    public function test_patient_search_limits_results_and_indicates_more_matches(): void
+    {
+        $case = $this->clinicalCase();
+        $case['history']->paciente->update(['nombre' => 'LimiteFichasCajaAjax']);
+        for ($index = 0; $index < 20; $index++) {
+            $admission = $case['admission']->replicate();
+            $admission->save();
+            $history = $case['history']->replicate();
+            $history->admision_id = $admission->id;
+            $history->save();
+        }
+
+        $this->actingAs($this->clinicalUser('cajas'))->getJson(route('cajas.buscar-pacientes', ['buscar' => 'LimiteFichasCajaAjax']))
+            ->assertOk()->assertJsonCount(20, 'fichas')->assertJsonPath('hay_mas', true);
+    }
+
+    public function test_patient_search_rejects_invalid_queries_with_422(): void
+    {
+        $this->actingAs($this->clinicalUser('cajas'));
+
+        $this->getJson(route('cajas.buscar-pacientes'))->assertUnprocessable()->assertJsonValidationErrors('buscar');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'A']))->assertUnprocessable()
+            ->assertJsonPath('errors.buscar.0', 'Ingrese al menos dos caracteres del CI o nombre del paciente.');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => str_repeat('A', 101)]))
+            ->assertUnprocessable()->assertJsonValidationErrors('buscar');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Paciente', 'clinica_id' => 0]))
+            ->assertUnprocessable()->assertJsonValidationErrors('clinica_id');
+    }
+
+    public function test_patient_search_requires_login_and_forbids_students_with_403(): void
+    {
+        $this->get(route('cajas.buscar-pacientes', ['buscar' => 'Paciente']))->assertRedirectToRoute('auth.login');
+        $this->actingAs($this->clinicalUser('estudiante'))->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Paciente']))
+            ->assertForbidden();
+    }
+
+    public function test_cashier_with_create_permission_can_search_patients_and_admissions(): void
+    {
+        $case = $this->approvedProgress();
+        $cashier = $this->clinicalUser('estudiante');
+        $cashier->givePermissionTo('cajas.crear');
+
+        $this->assertFalse($cashier->can('cajas.ver'));
+
+        $this->actingAs($cashier)->getJson(route('cajas.buscar-pacientes', ['buscar' => $case['history']->paciente->nombre]))
+            ->assertOk()->assertJsonPath('fichas.0.ficha', $case['admission']->id);
+        $this->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))
+            ->assertOk()->assertJsonPath('ficha', $case['admission']->id);
+    }
+
     public function test_cashier_finds_assigned_student_patient_and_authorized_treatments_by_admission_number(): void
     {
         $case = $this->approvedProgress();

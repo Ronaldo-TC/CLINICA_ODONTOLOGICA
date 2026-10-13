@@ -346,7 +346,7 @@
            ELIMINAR
            ============================================================ */
         async function eliminar(id, nombre) {
-            if (!confirm(`¿Eliminar el rol "${nombre}"? Esta acción no se puede deshacer.`)) return;
+            if (!await window.confirmarEliminacion(`Rol: ${nombre}`)) return;
 
             setStatus('loading', 'Eliminando...');
 

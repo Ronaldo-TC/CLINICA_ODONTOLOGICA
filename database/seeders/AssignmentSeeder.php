@@ -32,13 +32,13 @@ class AssignmentSeeder extends Seeder
     private function seedRolPermiso($now): void
     {
         $permisos = DB::table('permisos')->pluck('id', 'codigo');
-        $roles    = DB::table('roles')->pluck('id', 'nombre');
+        $roles = DB::table('roles')->pluck('id', 'nombre');
 
         // Admin: todos los permisos
         $adminId = $roles['admin'];
         DB::table('rol_permiso')->insert(
-            $permisos->values()->map(fn($pid) => [
-                'rol_id'     => $adminId,
+            $permisos->values()->map(fn ($pid) => [
+                'rol_id' => $adminId,
                 'permiso_id' => $pid,
                 'habilitado' => true,
                 'created_at' => $now,
@@ -90,9 +90,6 @@ class AssignmentSeeder extends Seeder
                 'sesiones.ver',
                 'sesiones.gestionar',
                 'tratamientos.ver',
-                'cajas.ver',
-                'insumos.ver',
-                'insumos.gestionar',
                 'esterilizaciones.ver',
                 'esterilizaciones.gestionar',
                 'radiologias.ver',
@@ -105,8 +102,6 @@ class AssignmentSeeder extends Seeder
                 'historias.editar',
                 'sesiones.ver',
                 'sesiones.crear',
-                'insumos.ver',
-                'insumos.crear',
                 'esterilizaciones.ver',
                 'esterilizaciones.crear',
                 'radiologias.ver',
@@ -119,8 +114,6 @@ class AssignmentSeeder extends Seeder
                 'historias.editar',
                 'sesiones.ver',
                 'sesiones.crear',
-                'insumos.ver',
-                'insumos.crear',
                 'esterilizaciones.ver',
                 'esterilizaciones.crear',
                 'radiologias.ver',
@@ -186,7 +179,7 @@ class AssignmentSeeder extends Seeder
                 }
 
                 $pivote[] = [
-                    'rol_id'     => $rolId,
+                    'rol_id' => $rolId,
                     'permiso_id' => $permisos[$codigo],
                     'habilitado' => true,
                     'created_at' => $now,
@@ -228,14 +221,14 @@ class AssignmentSeeder extends Seeder
             }
 
             $rows[] = [
-                'usuario_id'           => $usuarios[$usuarioNombre],
-                'clinica_id'           => $clinicas[$especialidad],
-                'habilitado'           => true,
-                'rotacion'             => $responsable ? 0 : 1,
+                'usuario_id' => $usuarios[$usuarioNombre],
+                'clinica_id' => $clinicas[$especialidad],
+                'habilitado' => true,
+                'rotacion' => $responsable ? 0 : 1,
                 'responsable_admision' => $responsable,
-                'fecha_inicio'         => '2026-01-05',
-                'created_at'           => $now,
-                'updated_at'           => $now,
+                'fecha_inicio' => '2026-01-05',
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 
@@ -253,10 +246,10 @@ class AssignmentSeeder extends Seeder
 
         $tipos = [
             'Operatoria Dental' => ['Resina compuesta', 'Anestésico', 'Aislamiento'],
-            'Endodoncia'        => ['Limas endodónticas', 'Hipoclorito', 'Conos de gutapercha'],
-            'Cirugía Bucal'     => ['Sutura', 'Anestésico', 'Gasa estéril'],
-            'Periodoncia'       => ['Curetas', 'Clorhexidina', 'Anestésico'],
-            'Radiología'        => ['Película radiográfica', 'Revelador', 'Fijador'],
+            'Endodoncia' => ['Limas endodónticas', 'Hipoclorito', 'Conos de gutapercha'],
+            'Cirugía Bucal' => ['Sutura', 'Anestésico', 'Gasa estéril'],
+            'Periodoncia' => ['Curetas', 'Clorhexidina', 'Anestésico'],
+            'Radiología' => ['Película radiográfica', 'Revelador', 'Fijador'],
         ];
 
         $rows = [];
@@ -267,11 +260,11 @@ class AssignmentSeeder extends Seeder
 
             foreach ($nombres as $nombre) {
                 $rows[] = [
-                    'nombre'      => $nombre,
+                    'nombre' => $nombre,
                     'descripcion' => '',
-                    'clinica_id'  => $clinicas[$especialidad],
-                    'created_at'  => $now,
-                    'updated_at'  => $now,
+                    'clinica_id' => $clinicas[$especialidad],
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }
@@ -322,13 +315,13 @@ class AssignmentSeeder extends Seeder
 
             foreach ($tratamientos as $t) {
                 $rows[] = [
-                    'nombre'        => $t['nombre'],
-                    'costo'         => $t['costo'],
+                    'nombre' => $t['nombre'],
+                    'costo' => $t['costo'],
                     'porcentaje_pg' => null,
-                    'descripcion'   => '',
-                    'clinica_id'    => $clinicas[$especialidad],
-                    'created_at'    => $now,
-                    'updated_at'    => $now,
+                    'descripcion' => '',
+                    'clinica_id' => $clinicas[$especialidad],
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }

@@ -16,7 +16,7 @@
         </span>
     </td>
 
-    <td>
+    <td class="table-value">
         @if ($tratamiento->precio_asignado)
         <strong>{{ number_format($tratamiento->costo, 2) }}</strong> Bs
         @else
@@ -38,19 +38,19 @@
 
     <td>
         <div class="actions">
-            <a class="btn btn-sm btn-secondary" href="{{ route('tratamientos.show', $tratamiento) }}">Ver</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('tratamientos.show', $tratamiento) }}"><x-icono nombre="ver" /> Ver</a>
             @can('tratamientos.precios')
-            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#precio">Precio</a>
+            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#precio"><x-icono nombre="precio" /> Precio</a>
             @endcan
             @can('tratamientos.insumos')
-            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#insumos">Insumos</a>
+            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#insumos"><x-icono nombre="insumos" /> Insumos</a>
             @endcan
             @canany(['tratamientos.editar', 'tratamientos.gestionar'])
             <button type="button"
                 class="btn btn-sm btn-secondary"
                 data-action="editar"
                 data-id="{{ $tratamiento->id }}">
-                Editar
+                <x-icono nombre="editar" /> Editar
             </button>
             @endcanany
 
@@ -60,7 +60,7 @@
                 data-action="eliminar"
                 data-id="{{ $tratamiento->id }}"
                 data-nombre="{{ $tratamiento->nombre }}">
-                Eliminar
+                <x-icono nombre="eliminar" /> Eliminar
             </button>
             @endcanany
         </div>
