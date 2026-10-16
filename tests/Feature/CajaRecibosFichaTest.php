@@ -16,6 +16,7 @@ class CajaRecibosFichaTest extends TestCase
     {
         $case = $this->approvedProgress();
         $case['history']->paciente->update(['ci' => 'AJAX739125', 'nombre' => 'AmaliaCajaAjax', 'apellido_paterno' => 'Montes', 'apellido_materno' => 'Rojas']);
+        $case['student']->update(['ci' => 'EST739126', 'nombre_completo' => 'Estudiante Caja Busqueda']);
         $case['admission']->update(['fecha_admision' => '2026-10-08']);
         $this->actingAs($this->clinicalUser('cajas'));
 
@@ -24,15 +25,35 @@ class CajaRecibosFichaTest extends TestCase
             ->assertJsonPath('fichas.0.ficha', $case['admission']->id)
             ->assertJsonPath('fichas.0.ci', 'AJAX739125')
             ->assertJsonPath('fichas.0.fecha', '08/10/2026');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'EST739126']))
+            ->assertOk()->assertJsonPath('fichas.0.estudiantes.0.ci', 'EST739126');
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Estudiante Caja Busqueda']))
+            ->assertOk()->assertJsonPath('fichas.0.estudiantes.0.nombre', 'Estudiante Caja Busqueda');
         $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Rojas AmaliaCajaAjax Montes']))
             ->assertOk()->assertJsonCount(1, 'fichas')
             ->assertJsonPath('fichas.0.paciente', 'AmaliaCajaAjax Montes Rojas');
         $this->getJson(route('cajas.buscar-ficha', ['ficha' => $case['admission']->id]))
             ->assertOk()->assertJsonPath('estudiante', $case['student']->nombre_completo)
             ->assertJsonPath('atenciones.0.id', $case['realized']->id);
-        $this->get(route('cajas.index'))->assertSee('Buscar por CI o nombre del paciente')
+        $this->get(route('cajas.index'))->assertSee('Buscar por CI o nombre del estudiante o paciente')
             ->assertSee('role="combobox"', false)->assertSee('role="listbox"', false)
+            ->assertSee('Se asigna automáticamente al registrar el pago.')
             ->assertDontSee('id="caja-buscar-paciente"', false)->assertDontSee('id="caja-buscar-ficha"', false);
+    }
+
+    public function test_patient_search_finds_the_admission_student_when_it_differs_from_the_history_student(): void
+    {
+        $case = $this->clinicalCase();
+        $case['student']->update(['ci' => 'EST789321', 'nombre_completo' => 'Estudiante Caja Legacy']);
+        $otherStudent = $this->clinicalUser('estudiante');
+        $otherStudent->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
+        $case['history']->update(['estudiante_id' => $otherStudent->id]);
+        $this->actingAs($this->clinicalUser('cajas'));
+
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'EST789321']))
+            ->assertOk()->assertJsonFragment(['ci' => 'EST789321']);
+        $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Estudiante Caja Legacy']))
+            ->assertOk()->assertJsonFragment(['nombre' => 'Estudiante Caja Legacy']);
     }
 
     public function test_patient_search_lists_multiple_admissions_once_and_filters_by_clinic(): void
@@ -82,7 +103,7 @@ class CajaRecibosFichaTest extends TestCase
 
         $this->getJson(route('cajas.buscar-pacientes'))->assertUnprocessable()->assertJsonValidationErrors('buscar');
         $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'A']))->assertUnprocessable()
-            ->assertJsonPath('errors.buscar.0', 'Ingrese al menos dos caracteres del CI o nombre del paciente.');
+            ->assertJsonPath('errors.buscar.0', 'Ingrese al menos dos caracteres del CI o nombre del estudiante o paciente.');
         $this->getJson(route('cajas.buscar-pacientes', ['buscar' => str_repeat('A', 101)]))
             ->assertUnprocessable()->assertJsonValidationErrors('buscar');
         $this->getJson(route('cajas.buscar-pacientes', ['buscar' => 'Paciente', 'clinica_id' => 0]))
@@ -137,7 +158,17 @@ class CajaRecibosFichaTest extends TestCase
         $this->assertSame('30.00', Caja::findOrFail($first)->cancelado);
         $this->postJson(route('cajas.store'), $this->receipt($case, 1900000103, 50))->assertUnprocessable()->assertJsonValidationErrors('cancelado');
         $this->assertSame(2, Caja::query()->where('tratamiento_realizado_id', $case['realized']->id)->count());
-        $this->getJson(route('cajas.tabla', ['clinica_id' => $case['clinic']->id]))->assertOk()->assertJsonPath('total', 2);
+
+        $this->get(route('cajas.index'))
+            ->assertOk()
+            ->assertSee('table-pagination');
+
+        $tableResponse = $this->getJson(route('cajas.tabla', ['clinica_id' => $case['clinic']->id]))
+            ->assertOk()
+            ->assertJsonPath('total', 2);
+
+        $this->assertStringContainsString((string) Caja::findOrFail($first)->recibo, $tableResponse->json('filas'));
+        $this->assertStringContainsString('table-pagination', $tableResponse->json('paginacion'));
     }
 
     public function test_admission_lookup_autocompletes_assignment_without_selecting_a_clinic_or_having_authorized_treatments(): void
@@ -164,15 +195,22 @@ class CajaRecibosFichaTest extends TestCase
             ->assertJsonPath('estudiante', $other['student']->nombre_completo)->assertJsonPath('clinica_id', $other['clinic']->id);
     }
 
-    public function test_duplicate_receipt_number_returns_422_without_adding_payment(): void
+    public function test_receipt_number_is_assigned_automatically_and_client_number_is_ignored(): void
     {
         $case = $this->approvedProgress();
         $case['realized']->update(['costo_cobrado' => 100]);
-        $this->actingAs($this->clinicalUser('cajas'))->postJson(route('cajas.store'), $this->receipt($case, 1900000104, 10))->assertCreated();
+        $this->actingAs($this->clinicalUser('cajas'));
+        $firstPayload = $this->receipt($case, 1900000104, 10);
+        unset($firstPayload['recibo']);
+        $first = $this->postJson(route('cajas.store'), $firstPayload)->assertCreated();
+        $second = $this->postJson(route('cajas.store'), $this->receipt($case, 1900000104, 10))->assertCreated();
 
-        $this->postJson(route('cajas.store'), $this->receipt($case, 1900000104, 10))->assertUnprocessable()->assertJsonValidationErrors('recibo');
+        $numeroPrimero = (int) $first->json('registro.recibo');
+        $numeroSegundo = (int) $second->json('registro.recibo');
 
-        $this->assertSame(1, Caja::query()->where('tratamiento_realizado_id', $case['realized']->id)->count());
+        $this->assertSame($numeroPrimero + 1, $numeroSegundo);
+        $this->assertDatabaseHas('cajas', ['id' => $first->json('id'), 'recibo' => $numeroPrimero]);
+        $this->assertSame(2, Caja::query()->where('tratamiento_realizado_id', $case['realized']->id)->count());
     }
 
     public function test_receipt_uses_case_data_and_rejects_wrong_admission_or_clinic(): void

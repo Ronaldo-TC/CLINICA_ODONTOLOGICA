@@ -1,6 +1,8 @@
 @forelse ($items as $caja)
 @php
-$canceladoAcumulado = (float) ($caja->cancelado_acumulado ?? ($caja->habilitada ? $caja->cancelado : 0));
+$canceladoAcumulado = $caja->solicitud_radiologica_id !== null
+    ? (float) ($caja->pago_radiologico_acumulado ?? 0)
+    : (float) ($caja->cancelado_acumulado ?? ($caja->habilitada ? $caja->cancelado : 0));
 $saldo = (float) $caja->costo_total - $canceladoAcumulado;
 $estadoPago = $canceladoAcumulado <= 0
     ? 'pendiente'
@@ -22,11 +24,11 @@ $estadoPago = $canceladoAcumulado <= 0
             <small class="table-value" style="color:var(--muted);">
                 CI: {{ $caja->ci ?: '—' }}
             </small>
-            <br><small>Ficha #{{ $caja->tratamientoRealizado?->historiaClinica?->admision_id }} · {{ $caja->tratamientoRealizado?->historiaClinica?->estudiante?->nombre_completo }}</small>
+            <br>            <small>Ficha #{{ $caja->solicitudRadiologica?->historiaClinica?->admision_id ?? $caja->tratamientoRealizado?->historiaClinica?->admision_id }} · {{ $caja->solicitudRadiologica?->historiaClinica?->estudiante?->nombre_completo ?? $caja->tratamientoRealizado?->historiaClinica?->estudiante?->nombre_completo }}</small>
         </td>
 
         <td>
-            <small>{{ $caja->tratamiento?->nombre ?? '—' }}</small>
+            <small>{{ $caja->solicitudRadiologica?->descripcion ?? $caja->tratamiento?->nombre ?? '—' }}</small>
         </td>
 
         <td>
@@ -69,6 +71,7 @@ $estadoPago = $canceladoAcumulado <= 0
 
         <td>
             <div class="actions">
+                @if($caja->solicitud_radiologica_id === null)
                 @can('cajas.editar')
                 <button type="button" class="btn btn-sm btn-secondary"
                     data-action="editar" data-id="{{ $caja->id }}">
@@ -84,6 +87,7 @@ $estadoPago = $canceladoAcumulado <= 0
                     <x-icono nombre="eliminar" /> Eliminar
                 </button>
                 @endcan
+                @endif
             </div>
         </td>
     </tr>

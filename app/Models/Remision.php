@@ -12,6 +12,7 @@ class Remision extends Model
     protected $table = 'remisiones';
 
     protected $fillable = [
+        'tratamiento_propuesto_id', 'observacion_propuesta',
         'estado',
         'estudiante_id',
         'docente_id',
@@ -38,6 +39,7 @@ class Remision extends Model
         return $query->with([
             'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
             'admision:id,paciente_id,periodo_id',
+            'tratamientoPropuesto:id,nombre,clinica_id,costo',
             'clinica:id,especialidad,modulo',
             'periodo:id,nombre,gestion,semestre',
             'docente:id,nombre_completo',
@@ -48,6 +50,11 @@ class Remision extends Model
     public function admision(): BelongsTo
     {
         return $this->belongsTo(Admision::class, 'admision_id');
+    }
+
+    public function tratamientoPropuesto(): BelongsTo
+    {
+        return $this->belongsTo(Tratamiento::class, 'tratamiento_propuesto_id');
     }
 
     public function paciente(): BelongsTo

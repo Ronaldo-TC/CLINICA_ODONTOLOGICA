@@ -47,7 +47,7 @@ class ClinicalTreatmentWorkflowTest extends TestCase
         $other = $this->clinicalUser('docente');
         $other->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
 
-        $this->actingAs($other)->post(route('tratamientos-realizados.autorizar', $proposal->id))->assertForbidden();
+        $this->actingAs($other)->post(route('tratamientos-realizados.autorizar', $proposal->id))->assertNotFound();
 
         $this->assertSame('pendiente', $proposal->fresh()->estado);
     }

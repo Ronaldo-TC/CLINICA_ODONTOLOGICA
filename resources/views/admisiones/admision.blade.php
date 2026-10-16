@@ -219,7 +219,19 @@
                 <legend>Área(s) derivada(s) · Clínicas</legend>
                 <div class="checkbox-grid">
                     @foreach($clinicas as $clinica)
-                        <label class="checkbox-item"><input type="checkbox" name="clinica_ids[]" value="{{ $clinica->id }}" @checked(in_array($clinica->id, $seleccionadas))> <span>{{ $clinica->especialidad }}</span></label>
+                        <div class="form-group">
+                            <label class="checkbox-item"><input type="checkbox" name="clinica_ids[]" value="{{ $clinica->id }}" @checked(in_array($clinica->id, $seleccionadas))> <span>{{ $clinica->especialidad }}</span></label>
+                            <label for="propuesta-{{ $clinica->id }}">Tratamiento sugerido (opcional)</label>
+                            <select id="propuesta-{{ $clinica->id }}" name="tratamientos_propuestos[{{ $clinica->id }}]" class="form-control">
+                                <option value="">Sin propuesta inicial</option>
+                                @foreach($tratamientosPropuestos->where('clinica_id', $clinica->id) as $tratamiento)
+                                    <option value="{{ $tratamiento->id }}" @selected((string) old('tratamientos_propuestos.'.$clinica->id, $ficha?->remisiones->firstWhere('clinica_id', $clinica->id)?->tratamiento_propuesto_id) === (string) $tratamiento->id)>{{ $tratamiento->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <span class="form-error" data-error-for="tratamientos_propuestos.{{ $clinica->id }}"></span>
+                            <label for="observacion-propuesta-{{ $clinica->id }}">Observación de la propuesta</label>
+                            <input id="observacion-propuesta-{{ $clinica->id }}" name="observaciones_propuestas[{{ $clinica->id }}]" class="form-control" maxlength="2000" value="{{ old('observaciones_propuestas.'.$clinica->id, $ficha?->remisiones->firstWhere('clinica_id', $clinica->id)?->observacion_propuesta) }}">
+                        </div>
                     @endforeach
                 </div>
                 <span class="form-error" data-error-for="clinica_ids"></span>

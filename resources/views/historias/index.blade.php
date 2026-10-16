@@ -101,38 +101,17 @@
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->links() }}</div>
 </div>
 
 @include('historias.partials.modal')
+@include('historias.partials.modal-seguimiento')
+@if(auth()->user()->hasAnyRole(['estudiante', 'interno']))
+    @canany(['solicitudes-insumos.crear', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
+        @include('solicitudes-insumos.partials.modal-designado')
+    @endcanany
+@endif
 
-{{-- ============ MODAL DE ARCHIVOS ADJUNTOS ============ --}}
-<div class="modal-backdrop" id="modalArchivos">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modalArchivosTitulo">
-        <div class="modal-header">
-            <h3 id="modalArchivosTitulo">Archivos adjuntos</h3>
-            <button type="button" class="modal-close" data-modal-close aria-label="Cerrar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
-        </div>
-        <div class="modal-body" id="modalArchivosBody">
-            <p class="notif-cargando">Selecciona una historia para ver sus archivos.</p>
-        </div>
-        <div class="modal-footer">
-            @can('historias.editar')
-            <label class="btn btn-primary" for="archivoGlobalInput" style="cursor:pointer;">
-                + Adjuntar archivo
-            </label>
-            <input type="file" id="archivoGlobalInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
-            @endcan
-            <button type="button" class="btn btn-secondary" data-modal-close>Cerrar</button>
-        </div>
-    </div>
-</div>
 
 @endsection
 
@@ -299,111 +278,9 @@
                 case 'eliminar':
                     eliminar(id, nombre);
                     break;
-                case 'archivos':
-                    abrirArchivos(id);
-                    break;
             }
         });
 
-        /* ============================================================
-           ARCHIVOS ADJUNTOS
-           ============================================================ */
-        const $modalArchivos = document.getElementById('modalArchivos');
-        const $inputArchivo = document.getElementById('archivoGlobalInput');
-        let historiaArchivosActual = null;
-
-        async function abrirArchivos(id) {
-            if (!$modalArchivos) return;
-
-            historiaArchivosActual = id;
-
-            const cuerpo = document.getElementById('modalArchivosBody');
-            const titulo = document.getElementById('modalArchivosTitulo');
-
-            titulo.textContent = 'Archivos de la historia #' + id;
-            cuerpo.innerHTML = '<p class="notif-cargando">Cargando…</p>';
-            $modalArchivos.classList.add('open');
-            document.body.classList.add('modal-open');
-
-            try {
-                const res = await fetch(`/historias/${id}/archivos`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const archivos = data.archivos || [];
-
-                if (archivos.length === 0) {
-                    cuerpo.innerHTML = '<div class="empty-state"><p>Sin archivos adjuntos todavía.</p></div>';
-                } else {
-                    cuerpo.innerHTML = `
-                        <div class="archivos-lista">
-                            ${archivos.map((a) => `
-                                <figure class="archivo-item" data-id="${a.id}">
-                                    <div class="archivo-preview">
-                                        ${a.es_imagen
-                                            ? `<img src="${a.url}" alt="" loading="lazy">`
-                                            : `<embed src="${a.url}#toolbar=0" type="application/pdf">`}
-                                    </div>
-                                    <figcaption class="archivo-meta">
-                                        <a href="${a.url}" target="_blank" rel="noopener" class="archivo-nombre">${a.nombre_original}</a>
-                                        <span class="archivo-detalle">${a.tamano_legible} · ${a.fecha || ''}</span>
-                                    </figcaption>
-                                </figure>`).join('')}
-                        </div>`;
-                }
-            } catch (err) {
-                cuerpo.innerHTML = '<div class="empty-state"><p>No se pudieron cargar los archivos.</p></div>';
-            }
-        }
-
-        $modalArchivos?.addEventListener('click', (e) => {
-            if (e.target.closest('[data-modal-close]') || e.target === $modalArchivos) {
-                $modalArchivos.classList.remove('open');
-                document.body.classList.remove('modal-open');
-            }
-        });
-
-        /* Subida del archivo seleccionado para la historia abierta */
-        $inputArchivo?.addEventListener('change', async () => {
-            const archivo = $inputArchivo.files?.[0];
-            if (!archivo || !historiaArchivosActual) return;
-
-            const datos = new FormData();
-            datos.append('archivo', archivo);
-
-            try {
-                const res = await fetch(`/historias/${historiaArchivosActual}/archivos`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: datos,
-                    credentials: 'same-origin',
-                });
-
-                const data = await res.json().catch(() => ({}));
-
-                if (!res.ok || !data.success) {
-                    throw new Error(data.message || 'No se pudo subir el archivo.');
-                }
-
-                window.SolicitudesLista?.toast?.('success', data.message);
-                window.mostrarToast?.('success', data.message);
-                await abrirArchivos(historiaArchivosActual);
-            } catch (err) {
-                window.mostrarToast?.('error', err.message || 'Error al subir el archivo.');
-            } finally {
-                $inputArchivo.value = '';
-            }
-        });
 
         async function abrirEdicion(id) {
             setStatus('loading', 'Cargando datos...');

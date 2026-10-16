@@ -10,6 +10,17 @@ class Caja extends Model
 {
     protected $table = 'cajas';
 
+    public static function siguienteNumeroRecibo(): ?int
+    {
+        $ultimoNumero = static::query()
+            ->orderByDesc('recibo')
+            ->lockForUpdate()
+            ->value('recibo');
+        $siguienteNumero = max(0, (int) $ultimoNumero) + 1;
+
+        return $siguienteNumero <= 2_147_483_647 ? $siguienteNumero : null;
+    }
+
     protected $fillable = [
         'tratamiento_realizado_id', 'paciente_id', 'periodo_id',
         'recibo',
@@ -27,6 +38,7 @@ class Caja extends Model
         'clinica_id',
         'remision_id',
         'usuario_id',
+        'solicitud_radiologica_id',
     ];
 
     protected $casts = [
@@ -48,7 +60,10 @@ class Caja extends Model
 
     public function recibosAtencion(): HasMany
     {
-        return $this->hasMany(self::class, 'tratamiento_realizado_id', 'tratamiento_realizado_id')->where('habilitada', true);
+        return $this->hasMany(self::class, 'tratamiento_realizado_id', 'tratamiento_realizado_id')
+            ->whereNotNull('tratamiento_realizado_id')
+            ->whereNull('solicitud_radiologica_id')
+            ->where('habilitada', true);
     }
 
     public function tratamiento()
@@ -79,6 +94,18 @@ class Caja extends Model
     public function radiologias()
     {
         return $this->hasMany(Radiologia::class, 'caja_id');
+    }
+
+    public function solicitudRadiologica(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudRadiologica::class, 'solicitud_radiologica_id');
+    }
+
+    public function recibosRadiologicos(): HasMany
+    {
+        return $this->hasMany(self::class, 'solicitud_radiologica_id', 'solicitud_radiologica_id')
+            ->whereNotNull('solicitud_radiologica_id')
+            ->where('habilitada', true);
     }
 
     /* ============================================================

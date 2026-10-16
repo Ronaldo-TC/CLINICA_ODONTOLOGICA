@@ -13,12 +13,121 @@
         <div class="actions">
             <a class="btn btn-secondary" href="#tratamientos">Tratamientos</a>
             @canany(['cajas.ver', 'cajas.gestionar'])<a class="btn btn-secondary" href="#cajas">Cajas</a>@endcanany
+            @canany(['radiologias.ver', 'radiologias.gestionar'])<a class="btn btn-secondary" href="#radiologia">Radiología</a>@endcanany
             @canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<a class="btn btn-secondary" href="#insumos">Insumos</a>@endcanany
             @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-secondary" href="#esterilizaciones">Esterilizaciones</a>@endcanany
         </div>
         @if($errors->any())<p class="form-error" role="alert">{{ $errors->first() }}</p>@endif
     </div>
 </div>
+
+@canany(['radiologias.ver', 'radiologias.gestionar'])
+<div class="card" id="radiologia" style="margin-top:20px;">
+    <div class="card-header"><h2>Radiología · solicitudes y resultados</h2></div>
+    @if($puedeSolicitarRadiologia)
+        <div class="card-body">
+            <h3>Solicitar estudio radiológico</h3>
+            <form action="{{ route('historias.solicitudes-radiologicas.store', $registro) }}" method="POST" class="form-grid">
+                @csrf
+                <label class="form-group" style="grid-column:1 / -1;">Estudio y motivo
+                    <input class="form-control" name="descripcion" maxlength="150" required placeholder="Ej.: Radiografía periapical, pieza 16">
+                </label>
+                @if(auth()->user()->hasRole('docente') && (int)$registro->docente_id === (int)auth()->id())
+                    <label class="form-group">Costo autorizado (Bs)
+                        <input class="form-control" name="costo_autorizado" type="number" min="0.01" max="99999999.99" step="0.01" required>
+                    </label>
+                    <p>Como docente responsable, esta solicitud quedará autorizada directamente.</p>
+                @else
+                    <p>La solicitud quedará pendiente de revisión del docente responsable.</p>
+                @endif
+                <div class="form-group"><button type="submit" class="btn btn-primary">Enviar solicitud</button></div>
+            </form>
+        </div>
+    @endif
+    @forelse($solicitudesRadiologicas as $solicitudRadiologica)
+        @php($pagoRadiologico = $solicitudRadiologica->resumenPago())
+        <div class="card-body" style="border-top:1px solid var(--border);">
+            <h3>Solicitud #{{ $solicitudRadiologica->id }} · {{ $solicitudRadiologica->descripcion }}</h3>
+            <p>Solicitante: {{ $solicitudRadiologica->solicitante?->nombre_completo }} · Estado:
+                <strong>{{ ucfirst($solicitudRadiologica->estado) }}</strong>
+                @if($solicitudRadiologica->revisor)
+                    · Revisó: {{ $solicitudRadiologica->revisor->nombre_completo }}
+                @endif
+            </p>
+            @if($solicitudRadiologica->observacion)<p>Observación: {{ $solicitudRadiologica->observacion }}</p>@endif
+            @if($solicitudRadiologica->costo_autorizado !== null)
+                <p>Costo autorizado: Bs {{ number_format($pagoRadiologico['autorizado'], 2) }} · Pagado: Bs {{ number_format($pagoRadiologico['pagado'], 2) }} · Saldo: Bs {{ number_format($pagoRadiologico['saldo'], 2) }} · Estado del pago: {{ ucfirst($pagoRadiologico['estado']) }}</p>
+            @endif
+
+            @if($puedeRevisarRadiologia && in_array($solicitudRadiologica->estado, ['pendiente', 'observada'], true))
+                <div class="actions">
+                    <form action="{{ route('solicitudes-radiologicas.revisar', $solicitudRadiologica) }}" method="POST" class="actions">
+                        @csrf
+                        <input type="hidden" name="accion" value="autorizar">
+                        <label>Costo (Bs) <input class="form-control" name="costo_autorizado" type="number" min="0.01" max="99999999.99" step="0.01" required></label>
+                        <button class="btn btn-sm btn-primary" type="submit">Autorizar</button>
+                    </form>
+                    <form action="{{ route('solicitudes-radiologicas.revisar', $solicitudRadiologica) }}" method="POST" class="actions">
+                        @csrf
+                        <input type="hidden" name="accion" value="observar">
+                        <input class="form-control" name="observacion" maxlength="2000" required placeholder="Indique qué debe corregirse">
+                        <button class="btn btn-sm btn-secondary" type="submit">Observar</button>
+                    </form>
+                    <form action="{{ route('solicitudes-radiologicas.revisar', $solicitudRadiologica) }}" method="POST" class="actions">
+                        @csrf
+                        <input type="hidden" name="accion" value="rechazar">
+                        <input class="form-control" name="observacion" maxlength="2000" required placeholder="Motivo del rechazo">
+                        <button class="btn btn-sm btn-danger" type="submit">Rechazar</button>
+                    </form>
+                </div>
+            @elseif($solicitudRadiologica->estado === 'observada'
+                && (int)$solicitudRadiologica->solicitante_id === (int)auth()->id())
+                <form action="{{ route('solicitudes-radiologicas.reenviar', $solicitudRadiologica) }}" method="POST" class="actions">
+                    @csrf
+                    <input class="form-control" name="descripcion" maxlength="150" required value="{{ $solicitudRadiologica->descripcion }}">
+                    <button class="btn btn-sm btn-primary" type="submit">Corregir y reenviar</button>
+                </form>
+            @endif
+
+            @if($solicitudRadiologica->estudio)
+                <p>Resultado registrado el {{ $solicitudRadiologica->estudio->fecha_toma?->format('d/m/Y H:i') }} ·
+                    <a class="btn btn-sm btn-secondary" href="{{ route('radiologia.visor', $solicitudRadiologica->estudio) }}">Consultar estudio e imágenes ({{ $solicitudRadiologica->estudio->archivos_count }})</a>
+                </p>
+            @elseif($solicitudRadiologica->estado === 'autorizada')
+                <p>El pago del estudio se registra en Caja. Radiología lo realizará cuando el saldo llegue a cero.</p>
+            @endif
+            @if($solicitudRadiologica->recibos->isNotEmpty())
+                <p>Recibos:
+                    @foreach($solicitudRadiologica->recibos as $reciboRadiologico)
+                        <span>#{{ $reciboRadiologico->recibo }} · Bs {{ number_format($reciboRadiologico->cancelado, 2) }}</span>@if(!$loop->last), @endif
+                    @endforeach
+                </p>
+            @endif
+        </div>
+    @empty
+        @unless($puedeSolicitarRadiologia)<div class="card-body"><p>No hay solicitudes radiológicas registradas para esta historia.</p></div>@endunless
+    @endforelse
+    @if($estudiosRadiologicos->isNotEmpty())
+        <div class="card-body" style="border-top:1px solid var(--border);">
+            <h3>Resultados radiológicos de este paciente · todas las clínicas autorizadas</h3>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Fecha</th><th>Clínica</th><th>Estudio</th><th>Archivos</th><th>Consulta</th></tr></thead>
+                <tbody>
+                @foreach($estudiosRadiologicos as $estudioRadiologico)
+                    <tr>
+                        <td>{{ $estudioRadiologico->fecha_toma?->format('d/m/Y H:i') ?? 'Sin fecha' }}</td>
+                        <td>{{ $estudioRadiologico->clinica?->especialidad }}</td>
+                        <td>{{ $estudioRadiologico->descripcion }}</td>
+                        <td>{{ $estudioRadiologico->archivos_count }}</td>
+                        <td><a class="btn btn-sm btn-secondary" href="{{ route('radiologia.visor', $estudioRadiologico) }}">Consultar estudio</a></td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table></div>
+        </div>
+    @endif
+</div>
+@endcanany
 
 <div class="card" id="tratamientos" style="margin-top:20px;">
     <div class="card-header"><h2>Tratamientos de esta historia</h2></div>

@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Admision;
 use App\Models\Bitacora;
 use App\Models\Caja;
 use App\Models\HistoriaClinica;
 use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
+use App\Models\Paciente;
 use App\Models\Periodo;
+use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
@@ -56,8 +59,8 @@ class DashboardMetrics
             'subadmin' => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total'],
             'director' => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'historias_pendientes', 'insumos_bajo_stock'],
             'jefatura-clinicas' => ['historias_pendientes', 'insumos_bajo_stock', 'solicitudes_pendientes', 'admisiones_hoy', 'radiologias_hoy'],
-            'jefe-catedra' => ['historias_pendientes', 'solicitudes_pendientes', 'pacientes_total', 'tratamientos_periodo'],
-            'docente' => ['historias_por_autorizar', 'estudiantes_asignados', 'solicitudes_estudiantes', 'insumos_bajo_stock'],
+            'jefe-catedra' => ['historias_catedra', 'solicitudes_catedra', 'pacientes_catedra', 'tratamientos_catedra'],
+            'docente' => ['historias_por_autorizar', 'estudiantes_asignados', 'solicitudes_estudiantes', 'tratamientos_docente'],
             'estudiante' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes', 'historias_pendientes'],
             'interno' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes'],
             'admision' => ['admisiones_hoy', 'pacientes_total', 'periodos', 'mis_admisiones'],
@@ -99,6 +102,20 @@ class DashboardMetrics
     {
         try {
             return match ($clave) {
+                'historias_catedra' => self::tarjeta('Historias por autorizar',
+                    self::contar(AccesoClinico::historias(HistoriaClinica::query(), $usuario)->where('autorizado', false)),
+                    'en tus clínicas habilitadas', 'amber', 'file-text', self::ruta('historias.index')),
+                'solicitudes_catedra' => self::tarjeta('Solicitudes pendientes',
+                    self::contar(AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)->where('estado', InsumoSolicitado::ESTADO_PENDIENTE)),
+                    'de tu cátedra', 'amber', 'clipboard', self::ruta('solicitudes-insumos.index')),
+                'pacientes_catedra' => self::tarjeta('Pacientes de la cátedra',
+                    self::contar(Paciente::query()->whereIn('id', AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('paciente_id'))
+                        ->orWhereIn('id', AccesoClinico::admisiones(Admision::query(), $usuario)->select('paciente_id'))),
+                    'en tus clínicas habilitadas', 'teal', 'users', self::ruta('admisiones.index')),
+                'tratamientos_catedra' => self::tarjeta('Tratamientos del periodo',
+                    self::contar(TratamientoRealizado::query()->whereIn('historia_clinica_id',
+                        AccesoClinico::historias(HistoriaClinica::query(), $usuario)->where('periodo_id', self::periodoIdVigente())->select('id'))),
+                    'de tu cátedra en el periodo vigente', 'fuchsia', 'activity', self::ruta('tratamientos-realizados.index')),
                 'usuarios_activos' => self::tarjeta(
                     'Usuarios activos',
                     self::contar(Usuario::query()->where('habilitado', true)->where('permitir_login', true)),
@@ -192,7 +209,7 @@ class DashboardMetrics
                 ),
                 'historias_por_autorizar' => self::tarjeta(
                     'Historias por autorizar',
-                    self::contar(HistoriaClinica::query()->where('docente_id', $usuario->id)->where('autorizado', false)),
+                    self::contar(AccesoClinico::historias(HistoriaClinica::query(), $usuario)->where('autorizado', false)),
                     'asignadas a tu supervisión',
                     'amber',
                     'file-text',
@@ -200,7 +217,7 @@ class DashboardMetrics
                 ),
                 'estudiantes_asignados' => self::tarjeta(
                     'Estudiantes asignados',
-                    self::contar(HistoriaClinica::query()->where('docente_id', $usuario->id)->distinct()->select('estudiante_id')),
+                    self::contar(AccesoClinico::historias(HistoriaClinica::query(), $usuario)->distinct()->count('estudiante_id')),
                     'bajo tu supervisión',
                     'cyan',
                     'users',
@@ -285,14 +302,17 @@ class DashboardMetrics
                 ),
                 'solicitudes_estudiantes' => self::tarjeta(
                     'Solicitudes de mis estudiantes',
-                    self::contar(InsumoSolicitado::query()->whereIn(
-                        'usuario_id',
-                        DB::table('historias_clinicas')->select('estudiante_id')->where('docente_id', $usuario->id)
-                    )),
+                    self::contar(AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)),
                     'insumos solicitados',
                     'amber',
                     'clipboard',
                     self::ruta('solicitudes-insumos.index')
+                ),
+                'tratamientos_docente' => self::tarjeta(
+                    'Tratamientos supervisados',
+                    self::contar(TratamientoRealizado::query()->whereIn('historia_clinica_id',
+                        AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('id'))),
+                    'de tus casos asignados', 'fuchsia', 'activity', self::ruta('tratamientos-realizados.index')
                 ),
                 'ciclos_hoy' => self::tarjeta(
                     'Ciclos de hoy',
@@ -435,11 +455,13 @@ class DashboardMetrics
      *
      * @return array{labels: array<int,string>, valores: array<int,int>}
      */
-    public static function pacientesPorMes(): array
+    public static function pacientesPorMes(?Usuario $usuario = null): array
     {
         $inicio = now()->startOfMonth()->subMonths(11);
 
         $conteos = DB::table('admisiones')
+            ->when($usuario?->hasAnyRole(['docente', 'jefe-catedra']) && ! AccesoClinico::esAdministrador($usuario),
+                fn (Builder $query) => $query->whereIn('id', AccesoClinico::admisiones(Admision::query(), $usuario)->select('id')))
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as mes, COUNT(*) as total")
             ->where('created_at', '>=', $inicio)
             ->groupBy('mes')
@@ -463,11 +485,13 @@ class DashboardMetrics
      *
      * @return array{labels: array<int,string>, valores: array<int,int>}
      */
-    public static function topEspecialidades(int $limite = 5): array
+    public static function topEspecialidades(int $limite = 5, ?Usuario $usuario = null): array
     {
         $filas = DB::table('admisiones')
             ->join('historias_clinicas', 'historias_clinicas.admision_id', '=', 'admisiones.id')
             ->join('clinicas', 'clinicas.id', '=', 'historias_clinicas.clinica_id')
+            ->when($usuario?->hasAnyRole(['docente', 'jefe-catedra']) && ! AccesoClinico::esAdministrador($usuario),
+                fn (Builder $query) => $query->whereIn('historias_clinicas.id', AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('id')))
             ->selectRaw('clinicas.especialidad as nombre, COUNT(DISTINCT admisiones.id) as total')
             ->groupBy('clinicas.especialidad')
             ->orderByDesc('total')

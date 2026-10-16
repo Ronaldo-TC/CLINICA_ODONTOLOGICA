@@ -327,7 +327,7 @@ class RemisionController extends Controller
     {
         $usuario = $request->user();
 
-        return $usuario->hasRole('admin')
+        return AccesoClinico::esAdministrador($usuario)
             ? Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
             : $usuario->especialidades()
                 ->wherePivot('habilitado', true)

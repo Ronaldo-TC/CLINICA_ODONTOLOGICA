@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\HistoriaClinica;
+use App\Models\Notificacion;
 use App\Models\Periodo;
 use App\Models\Remision;
+use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,7 +27,7 @@ class AsignacionRemision
                 ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', ['estudiante', 'interno', 'docente', 'jefe-catedra']))
                 ->with('roles')->orderBy('nombre_completo')->get(),
             'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(['id', 'nombre', 'gestion', 'semestre']),
-            'docenteActual' => ! $usuario->hasRole('admin') && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null,
+            'docenteActual' => ! $usuario->hasAnyRole(['admin', 'director']) && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null,
         ];
     }
 
@@ -53,7 +55,7 @@ class AsignacionRemision
             $asignacion = ['estudiante_id' => $estudianteId, 'docente_id' => $docenteId, 'periodo_id' => $periodoId];
             $registro->update($asignacion + ['asignado_por' => $usuario->id, 'fecha_asignacion' => now(), 'estado' => 'asignada']);
 
-            return HistoriaClinica::create($asignacion + [
+            $historia = HistoriaClinica::create($asignacion + [
                 'remision_id' => $registro->id,
                 'admision_id' => $registro->admision_id,
                 'paciente_id' => $registro->paciente_id,
@@ -63,6 +65,20 @@ class AsignacionRemision
                 'estado' => 'revision',
                 'autorizado' => false,
             ]);
+            if ($registro->tratamiento_propuesto_id) {
+                $catalogo = $registro->tratamientoPropuesto()->lockForUpdate()->firstOrFail();
+                abort_unless((int) $catalogo->clinica_id === (int) $registro->clinica_id, 422, 'La propuesta debe pertenecer a la clínica derivada.');
+                TratamientoRealizado::create(['historia_clinica_id' => $historia->id,
+                    'tratamiento_id' => $catalogo->id, 'clinica_id' => $historia->clinica_id,
+                    'estado' => 'pendiente', 'costo_cobrado' => $catalogo->precio_asignado ? $catalogo->costo : null,
+                    'observacion' => 'Sugerido en Admisión. '.($registro->observacion_propuesta ?? '')]);
+            }
+            NotificacionService::a($estudianteId, Notificacion::TIPO_REMISION_NUEVA, 'Paciente asignado a su clínica',
+                'Revise la historia #'.$historia->id.' y la propuesta de Admisión.', route('historias.show', $historia->id));
+            NotificacionService::a($docenteId, Notificacion::TIPO_REMISION_NUEVA, 'Historia pendiente de revisión',
+                'Revise la historia #'.$historia->id.' antes de autorizar tratamientos.', route('historias.show', $historia->id));
+
+            return $historia;
         });
     }
 

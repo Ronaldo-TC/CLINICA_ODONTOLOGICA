@@ -81,7 +81,43 @@
             <div style="padding:16px 0;border-top:1px solid var(--line)">
                 <h3>#{{ $tratamiento->id }} · {{ $tratamiento->tratamiento?->nombre }}</h3>
                 <p><span class="badge badge-info">{{ ucfirst(str_replace('_', ' ', $tratamiento->estado)) }}</span> · Pieza {{ $tratamiento->pieza_dental ?: 'Sin especificar' }} · {{ $tratamiento->costo_cobrado }} Bs</p>
-                @if(in_array($tratamiento->estado, ['pendiente', 'propuesta']))<p>Espera la autorización de la propuesta por tu docente.</p>@endif
+                @if(in_array($tratamiento->estado, ['pendiente', 'propuesta']))<p>Espera la autorización de la propuesta por tu docente. Mientras esté pendiente puedes corregirla o eliminarla.</p>@endif
+                @if($tratamiento->estado === 'rechazado')
+                <div class="alert alert-danger">
+                    <strong>Propuesta rechazada por el docente.</strong>
+                    <p>{{ $tratamiento->observacion }}</p>
+                </div>
+                @endif
+                @if($tratamiento->estado === 'cancelado')<p>Esta solicitud fue cancelada y se conserva en el historial.</p>@endif
+                @if(!$cerrada && in_array($tratamiento->estado, ['pendiente', 'propuesta', 'rechazado']))
+                @canany(['atenciones.editar', 'atenciones.gestionar'])
+                <details @if($tratamiento->estado === 'rechazado') open @endif>
+                    <summary>{{ $tratamiento->estado === 'rechazado' ? 'Corregir y reenviar propuesta' : 'Editar propuesta' }}</summary>
+                    <form data-estudiante-form action="{{ route('tratamientos-realizados.update', $tratamiento->id) }}" method="POST" class="form-grid">
+                        @csrf
+                        @method('PUT')
+                        <div class="form-group">
+                            <label for="tratamiento-{{ $tratamiento->id }}">Tratamiento</label>
+                            <select id="tratamiento-{{ $tratamiento->id }}" name="tratamiento_id" class="form-control" required>
+                                @foreach($catalogo as $opcion)
+                                <option value="{{ $opcion->id }}" @selected((int) $tratamiento->tratamiento_id === (int) $opcion->id)>{{ $opcion->nombre }} · {{ $opcion->costo }} Bs</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="pieza-{{ $tratamiento->id }}">Pieza dental</label><input id="pieza-{{ $tratamiento->id }}" name="pieza_dental" value="{{ $tratamiento->pieza_dental }}" class="form-control" maxlength="20"></div>
+                        <div class="form-group"><label for="observacion-{{ $tratamiento->id }}">Observación</label><textarea id="observacion-{{ $tratamiento->id }}" name="observacion" class="form-control" maxlength="2000">{{ $tratamiento->observacion }}</textarea></div>
+                        <div><button class="btn btn-primary">{{ $tratamiento->estado === 'rechazado' ? 'Corregir y reenviar' : 'Guardar cambios' }}</button></div>
+                        <p data-form-error role="alert"></p>
+                    </form>
+                </details>
+                <form data-estudiante-form data-confirm="¿Eliminar definitivamente esta propuesta? Esta acción no se puede deshacer." action="{{ route('tratamientos-realizados.destroy', $tratamiento->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-danger">Eliminar propuesta</button>
+                    <p data-form-error role="alert"></p>
+                </form>
+                @endcanany
+                @endif
                 @if(in_array($tratamiento->estado, ['autorizado', 'en_proceso']) && !$tratamiento->tiene_pago)<p>Falta un pago válido registrado por Caja antes de registrar avances.</p>@endif
                 @if(!$cerrada && $tratamiento->tiene_pago && in_array($tratamiento->estado, ['autorizado', 'en_proceso']))
                 @canany(['historias.editar', 'historias.gestionar'])

@@ -20,6 +20,7 @@ use App\Http\Controllers\RadiologiaController;
 use App\Http\Controllers\RemisionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\SolicitudRadiologicaController;
 use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
@@ -204,6 +205,7 @@ Route::middleware(['auth.session'])->group(function () {
             Route::get('/datos-iniciales', 'datosIniciales')->name('datos-iniciales');
 
             Route::get('/{historia}/datos', 'datos')->name('datos');
+            Route::get('/{historia}/seguimiento/{seccion}', 'seguimiento')->name('seguimiento');
 
             /* ---- Archivos adjuntos ---- */
             Route::get('/{id}/archivos', 'archivos')->name('archivos');
@@ -227,14 +229,34 @@ Route::middleware(['auth.session'])->group(function () {
             Route::delete('/{historia}', 'destroy')->name('destroy');
         });
     });
+
+    Route::post('/historias/{historia}/solicitudes-radiologicas', [SolicitudRadiologicaController::class, 'store'])
+        ->middleware('permission:radiologias.crear|radiologias.gestionar')
+        ->name('historias.solicitudes-radiologicas.store');
+    Route::post('/solicitudes-radiologicas/{solicitud}/revisar', [SolicitudRadiologicaController::class, 'revisar'])
+        ->middleware('permission:radiologias.revisar|radiologias.gestionar')
+        ->name('solicitudes-radiologicas.revisar');
+    Route::post('/solicitudes-radiologicas/{solicitud}/reenviar', [SolicitudRadiologicaController::class, 'reenviar'])
+        ->middleware('permission:radiologias.crear|radiologias.gestionar')
+        ->name('solicitudes-radiologicas.reenviar');
+    Route::post('/cajas/solicitudes-radiologicas/{solicitud}/pago', [SolicitudRadiologicaController::class, 'pagar'])
+        ->middleware('permission:cajas.crear|cajas.gestionar')
+        ->name('cajas.solicitudes-radiologicas.pago');
+    Route::post('/radiologia/solicitudes/{solicitud}/realizar', [SolicitudRadiologicaController::class, 'realizar'])
+        ->middleware('permission:radiologias.gestionar')
+        ->name('radiologia.solicitudes.realizar');
     /* ============================================================
        TRATAMIENTOS
        ============================================================ */
     Route::prefix('tratamientos-realizados')->name('tratamientos-realizados.')->controller(TratamientoController::class)->group(function (): void {
         Route::get('/', 'realizados')->middleware('permission:atenciones.ver|atenciones.gestionar')->name('index');
+        Route::get('/tabla', 'tablaRealizados')->middleware('permission:atenciones.ver|atenciones.gestionar')->name('tabla');
         Route::get('/reporte', 'reporteRealizados')->middleware('permission:atenciones.ver|atenciones.gestionar')->name('reporte');
         Route::post('/', 'proponer')->middleware('permission:atenciones.crear|atenciones.gestionar')->name('store');
+        Route::put('/{tratamiento}', 'actualizarPropuesta')->middleware('permission:atenciones.editar|atenciones.gestionar')->name('update');
         Route::post('/{tratamiento}/autorizar', 'autorizarRealizado')->middleware('permission:atenciones.autorizar|atenciones.gestionar')->name('autorizar');
+        Route::post('/{tratamiento}/rechazar', 'rechazarRealizado')->middleware('permission:atenciones.autorizar|atenciones.gestionar')->name('rechazar');
+        Route::delete('/{tratamiento}', 'eliminarPropuesta')->middleware('permission:atenciones.editar|atenciones.gestionar')->name('destroy');
         Route::post('/{tratamiento}/finalizar', 'finalizar')->middleware('permission:atenciones.editar|atenciones.gestionar')->name('finalizar');
         Route::post('/{tratamiento}/culminar', 'culminar')->middleware('permission:atenciones.autorizar|atenciones.gestionar')->name('culminar');
     });
@@ -273,7 +295,7 @@ Route::middleware(['auth.session'])->group(function () {
     /* ============================================================
        REMISIONES
        ============================================================ */
-    Route::prefix('pacientes-remitidos')->name('pacientes-remitidos.')->middleware('role:admin|docente|jefe-catedra')->controller(RemisionController::class)->group(function (): void {
+    Route::prefix('pacientes-remitidos')->name('pacientes-remitidos.')->middleware('role:admin|director|docente|jefe-catedra')->controller(RemisionController::class)->group(function (): void {
         // ---- Estáticas primero ----
         Route::get('/', 'remitidos')
             ->middleware('permission:remisiones.ver|remisiones.gestionar')
@@ -297,9 +319,9 @@ Route::middleware(['auth.session'])->group(function () {
         Route::get('/pacientes-derivados', 'derivadosEstudiante')->name('derivados');
     });
 
-    Route::prefix('remisiones')->name('remisiones.')->middleware('role:admin|admision')->controller(RemisionController::class)->group(function () {
-        Route::get('/{remision}/asignar', 'asignacion')->middleware(['role:admin|admision', 'permission:remisiones.asignar|remisiones.gestionar'])->name('asignacion');
-        Route::post('/{remision}/asignar', 'asignar')->middleware(['role:admin|admision', 'permission:remisiones.asignar|remisiones.gestionar'])->name('asignar');
+    Route::prefix('remisiones')->name('remisiones.')->middleware('role:admin|director|admision|jefatura-clinicas')->controller(RemisionController::class)->group(function () {
+        Route::get('/{remision}/asignar', 'asignacion')->middleware('permission:remisiones.asignar|remisiones.gestionar')->name('asignacion');
+        Route::post('/{remision}/asignar', 'asignar')->middleware('permission:remisiones.asignar|remisiones.gestionar')->name('asignar');
 
         Route::middleware('permission:remisiones.ver|remisiones.gestionar')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -364,6 +386,13 @@ Route::middleware(['auth.session'])->group(function () {
     /* ============================================================
    SOLICITUDES DE INSUMOS — Flujo de aprobación
    ============================================================ */
+    Route::prefix('reposiciones-insumos')->name('insumos.')->middleware('role:insumos|jefatura-clinicas|director|admin')->controller(InsumoController::class)->group(function (): void {
+        Route::get('/', 'reposiciones')->name('reposiciones');
+        Route::get('/tabla', 'tablaReposiciones')->name('reposiciones-tabla');
+        Route::post('/', 'crearReposicion')->name('reposiciones-crear');
+        Route::post('/{solicitud}/revision', 'revisarReposicion')->name('reposiciones-revisar');
+    });
+
     Route::prefix('solicitudes-insumos')->name('solicitudes-insumos.')->controller(InsumoController::class)->group(function () {
 
         Route::middleware('permission:solicitudes-insumos.ver|solicitudes-insumos.gestionar|insumos.gestionar')->group(function () {

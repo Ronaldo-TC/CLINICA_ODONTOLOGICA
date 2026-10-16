@@ -33,11 +33,100 @@ class HistoriasSeguimientoTest extends TestCase
 
         $this->get(route('historias.index'))->assertOk()->assertSee('<th>Cajas</th>', false)
             ->assertSee('<th>Insumos</th>', false)->assertSee('<th>Esterilizaciones</th>', false)
+            ->assertSee('id="modalSeguimientoHistoria"', false)
+            ->assertSee('data-seguimiento-seccion="tratamientos"', false)
+            ->assertSee('data-seguimiento-seccion="recibos"', false)
+            ->assertSee('data-seguimiento-seccion="solicitudes"', false)
+            ->assertSee('data-seguimiento-seccion="controles"', false)
+            ->assertSee('data-seguimiento-seccion="archivos"', false)
             ->assertSee($url.'#insumos', false)->assertSee($url.'#cajas', false)->assertSee($url.'#esterilizaciones', false);
         $response = $this->getJson(route('historias.tabla'))->assertOk();
-        $this->assertStringContainsString($url.'#insumos', $response->json('filas'));
-        $this->assertStringContainsString($url.'#cajas', $response->json('filas'));
+        $this->assertStringContainsString('data-historia-seguimiento="'.$case['history']->id.'"', $response->json('filas'));
+        $this->assertStringContainsString('data-seguimiento-seccion="tratamientos"', $response->json('filas'));
+        $this->assertStringContainsString('data-seguimiento-seccion="recibos"', $response->json('filas'));
+        $this->assertStringContainsString('data-seguimiento-seccion="solicitudes"', $response->json('filas'));
+        $this->assertStringContainsString('data-seguimiento-seccion="controles"', $response->json('filas'));
+        $this->assertStringContainsString('data-seguimiento-seccion="archivos"', $response->json('filas'));
         $this->get(route('historias.index'))->assertViewHas('registros', fn ($rows): bool => $rows->first()->tratamientos_realizados_count === 1);
+    }
+
+    public function test_ajax_follow_up_modal_returns_only_the_selected_history_records(): void
+    {
+        $case = $this->approvedProgress();
+        $other = $this->approvedProgress();
+        $ownRequest = $this->supplyRequest($case, '<script>Material del modal</script>');
+        $this->supplyRequest($other, 'Material ajeno al modal');
+        $ownPayment = $this->payment($case, 765421);
+        $this->payment($other, 765422);
+        $referral = $this->referral($case);
+        $ownControl = Esterilizacion::create([
+            'remision_id' => $referral->id, 'estudiante_id' => $case['student']->id, 'docente_id' => $case['teacher']->id,
+            'clinica_id' => $case['clinic']->id, 'periodo_id' => $case['history']->periodo_id, 'usuario_id' => $case['student']->id,
+            'cantidad_sobres' => 1, 'cantidad_paquetes' => 0, 'descripcion' => 'Control del modal', 'habilitada' => true,
+        ]);
+        $this->teacher($case);
+
+        $treatments = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'tratamientos']))
+            ->assertOk()->assertJsonPath('success', true)->assertJsonPath('url', route('historias.show', $case['history']->id));
+        $this->assertStringContainsString($case['treatment']->nombre, $treatments->json('html'));
+
+        $receipts = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'recibos']))->assertOk();
+        $this->assertStringContainsString((string) $ownPayment->recibo, $receipts->json('html'));
+        $this->assertStringNotContainsString('765422', $receipts->json('html'));
+
+        $requests = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'solicitudes']))->assertOk();
+        $this->assertStringContainsString((string) $ownRequest->id, $requests->json('html'));
+        $this->assertStringContainsString('&lt;script&gt;Material del modal&lt;/script&gt;', $requests->json('html'));
+        $this->assertStringNotContainsString('<script>Material del modal</script>', $requests->json('html'));
+        $this->assertStringNotContainsString('Material ajeno al modal', $requests->json('html'));
+
+        $controls = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'controles']))->assertOk();
+        $this->assertStringContainsString((string) $ownControl->id, $controls->json('html'));
+        $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'desconocida']))->assertNotFound();
+    }
+
+    public function test_student_uses_the_same_modal_for_owned_history_with_section_permissions(): void
+    {
+        $case = $this->approvedProgress();
+        $this->referral($case);
+        $this->actingAs($case['student']);
+
+        $this->get(route('estudiante.historias'))->assertOk()
+            ->assertSee('id="modalSeguimientoHistoria"', false)
+            ->assertSee('data-seguimiento-seccion="tratamientos"', false)
+            ->assertSee('data-seguimiento-seccion="recibos"', false)
+            ->assertSee('data-seguimiento-seccion="solicitudes"', false)
+            ->assertSee('data-seguimiento-seccion="controles"', false)
+            ->assertSee('data-seguimiento-seccion="archivos"', false);
+        foreach (['tratamientos', 'recibos', 'solicitudes', 'controles', 'archivos'] as $section) {
+            $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => $section]))
+                ->assertOk()->assertJsonPath('url', route('estudiante.historia', $case['history']->id));
+        }
+
+        $treatments = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'tratamientos']))->json('html');
+        $this->assertStringContainsString(route('tratamientos-realizados.finalizar', $case['realized']->id), $treatments);
+        $this->assertStringContainsString('data-solicitar-designado', $treatments);
+
+        $files = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'archivos']))->json('html');
+        $this->assertStringContainsString(route('historias.archivos.subir', $case['history']->id), $files);
+
+        $requests = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'solicitudes']))->json('html');
+        $this->assertStringContainsString('data-solicitar-designado', $requests);
+
+        $controls = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'controles']))->json('html');
+        $this->assertStringContainsString(route('esterilizacion.store'), $controls);
+        $otherStudent = $this->clinicalUser('estudiante');
+        $otherStudent->givePermissionTo('historias.ver');
+        $this->actingAs($otherStudent)->getJson(route('historias.seguimiento', [
+            'historia' => $case['history']->id, 'seccion' => 'tratamientos',
+        ]))->assertNotFound();
+
+        $reader = $this->clinicalUser('kardex');
+        $reader->syncRoles([]);
+        $reader->givePermissionTo('historias.ver');
+        $this->actingAs($reader)->getJson(route('historias.seguimiento', [
+            'historia' => $case['history']->id, 'seccion' => 'recibos',
+        ]))->assertForbidden();
     }
 
     public function test_follow_up_keeps_supplies_payments_and_sterilization_in_their_history(): void
@@ -84,6 +173,10 @@ class HistoriasSeguimientoTest extends TestCase
         $this->teacher($case)->givePermissionTo('atenciones.autorizar');
 
         $this->get(route('historias.index'))->assertSee($historyUrl.'#tratamientos', false)->assertSee('Ver tratamientos');
+        $modal = $this->getJson(route('historias.seguimiento', ['historia' => $case['history']->id, 'seccion' => 'tratamientos']))
+            ->assertOk()->json('html');
+        $this->assertStringContainsString(route('tratamientos-realizados.autorizar', $treatment->id), $modal);
+        $this->assertStringContainsString(route('tratamientos-realizados.rechazar', $treatment->id), $modal);
         $this->get($historyUrl)->assertSee('Autorizar tratamiento')
             ->assertSee('action="'.route('tratamientos-realizados.autorizar', $treatment->id).'"', false);
         $this->from($historyUrl)->post(route('tratamientos-realizados.autorizar', $treatment->id))
@@ -108,9 +201,8 @@ class HistoriasSeguimientoTest extends TestCase
         $otherTeacher->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
         $otherTeacher->givePermissionTo(['historias.ver', 'atenciones.autorizar']);
 
-        $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertSee($case['treatment']->nombre)
-            ->assertDontSee('Autorizar tratamiento');
-        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertForbidden();
+        $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertNotFound();
+        $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertNotFound();
         $case['student']->givePermissionTo(['historias.ver', 'atenciones.autorizar']);
         $this->actingAs($case['student'])->get(route('historias.show', $case['history']->id))->assertDontSee('Autorizar tratamiento');
         $this->postJson(route('tratamientos-realizados.autorizar', $treatment->id))->assertForbidden();
@@ -193,8 +285,7 @@ class HistoriasSeguimientoTest extends TestCase
         $otherTeacher->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
         $otherTeacher->givePermissionTo(['historias.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar']);
 
-        $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertOk()
-            ->assertViewHas('solicitudes', fn ($rows): bool => $rows->isEmpty())->assertDontSee('Autorizar solicitud');
+        $this->actingAs($otherTeacher)->get(route('historias.show', $case['history']->id))->assertNotFound();
         $this->postJson(route('solicitudes-insumos.autorizar', $solicitud->id))->assertNotFound();
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $solicitud->id, 'estado' => 'pendiente']);
         $this->actingAs($this->clinicalUser('estudiante'))->get(route('historias.show', $case['history']->id))->assertNotFound();
@@ -247,6 +338,7 @@ class HistoriasSeguimientoTest extends TestCase
         $case = $this->approvedProgress();
         $other = $this->approvedProgress();
         $request = $this->supplyRequest($case);
+        $case['realized']->cajas()->delete();
         $type = $request->detalles()->firstOrFail()->insumo->insumo_tratamiento_id;
         $request->update(['historia_clinica_id' => null, 'tratamiento_id' => null, 'insumo_tratamiento_id' => $type,
             'tratamiento_realizado_id' => $case['realized']->id, 'sesion_atencion_id' => $case['session']->id]);
@@ -282,6 +374,7 @@ class HistoriasSeguimientoTest extends TestCase
     /** @param array<string, mixed> $case */
     private function supplyRequest(array $case, string $name = 'Guantes'): InsumoSolicitado
     {
+        $this->paidTreatment($case);
         $type = InsumoTratamiento::create(['clinica_id' => $case['clinic']->id, 'nombre' => 'Material dental']);
         $material = Insumo::create(['nombre' => $name, 'clinica_id' => $case['clinic']->id, 'insumo_tratamiento_id' => $type->id,
             'cantidad' => 'unidades', 'cantidad_numerica' => 10, 'stock_minimo' => 1, 'costo_unitario' => 2]);
@@ -308,9 +401,18 @@ class HistoriasSeguimientoTest extends TestCase
     /** @param array<string, mixed> $case */
     private function payment(array $case, int $receipt): Caja
     {
-        return Caja::create(['tratamiento_realizado_id' => $case['realized']->id, 'tratamiento_id' => $case['treatment']->id,
+        $payment = Caja::query()->where('tratamiento_realizado_id', $case['realized']->id)->first();
+        $attributes = ['tratamiento_realizado_id' => $case['realized']->id, 'tratamiento_id' => $case['treatment']->id,
             'clinica_id' => $case['clinic']->id, 'usuario_id' => $case['teacher']->id, 'costo_total' => 100, 'cancelado' => 25,
             'habilitada' => true, 'monto' => 100, 'ci' => 0, 'descripcion' => '', 'tipo' => '', 'tipo_pago' => 'efectivo',
-            'paciente_nombre_completo' => 'Paciente', 'grado' => '', 'recibo' => $receipt]);
+            'paciente_nombre_completo' => 'Paciente', 'grado' => '', 'recibo' => $receipt];
+
+        if ($payment) {
+            $payment->update($attributes);
+
+            return $payment->fresh();
+        }
+
+        return Caja::create($attributes);
     }
 }

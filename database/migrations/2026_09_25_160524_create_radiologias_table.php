@@ -26,8 +26,6 @@ return new class extends Migration
                 ->cascadeOnDelete()
                 ->cascadeOnUpdate();
 
-            //  NUEVA: clínica a la que pertenece la radiografía
-            // El orden de declaración ya la coloca después de caja_id.
             $table->foreignId('clinica_id')
                 ->constrained('clinicas')
                 ->cascadeOnDelete()
@@ -44,6 +42,13 @@ return new class extends Migration
                 ->constrained('remisiones')
                 ->nullOnDelete()
                 ->cascadeOnUpdate();
+
+            // ── NUEVA: relación con solicitudes_radiologicas ──
+            $table->foreignId('solicitud_radiologica_id')
+                ->nullable()
+                ->unique()
+                ->constrained('solicitudes_radiologicas')
+                ->restrictOnDelete();
 
             // ── Datos de la radiografía ──
             $table->string('archivo_ruta', 500)->default('');

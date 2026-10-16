@@ -28,10 +28,10 @@
                         <td><span class="badge {{ $historia->autorizado ? 'badge-success' : 'badge-warning' }}">{{ $historia->autorizado ? ucfirst($historia->estado) : 'Pendiente de revisión docente' }}</span></td>
                         <td>{{ ($historia->fecha_inicio ?? $historia->remision?->fecha_asignacion ?? $historia->created_at)?->format('d/m/Y') }}</td>
                         <td>{{ $historia->fecha_fin?->format('d/m/Y') ?? '—' }}</td>
-                        <td><a class="btn btn-sm btn-primary" href="{{ route('estudiante.historia', $historia->id) }}">Abrir historia</a><br><small>{{ $historia->archivos_count }} archivos · {{ $historia->tratamientos_realizados_count }} tratamientos</small></td>
-                        <td>@canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#esterilizacion">Ver control</a>@endcanany</td>
-                        <td><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#pagos">Ver pagos</a></td>
-                        <td>@canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#insumos">Ver solicitudes</a>@endcanany
+                        <td><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#tratamientos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="tratamientos" data-seguimiento-titulo="Tratamientos">Gestionar tratamientos</a><br><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#archivos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="archivos" data-seguimiento-titulo="Archivos adjuntos">Gestionar archivos</a><br><a href="{{ route('estudiante.historia', $historia->id) }}">Abrir historia completa</a><br><small>{{ $historia->archivos_count }} archivos · {{ $historia->tratamientos_realizados_count }} tratamientos</small></td>
+                        <td>@canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#esterilizacion" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="controles" data-seguimiento-titulo="Controles de esterilización">Ver control</a>@endcanany</td>
+                        <td><a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#pagos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="recibos" data-seguimiento-titulo="Recibos de Caja">Ver pagos</a></td>
+                        <td>@canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<a class="btn btn-sm btn-secondary" href="{{ route('estudiante.historia', $historia->id) }}#insumos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="solicitudes" data-seguimiento-titulo="Solicitudes de insumos">Ver solicitudes</a>@endcanany
                             @if(!$historia->fecha_fin && !in_array($historia->estado, $estadosCerrados, true))
                                 @canany(['solicitudes-insumos.crear', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])<button class="btn btn-sm btn-primary" type="button" data-solicitar-designado data-historia="{{ $historia->id }}">Solicitar insumos</button>@endcanany
                             @endif
@@ -47,6 +47,7 @@
     @endfragment
     </div>
 </div>
+@include('historias.partials.modal-seguimiento')
 @canany(['solicitudes-insumos.crear', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
     @include('solicitudes-insumos.partials.modal-designado')
 @endcanany

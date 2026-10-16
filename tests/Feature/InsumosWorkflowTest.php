@@ -27,6 +27,7 @@ class InsumosWorkflowTest extends TestCase
         $case = $this->clinicalCase();
         $case['teacher']->givePermissionTo(['solicitudes-insumos.autorizar', 'solicitudes-insumos.ver']);
         $treatment = TratamientoRealizado::create(['historia_clinica_id' => $case['history']->id, 'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id, 'estado' => 'en_proceso', 'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now(), 'pieza_dental' => '16']);
+        $this->paidTreatment([...$case, 'realized' => $treatment]);
         $session = SesionAtencion::create(['tratamiento_realizado_id' => $treatment->id, 'estudiante_id' => $case['student']->id, 'docente_id' => $case['teacher']->id, 'fecha' => today(), 'descripcion' => 'Avance aprobado', 'autorizado' => true, 'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now()]);
         $type = InsumoTratamiento::create(['clinica_id' => $case['clinic']->id, 'nombre' => 'Tipo prueba', 'descripcion' => 'Material']);
         $material = Insumo::create(['nombre' => 'Material prueba', 'clinica_id' => $case['clinic']->id, 'insumo_tratamiento_id' => $type->id, 'cantidad_numerica' => 10, 'cantidad' => 'unidades', 'stock_minimo' => 0, 'costo_unitario' => 2]);
@@ -44,6 +45,7 @@ class InsumosWorkflowTest extends TestCase
         $this->postJson(route('solicitudes-insumos.entregar', $id), ['detalles' => [['detalle_id' => $detail->id, 'cantidad_entregada' => 1]]])->assertForbidden();
 
         $warehouse = $this->clinicalUser('insumos');
+        $this->actingAs($warehouse)->postJson(route('solicitudes-insumos.aprobar', $id))->assertOk();
         $this->actingAs($warehouse)->postJson(route('solicitudes-insumos.entregar', $id), ['detalles' => [['detalle_id' => $detail->id, 'cantidad_entregada' => 2]]])->assertOk();
         $this->assertSame('parcial', $request->fresh()->estado);
         $this->assertSame(8.0, (float) $material->fresh()->cantidad_numerica);

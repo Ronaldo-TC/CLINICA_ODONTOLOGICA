@@ -46,6 +46,49 @@ class InsumoController extends Controller
 
     private ?int $tratamientoSeleccionadoId = null;
 
+    public function reposiciones(Request $request): View
+    {
+        return view('insumos.reposiciones', [
+            'registros' => $this->consultaReposiciones($request)->paginate(15)->withQueryString(),
+            'insumos' => Insumo::with('clinica')->orderBy('nombre')->get(),
+        ]);
+    }
+
+    public function tablaReposiciones(Request $request): JsonResponse
+    {
+        $registros = $this->consultaReposiciones($request)->paginate(15)->withQueryString();
+
+        return response()->json(['filas' => view('insumos.partials.reposiciones', compact('registros'))->render(),
+            'paginacion' => $registros->links()->toHtml(), 'total' => $registros->total()]);
+    }
+
+    private function consultaReposiciones(Request $request): Builder
+    {
+        abort_unless($request->user()->hasAnyRole(['insumos', 'jefatura-clinicas', 'director', 'admin']), 403);
+        $data = $request->validate(['estado' => ['nullable', Rule::in(['pendiente', 'autorizado', 'aprobado', 'parcial', 'recibido', 'rechazado'])]]);
+
+        return InsumoSolicitado::where('tipo_solicitud', 'reposicion')
+            ->with(['estudiante', 'aprobadorJefatura', 'encargado', 'receptor', 'detalles.insumo.clinica', 'entregas.usuario'])
+            ->when($data['estado'] ?? null, fn (Builder $query, string $estado) => $query->where('estado', $estado))
+            ->orderByDesc('id');
+    }
+
+    public function crearReposicion(Request $request): JsonResponse
+    {
+        $solicitud = $this->solicitudes->guardarReposicion($request->user(), $request->all());
+
+        return response()->json(['success' => true, 'id' => $solicitud->id, 'message' => 'Reposición enviada a Jefatura y Dirección.'], 201);
+    }
+
+    public function revisarReposicion(Request $request, int $solicitud): JsonResponse
+    {
+        $data = $request->validate(['accion' => ['required', Rule::in(['jefatura', 'director', 'rechazar', 'recibir'])]]);
+        $registro = InsumoSolicitado::where('tipo_solicitud', 'reposicion')->findOrFail($solicitud);
+        $this->solicitudes->revisarReposicion($request->user(), $registro, $data['accion'], $request->all());
+
+        return response()->json(['success' => true, 'message' => 'Reposición actualizada.']);
+    }
+
     /* ============================================================
        QUERIES — Catálogo de insumos
        ============================================================ */

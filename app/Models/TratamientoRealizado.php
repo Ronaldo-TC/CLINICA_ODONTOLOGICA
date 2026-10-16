@@ -42,6 +42,26 @@ class TratamientoRealizado extends Model
         return $this->autorizado_por !== null && $this->fecha_autorizacion !== null;
     }
 
+    /** @return array{estado: string, costo: float, pagado: float, saldo: float} */
+    public function resumenPago(): array
+    {
+        $this->loadMissing(['tratamiento', 'cajas.detalles', 'cajaDetalles.caja.detalles']);
+        $recibos = $this->cajas
+            ->concat($this->cajaDetalles->pluck('caja')->filter())
+            ->unique('id')
+            ->filter(function (Caja $recibo): bool {
+                return $recibo->habilitada && (int) $recibo->recibo > 0
+                    && ((int) $recibo->tratamiento_realizado_id === $this->id
+                        || ($recibo->tratamiento_realizado_id === null
+                            && $recibo->detalles->pluck('tratamiento_realizado_id')->unique()->all() === [$this->id]));
+            });
+        $costo = (int) round((float) ($this->costo_cobrado ?? $this->tratamiento?->costo) * 100);
+        $pagado = (int) $recibos->sum(fn (Caja $recibo): int => (int) round((float) $recibo->cancelado * 100));
+
+        return ['estado' => $recibos->isNotEmpty() && $pagado >= $costo ? 'pagado' : ($pagado > 0 ? 'parcial' : 'sin_pago'),
+            'costo' => $costo / 100, 'pagado' => $pagado / 100, 'saldo' => max(0, $costo - $pagado) / 100];
+    }
+
     public function estaCerrado(): bool
     {
         return in_array($this->estado, ['finalizado', 'culminado', 'realizado', 'completado', 'cancelado'], true);
@@ -90,5 +110,10 @@ class TratamientoRealizado extends Model
     public function cajaDetalles(): HasMany
     {
         return $this->hasMany(CajaDetalle::class, 'tratamiento_realizado_id');
+    }
+
+    public function cajas(): HasMany
+    {
+        return $this->hasMany(Caja::class, 'tratamiento_realizado_id');
     }
 }

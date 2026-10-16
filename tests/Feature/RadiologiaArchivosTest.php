@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Caja;
 use App\Models\Radiologia;
+use App\Models\TratamientoRealizado;
+use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +21,7 @@ class RadiologiaArchivosTest extends TestCase
         Storage::fake('local');
         $case = $this->clinicalCase();
         $user = $this->clinicalUser('radiologia');
-        $cash = Caja::create(['recibo' => 999, 'monto' => 100, 'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id, 'usuario_id' => $user->id]);
+        $cash = $this->paidRadiologyReceipt($case, $user);
         $study = Radiologia::create(['descripcion' => 'Tomografía', 'observacion' => '', 'estado' => 'realizado', 'paciente_id' => $case['admission']->paciente_id, 'usuario_id' => $user->id, 'caja_id' => $cash->id, 'clinica_id' => $case['clinic']->id]);
         $file = UploadedFile::fake()->createWithContent('estudio.dcm', str_repeat(chr(0), 128).'DICM'.'test-content');
 
@@ -50,7 +52,7 @@ class RadiologiaArchivosTest extends TestCase
     {
         $case = $this->clinicalCase();
         $user = $this->clinicalUser('radiologia');
-        $cash = Caja::create(['recibo' => 999, 'monto' => 100, 'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id, 'usuario_id' => $user->id, 'paciente_id' => $case['admission']->paciente_id, 'periodo_id' => $case['history']->periodo_id]);
+        $cash = $this->paidRadiologyReceipt($case, $user);
         $payload = ['descripcion' => 'Radiografía periapical', 'estado' => 'pendiente', 'caja_id' => $cash->id, 'clinica_id' => $case['clinic']->id];
 
         $response = $this->actingAs($user)->postJson(route('radiologia.store'), $payload)->assertCreated();
@@ -60,5 +62,23 @@ class RadiologiaArchivosTest extends TestCase
         $this->assertSame($case['history']->periodo_id, $study->periodo_id);
         $this->assertSame($user->id, $study->usuario_id);
         $this->postJson(route('radiologia.store'), [...$payload, 'paciente_id' => $this->clinicalCase()['admission']->paciente_id])->assertUnprocessable()->assertJsonValidationErrors('paciente_id');
+    }
+
+    /** @param array<string, mixed> $case */
+    private function paidRadiologyReceipt(array $case, Usuario $user): Caja
+    {
+        $treatment = TratamientoRealizado::create([
+            'historia_clinica_id' => $case['history']->id, 'tratamiento_id' => $case['treatment']->id,
+            'clinica_id' => $case['clinic']->id, 'estado' => 'autorizado', 'costo_cobrado' => 100,
+            'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now(),
+        ]);
+
+        return Caja::create([
+            'tratamiento_realizado_id' => $treatment->id, 'paciente_id' => $case['admission']->paciente_id,
+            'periodo_id' => $case['history']->periodo_id, 'recibo' => 500000000 + $treatment->id,
+            'monto' => 100, 'costo_total' => 100, 'cancelado' => 100, 'habilitada' => true,
+            'tipo' => 'radiologia', 'ci' => 0, 'tratamiento_id' => $case['treatment']->id,
+            'clinica_id' => $case['clinic']->id, 'usuario_id' => $user->id,
+        ]);
     }
 }

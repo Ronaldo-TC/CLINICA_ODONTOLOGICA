@@ -1,53 +1,38 @@
-## About Laravel
+# Clínica Odontológica UTIC
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sistema web para la gestión de una clínica odontológica. Está desarrollado con Laravel y utiliza Vite para compilar los recursos del frontend.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3 o superior dentro de la rama 8.x.
+- Composer 2.
+- Node.js 20.19 o superior, o 22.12 o superior, y npm. Estas versiones cumplen los requisitos de Vite 8.
+- Una base de datos: SQLite para una instalación local sencilla (opción predeterminada) o MySQL.
+- Para generar PDF desde el sistema: Node.js, Puppeteer instalado con npm y Google Chrome o Chromium en el equipo donde corre Laravel.
 
-## Learning Laravel
+Composer comprobará las extensiones PHP necesarias al instalar dependencias. Si se utiliza MySQL, PHP debe tener habilitado `pdo_mysql`; para SQLite, `pdo_sqlite`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## istalacion
+## Instalación local en Windows
 
 git clone https://github.com/Ronaldo-TC/CLINICA_ODONTOLOGICA.git
+Set-Location CLINICA_ODONTOLOGICA
 
 composer install
+npm ci
 
-copy .env.example .env
+Copy-Item .env.example .env
 
+> **Importante:** no uses `php artisan migrate:fresh --seed` sobre una base de datos que quieras conservar. `migrate:fresh` elimina todas las tablas antes de crearlas de nuevo. Para una instalación normal o una actualización, utiliza `php artisan migrate --seed`.
+
+php artisan key:generate
 php artisan migrate:fresh --seed
+php artisan storage:linK
 
-php artisan storage:link
+## Generación de PDF
+
+composer require spatie/laravel-pdf
+composer require spatie/browsershot
 
 php artisan serve
+
+## Comprobaciones útiles

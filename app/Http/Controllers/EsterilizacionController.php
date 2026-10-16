@@ -42,9 +42,7 @@ class EsterilizacionController extends Controller
 
     protected function buildIndexQuery(Request $request)
     {
-        return Esterilizacion::query()
-            ->when(AccesoClinico::esEstudiante($request->user()), fn ($q) => $q->where('estudiante_id', $request->user()->id))
-            ->when(! AccesoClinico::esAdministrador($request->user()) && $request->user()->hasAnyRole(['docente', 'jefe-catedra']), fn ($q) => $q->where('docente_id', $request->user()->id))
+        return AccesoClinico::esterilizaciones(Esterilizacion::query(), $request->user())
             ->with([
                 'clinica:id,especialidad,modulo',
                 'periodo:id,nombre,gestion,semestre',
@@ -218,8 +216,10 @@ class EsterilizacionController extends Controller
         return view('esterilizacion.control', [
             'registro' => $registro,
             'cicloActual' => $registro->ultimoCiclo,
+            'puedeAutorizar' => ($request->user()->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $request->user()->id)
+                || AccesoClinico::supervisaClinica($request->user(), $registro->clinica_id),
             'puedeGestionar' => $request->user()->can('esterilizaciones.gestionar')
-                && $request->user()->hasAnyRole(['admin', 'subadmin', 'esterilizacion']),
+                && $request->user()->hasAnyRole(['admin', 'subadmin', 'director', 'esterilizacion']),
         ]);
     }
 
@@ -253,7 +253,8 @@ class EsterilizacionController extends Controller
         $data = $request->validate(['firma_docente' => ['required', 'string', 'max:2000000', 'starts_with:data:image/png;base64,']]);
         DB::transaction(function () use ($request, $esterilizacion, $data): void {
             $registro = $this->registroBloqueado($esterilizacion);
-            abort_unless($request->user()->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $request->user()->id, 403, 'La firma corresponde al docente asignado.');
+            abort_unless($request->user()->hasAnyRole(['admin', 'subadmin', 'director']) || ($request->user()->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $request->user()->id)
+                || AccesoClinico::supervisaClinica($request->user(), $registro->clinica_id), 403, 'La firma corresponde al docente asignado o al jefe de cátedra de la clínica.');
             abort_unless($registro->habilitada, 422, 'El control está deshabilitado.');
             abort_if($registro->autorizado || $registro->fecha_recojo, 422, 'El control ya está autorizado o cerrado.');
             $registro->update($data + ['autorizado' => true, 'fecha_autorizacion' => now()]);
@@ -405,7 +406,7 @@ class EsterilizacionController extends Controller
     private function autorizarServicio(Request $request): void
     {
         abort_unless($request->user()->can('esterilizaciones.gestionar')
-            && $request->user()->hasAnyRole(['admin', 'subadmin', 'esterilizacion']), 403);
+            && $request->user()->hasAnyRole(['admin', 'subadmin', 'director', 'esterilizacion']), 403);
     }
 
     private function registroBloqueado(int $id): Esterilizacion

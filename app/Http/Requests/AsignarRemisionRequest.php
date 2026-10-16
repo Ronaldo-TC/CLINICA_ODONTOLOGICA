@@ -10,7 +10,7 @@ class AsignarRemisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['admin', 'admision', 'docente', 'jefe-catedra'])
+        return $this->user()?->hasAnyRole(['admin', 'director', 'admision', 'jefatura-clinicas', 'docente', 'jefe-catedra'])
             && $this->user()->canAny(['remisiones.asignar', 'remisiones.gestionar']);
     }
 
@@ -53,7 +53,7 @@ class AsignarRemisionRequest extends FormRequest
     {
         $usuario = $this->user();
 
-        return ! $usuario->hasRole('admin') && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null;
+        return ! $usuario->hasAnyRole(['admin', 'director']) && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null;
     }
 
     public function docenteResponsableId(): int

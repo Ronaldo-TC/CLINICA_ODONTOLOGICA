@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Radiologia extends Model
 {
@@ -20,6 +21,7 @@ class Radiologia extends Model
         'remision_id',
         'archivo_ruta',
         'fecha_toma',
+        'solicitud_radiologica_id',
     ];
 
     protected $casts = [
@@ -58,5 +60,10 @@ class Radiologia extends Model
     public function archivos()
     {
         return $this->hasMany(Archivo::class, 'radiologia_id');
+    }
+
+    public function solicitudRadiologica(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudRadiologica::class, 'solicitud_radiologica_id');
     }
 }

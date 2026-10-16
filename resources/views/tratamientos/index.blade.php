@@ -83,7 +83,7 @@
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->links() }}</div>
 </div>
 
 @include('tratamientos.partials.modal')

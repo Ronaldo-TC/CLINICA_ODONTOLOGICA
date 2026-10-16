@@ -73,21 +73,21 @@ class RemisionesWorkflowTest extends TestCase
         $this->get(route('pacientes-remitidos.index'))->assertRedirect(route('auth.login'));
     }
 
-    public function test_teacher_with_director_role_sees_only_enabled_referrals_from_active_specialties(): void
+    public function test_teacher_with_director_role_keeps_global_referral_visibility(): void
     {
         $case = $this->clinicalCase();
         $case['teacher']->assignRole('director');
         $visible = $this->pendingReferral($case);
         $this->pendingReferral($case, ['habilitado' => false]);
         $otherClinic = Clinica::create(['especialidad' => 'Especialidad ajena remisiones', 'modulo' => 'Prueba', 'curso' => 1]);
-        $this->pendingReferral($case, ['clinica_id' => $otherClinic->id, 'docente_id' => $case['teacher']->id]);
+        $otherVisible = $this->pendingReferral($case, ['clinica_id' => $otherClinic->id, 'docente_id' => $case['teacher']->id]);
 
-        $this->actingAs($case['teacher'])->get(route('pacientes-remitidos.index'))
+        $this->actingAs($case['teacher'])->get(route('pacientes-remitidos.index', ['buscar' => $case['admission']->paciente->ci]))
             ->assertViewIs('pacientes-remitidos.index')
-            ->assertViewHas('registros', fn ($records): bool => $records->getCollection()->modelKeys() === [$visible->id])
-            ->assertViewHas('clinicas', fn ($clinics): bool => $clinics->modelKeys() === [$case['clinic']->id])
+            ->assertViewHas('registros', fn ($records): bool => $records->getCollection()->modelKeys() === [$otherVisible->id, $visible->id])
+            ->assertViewHas('clinicas', fn ($clinics): bool => $clinics->modelKeys() === Clinica::query()->orderBy('especialidad')->pluck('id')->all())
             ->assertSee('href="'.route('pacientes-remitidos.index').'"', false)
-            ->assertDontSee('href="'.route('remisiones.index').'"', false);
+            ->assertSee('href="'.route('remisiones.index').'"', false);
     }
 
     public function test_admission_staff_cannot_enter_patient_inbox_even_with_read_permission(): void

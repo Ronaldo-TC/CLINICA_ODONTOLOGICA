@@ -7,10 +7,14 @@ use App\Models\Admision;
 use App\Models\Caja;
 use App\Models\Clinica;
 use App\Models\HistoriaClinica;
+use App\Models\SolicitudRadiologica;
 use App\Models\Tratamiento;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
+use App\Services\NotificacionService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -48,8 +52,11 @@ class CajaController extends Controller
                 'remision:id,id',
                 'usuario:id,nombre_completo',
                 'tratamientoRealizado.historiaClinica.estudiante',
+                'solicitudRadiologica.historiaClinica.estudiante',
+                'solicitudRadiologica.historiaClinica.admision',
             ])
             ->withSum('recibosAtencion as cancelado_acumulado', 'cancelado')
+            ->withSum('recibosRadiologicos as pago_radiologico_acumulado', 'cancelado')
             ->withCount('detalles')
             ->orderByDesc('id');
     }
@@ -89,6 +96,14 @@ class CajaController extends Controller
     {
         return [
             'atencionesAutorizadas' => TratamientoRealizado::whereIn('estado', ['autorizado', 'en_proceso'])->whereNotNull('autorizado_por')->with(['tratamiento', 'historiaClinica.paciente'])->orderByDesc('id')->get(),
+            'solicitudesRadiologicas' => SolicitudRadiologica::query()
+                ->where('estado', SolicitudRadiologica::AUTORIZADA)
+                ->whereDoesntHave('estudio')
+                ->whereRaw('COALESCE((SELECT SUM(cajas.cancelado) FROM cajas WHERE cajas.solicitud_radiologica_id = solicitudes_radiologicas.id AND cajas.habilitada = 1), 0) < solicitudes_radiologicas.costo_autorizado')
+                ->with(['historiaClinica.estudiante', 'paciente', 'clinica', 'recibos' => fn (HasMany $query) => $query->where('habilitada', true)])
+                ->orderBy('created_at')
+                ->limit(100)
+                ->get(),
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
             'catalogoTratamientos' => Tratamiento::query()->orderBy('nombre')->get(['id', 'nombre', 'clinica_id', 'costo', 'precio_asignado']),
             'tiposPago' => Caja::query()
@@ -121,7 +136,6 @@ class CajaController extends Controller
     {
         return [
             'tratamiento_realizado_id' => ['required', 'integer', 'exists:tratamientos_realizados,id'],
-            'recibo' => ['required', 'integer', 'min:1', 'max:2147483647', Rule::unique('cajas', 'recibo')->ignore($id)],
             'ficha' => ['nullable', 'integer', 'min:1'],
             'monto' => ['nullable', 'integer', 'min:0'],
             'costo_total' => ['nullable', 'numeric', 'min:0'],
@@ -129,7 +143,7 @@ class CajaController extends Controller
             'habilitada' => ['nullable', 'boolean'],
             'descripcion' => ['nullable', 'string', 'max:100'],
             'ci' => ['nullable', 'integer'],
-            'tipo' => ['nullable', 'string', 'max:100'],
+            'tipo' => ['nullable', Rule::in(['tratamiento', 'radiologia'])],
             'tipo_pago' => ['nullable', 'string', 'max:100'],
             'paciente_nombre_completo' => ['nullable', 'string', 'max:100'],
             'grado' => ['nullable', 'string', 'max:100'],
@@ -148,7 +162,6 @@ class CajaController extends Controller
             'tratamiento_id.required' => 'Debe seleccionar un tratamiento.',
             'clinica_id.required' => 'Debe seleccionar una clínica.',
             'usuario_id.required' => 'Debe asignar un responsable de caja.',
-            'recibo.unique' => 'El número de recibo ya está registrado.',
         ];
     }
 
@@ -171,8 +184,11 @@ class CajaController extends Controller
     {
         $data = $this->vincularAtencion($data);
         $data = $this->normalizarStrings($data);
+        $data['recibo'] = Caja::siguienteNumeroRecibo()
+            ?? throw ValidationException::withMessages(['recibo' => 'Se alcanzó el límite de numeración de recibos. Contacte a un administrador.']);
         $data['habilitada'] = request()->boolean('habilitada', true) ? 1 : 0;
         $data['cancelado'] = $data['cancelado'] ?? 0;
+        $data['tipo'] = ($data['tipo'] ?? '') !== '' ? $data['tipo'] : 'tratamiento';
         $data['monto'] = $data['monto'] ?? 0;
         $data['ci'] = $data['ci'] ?? 0;
         $data['usuario_id'] = $data['usuario_id'] ?? request()->user()?->getAuthIdentifier();
@@ -185,6 +201,9 @@ class CajaController extends Controller
         $caso = TratamientoRealizado::with(['historiaClinica.paciente', 'tratamiento'])->lockForUpdate()->findOrFail($data['tratamiento_realizado_id']);
         if (! $caso->estaAutorizado() || ! in_array($caso->estado, ['autorizado', 'en_proceso'], true)) {
             throw ValidationException::withMessages(['tratamiento_realizado_id' => 'El docente debe autorizar el tratamiento antes de emitir el recibo.']);
+        }
+        if (! $caso->tratamiento?->precio_asignado || $caso->costo_cobrado === null) {
+            throw ValidationException::withMessages(['tratamiento_realizado_id' => 'Caja debe configurar el precio del concepto antes de emitir el recibo.']);
         }
         if (isset($data['ficha']) && (int) $data['ficha'] !== (int) $caso->historiaClinica->admision_id) {
             throw ValidationException::withMessages(['ficha' => 'La atención no corresponde al número de ficha buscado.']);
@@ -207,9 +226,6 @@ class CajaController extends Controller
         if (request()->boolean('habilitada', true) && $this->centavos((float) $anterior) + $this->centavos((float) $data['cancelado']) > $this->centavos((float) $data['costo_total'])) {
             throw ValidationException::withMessages(['cancelado' => 'El pago supera el saldo pendiente del tratamiento.']);
         }
-        if (empty($data['recibo'])) {
-            throw ValidationException::withMessages(['recibo' => 'Ingrese el número del recibo.']);
-        }
 
         return $data;
     }
@@ -217,10 +233,40 @@ class CajaController extends Controller
     protected function afterStore($model): void
     {
         $model->detalles()->create(['tratamiento_realizado_id' => $model->tratamiento_realizado_id, 'concepto' => $model->tratamiento->nombre, 'cantidad' => 1, 'precio_unitario' => $model->costo_total, 'monto' => $model->costo_total, 'fecha' => today()]);
+        $this->notificarPago($model);
+    }
+
+    protected function afterUpdate($model): void
+    {
+        $this->notificarPago($model);
+    }
+
+    private function notificarPago(Caja $recibo): void
+    {
+        $atencion = $recibo->tratamientoRealizado()->with('historiaClinica')->first();
+        if (! $atencion) {
+            return;
+        }
+        $pago = $atencion->resumenPago();
+        foreach (array_unique([$atencion->historiaClinica->estudiante_id, $atencion->historiaClinica->docente_id]) as $usuarioId) {
+            NotificacionService::a($usuarioId, 'pago_registrado', 'Pago actualizado del tratamiento #'.$atencion->id,
+                'Estado: '.$pago['estado'].'. Pagado Bs '.number_format($pago['pagado'], 2).'; saldo Bs '.number_format($pago['saldo'], 2).'.', route('historias.show', $atencion->historia_clinica_id));
+        }
+        if ($pago['estado'] === 'pagado' && $recibo->tipo === 'radiologia') {
+            NotificacionService::aRol('radiologia', 'pago_radiologia', 'Estudio radiológico pagado',
+                'Recibo #'.$recibo->recibo.' para la ficha #'.$atencion->historiaClinica->admision_id.'.', route('radiologia.index'));
+        }
     }
 
     protected function beforeUpdate($model, array $data): array
     {
+        if ($model->solicitud_radiologica_id !== null) {
+            throw ValidationException::withMessages(['caja' => 'Los recibos de estudios radiológicos se conservan como registro de pago y no se editan desde esta pantalla.']);
+        }
+        if ($model->radiologias()->exists() && ((isset($data['tipo']) && $data['tipo'] !== $model->tipo)
+            || ! request()->boolean('habilitada') || (float) $data['cancelado'] < (float) $model->cancelado)) {
+            throw ValidationException::withMessages(['cancelado' => 'El recibo respalda un estudio radiológico y debe conservarse.']);
+        }
         if ((int) $data['tratamiento_realizado_id'] !== (int) $model->tratamiento_realizado_id) {
             throw ValidationException::withMessages(['tratamiento_realizado_id' => 'El recibo no puede reasignarse a otro tratamiento.']);
         }
@@ -250,31 +296,61 @@ class CajaController extends Controller
         $data = $request->validate([
             'buscar' => ['required', 'string', 'min:2', 'max:100'],
             'clinica_id' => ['nullable', 'integer', 'exists:clinicas,id'],
-        ], ['buscar.min' => 'Ingrese al menos dos caracteres del CI o nombre del paciente.']);
-        $terminos = preg_split('/\s+/u', trim($data['buscar']), -1, PREG_SPLIT_NO_EMPTY);
+        ], ['buscar.min' => 'Ingrese al menos dos caracteres del CI o nombre del estudiante o paciente.']);
+        $terminos = preg_split('/\s+/u', trim($data['buscar']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $coincideEstudiante = static function (Builder|Relation $query) use ($terminos): void {
+            foreach ($terminos as $termino) {
+                $query->where(fn (Builder $query) => $query->where('ci', 'like', '%'.$termino.'%')
+                    ->orWhere('nombre_completo', 'like', '%'.$termino.'%'));
+            }
+        };
+        $coincidePaciente = static function (Builder|Relation $query) use ($terminos): void {
+            foreach ($terminos as $termino) {
+                $query->where(function (Builder $query) use ($termino): void {
+                    $query->where('ci', 'like', "%{$termino}%")
+                        ->orWhere('nombre', 'like', "%{$termino}%")
+                        ->orWhere('apellido_paterno', 'like', "%{$termino}%")
+                        ->orWhere('apellido_materno', 'like', "%{$termino}%");
+                });
+            }
+        };
         $fichas = Admision::query()
             ->whereHas('historiasClinicas', fn (Builder $query) => $query
                 ->when(isset($data['clinica_id']), fn (Builder $query) => $query->where('clinica_id', $data['clinica_id'])))
-            ->whereHas('paciente', function (Builder $query) use ($terminos): void {
-                foreach ($terminos as $termino) {
-                    $query->where(function (Builder $query) use ($termino): void {
-                        $query->where('ci', 'like', "%{$termino}%")
-                            ->orWhere('nombre', 'like', "%{$termino}%")
-                            ->orWhere('apellido_paterno', 'like', "%{$termino}%")
-                            ->orWhere('apellido_materno', 'like', "%{$termino}%");
-                    });
+            ->where(function (Builder $ficha) use ($coincideEstudiante, $coincidePaciente, $data): void {
+                $ficha->whereHas('historiasClinicas.estudiante', $coincideEstudiante)
+                    ->orWhereHas('paciente', $coincidePaciente);
+                if (! isset($data['clinica_id'])) {
+                    $ficha->orWhereHas('estudiante', $coincideEstudiante);
                 }
             })
-            ->with('paciente:id,ci,nombre,apellido_paterno,apellido_materno')
-            ->orderByDesc('id')->limit(21)->get(['id', 'paciente_id', 'fecha_admision']);
+            ->with([
+                'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
+                'estudiante:id,ci,nombre_completo',
+                'historiasClinicas' => fn (Builder|Relation $query) => $query
+                    ->when(isset($data['clinica_id']), fn (Builder $query) => $query->where('clinica_id', $data['clinica_id']))
+                    ->with('estudiante:id,ci,nombre_completo'),
+            ])
+            ->orderByDesc('id')->limit(21)->get(['id', 'paciente_id', 'estudiante_id', 'fecha_admision']);
 
         return response()->json([
-            'fichas' => $fichas->take(20)->map(fn (Admision $admision): array => [
-                'ficha' => $admision->id,
-                'paciente' => $admision->paciente->nombre_completo,
-                'ci' => (string) $admision->paciente->ci,
-                'fecha' => $admision->fecha_admision?->format('d/m/Y'),
-            ])->values(),
+            'fichas' => $fichas->take(20)->map(function (Admision $admision) use ($data): array {
+                $estudiantes = $admision->historiasClinicas->pluck('estudiante');
+                if (! isset($data['clinica_id'])) {
+                    $estudiantes->push($admision->estudiante);
+                }
+
+                return [
+                    'ficha' => $admision->id,
+                    'paciente' => $admision->paciente->nombre_completo,
+                    'ci' => (string) $admision->paciente->ci,
+                    'estudiantes' => $estudiantes->filter()->unique('id')->map(fn (Usuario $estudiante): array => [
+                        'nombre' => $estudiante->nombre_completo,
+                        'ci' => (string) $estudiante->ci,
+                    ])->values(),
+                    'fecha' => $admision->fecha_admision?->format('d/m/Y'),
+                ];
+            })->values(),
             'hay_mas' => $fichas->count() > 20,
         ]);
     }
@@ -324,6 +400,9 @@ class CajaController extends Controller
 
     protected function canDestroy($model): array
     {
+        if ($model->solicitud_radiologica_id !== null) {
+            return [false, 'El recibo forma parte del historial de pago de un estudio radiológico y debe conservarse.'];
+        }
         if ($model->detalles()->count() > 0) {
             $count = $model->detalles()->count();
 

@@ -32,7 +32,7 @@ class SolicitudInsumoService
             'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
             'insumo_tratamiento_id' => ['required', 'integer', 'exists:insumos_tratamiento,id'],
             'tratamiento_realizado_id' => ['required', 'integer', 'exists:tratamientos_realizados,id'],
-            'sesion_atencion_id' => ['required', 'integer', 'exists:sesiones_atencion,id'],
+            'sesion_atencion_id' => ['nullable', 'integer', 'exists:sesiones_atencion,id'],
             'pieza' => ['nullable', 'integer', 'min:0', 'max:99'],
             'insumos' => ['nullable', 'string', 'max:2000'],
             'remision_id' => ['nullable', 'integer', 'exists:remisiones,id'],
@@ -49,13 +49,18 @@ class SolicitudInsumoService
             }
 
             $tratamiento = TratamientoRealizado::query()->with('historiaClinica')->lockForUpdate()->findOrFail($data['tratamiento_realizado_id']);
-            $sesion = SesionAtencion::query()->lockForUpdate()->findOrFail($data['sesion_atencion_id']);
-            $this->assertClinicalLink($tratamiento, $sesion, (int) $data['clinica_id']);
-            $this->assertSessionAuthorized($sesion);
+            $sesion = ! empty($data['sesion_atencion_id']) ? SesionAtencion::query()->lockForUpdate()->findOrFail($data['sesion_atencion_id']) : null;
+            if ($sesion) {
+                $this->assertClinicalLink($tratamiento, $sesion, (int) $data['clinica_id']);
+                $this->assertSessionAuthorized($sesion);
+            } elseif ((int) $tratamiento->clinica_id !== (int) $data['clinica_id']) {
+                $this->invalid('clinica_id', 'Seleccione la clínica del tratamiento autorizado.');
+            }
+            $this->exigirPago($tratamiento);
             if (! in_array($tratamiento->estado, ['autorizado', 'en_proceso'], true)) {
                 $this->invalid('tratamiento_realizado_id', 'El tratamiento debe estar autorizado y en curso.');
             }
-            abort_unless($actor->hasAnyRole(['admin', 'subadmin']) || (int) $tratamiento->historiaClinica?->estudiante_id === $actor->id || $this->isSupervisor($actor, $tratamiento, $sesion), 403, 'No puedes solicitar insumos para este tratamiento.');
+            abort_unless($actor->hasAnyRole(['admin', 'subadmin', 'director']) || (int) $tratamiento->historiaClinica?->estudiante_id === $actor->id || $this->isSupervisor($actor, $tratamiento, $sesion), 403, 'No puedes solicitar insumos para este tratamiento.');
 
             $tipo = InsumoTratamiento::query()->findOrFail($data['insumo_tratamiento_id']);
             if ((int) $tipo->clinica_id !== (int) $data['clinica_id']) {
@@ -102,7 +107,7 @@ class SolicitudInsumoService
         });
 
         $supervisor = $saved->sesionAtencion?->docente_id ?? $saved->tratamientoRealizado?->historiaClinica?->docente_id;
-        NotificacionService::a($supervisor, Notificacion::TIPO_SOLICITUD_CREADA, 'Solicitud de insumos #'.$saved->id, 'Un avance autorizado requiere materiales.', $this->url($saved));
+        NotificacionService::a($supervisor, Notificacion::TIPO_SOLICITUD_CREADA, 'Solicitud de insumos #'.$saved->id, 'Revise los materiales previstos para el tratamiento pagado.', $this->url($saved));
 
         return $saved;
     }
@@ -121,7 +126,7 @@ class SolicitudInsumoService
                 'detalles.*.cantidad_solicitada' => ['required', 'numeric', 'min:0.01', 'max:99999999.99', 'decimal:0,2'],
             ])->validate();
             $historia = HistoriaClinica::query()->lockForUpdate()->findOrFail($data['historia_clinica_id']);
-            abort_unless((int) $historia->estudiante_id === $actor->id || $actor->hasAnyRole(['admin', 'subadmin']), 403, 'Solo puede solicitar insumos para sus pacientes designados.');
+            abort_unless((int) $historia->estudiante_id === $actor->id || $actor->hasAnyRole(['admin', 'subadmin', 'director']), 403, 'Solo puede solicitar insumos para sus pacientes designados.');
             $this->exigirHistoriaVigente($historia);
             if ((int) $historia->clinica_id !== (int) $data['clinica_id']) {
                 $this->invalid('clinica_id', 'Seleccione la clínica del paciente designado.');
@@ -135,6 +140,14 @@ class SolicitudInsumoService
                 }
             }
             $catalogo = Tratamiento::query()->findOrFail($data['tratamiento_id']);
+            $atencion = TratamientoRealizado::query()->where('historia_clinica_id', $historia->id)
+                ->where('tratamiento_id', $catalogo->id)->whereIn('estado', ['autorizado', 'en_proceso'])
+                ->when(! empty($data['pieza']), fn ($query) => $query->where('pieza_dental', (string) $data['pieza']))
+                ->orderByDesc('id')->lockForUpdate()->first();
+            if (! $atencion || ! $atencion->estaAutorizado()) {
+                $this->invalid('tratamiento_id', 'El docente debe autorizar el tratamiento del paciente antes de solicitar sus insumos.');
+            }
+            $this->exigirPago($atencion);
             $materiales = $catalogo->insumos()->where('clinica_id', $historia->clinica_id)->get()->keyBy('id');
             foreach ($data['detalles'] as $index => $detalle) {
                 $insumo = $materiales->get($detalle['insumo_id']);
@@ -148,7 +161,7 @@ class SolicitudInsumoService
             $detalles = $data['detalles'];
             unset($data['detalles']);
             $data = [...$data, 'usuario_id' => $historia->estudiante_id, 'remision_id' => $historia->remision_id,
-                'tratamiento_realizado_id' => null, 'sesion_atencion_id' => null, 'insumo_tratamiento_id' => null,
+                'tratamiento_realizado_id' => $atencion->id, 'sesion_atencion_id' => null, 'insumo_tratamiento_id' => null,
                 'pieza' => $data['pieza'] ?? 0, 'estado' => InsumoSolicitado::ESTADO_PENDIENTE,
                 'autorizado' => false, 'docente_autoriza' => false, 'docente_id' => null, 'fecha_autorizacion' => null,
                 'aprobado_por' => null, 'fecha_aprobacion' => null, 'rechazado_por' => null, 'fecha_rechazo' => null, 'motivo_rechazo' => null];
@@ -179,7 +192,7 @@ class SolicitudInsumoService
         if (! $solicitud->sesion_atencion_id && $solicitud->historia_clinica_id) {
             $this->exigirHistoriaVigente($solicitud->historiaClinica);
 
-            return $actor->hasAnyRole(['docente', 'jefe-catedra']) && $actor->id === (int) $solicitud->historiaClinica->docente_id;
+            return AccesoClinico::supervisaHistoria($actor, $solicitud->historiaClinica);
         }
         [$tratamiento, $sesion] = $this->clinicalModels($solicitud);
 
@@ -188,10 +201,12 @@ class SolicitudInsumoService
 
     public function aprobar(Usuario $actor, InsumoSolicitado $solicitud): InsumoSolicitado
     {
-        abort_unless($actor->hasAnyRole(['insumos', 'admin', 'subadmin']), 403, 'Solo el encargado de insumos puede aprobar la entrega.');
+        abort_unless($actor->hasAnyRole(['insumos', 'admin', 'subadmin', 'director']), 403, 'Solo el encargado de insumos puede aprobar la entrega.');
 
         return DB::transaction(function () use ($actor, $solicitud): InsumoSolicitado {
             $solicitud = InsumoSolicitado::query()->lockForUpdate()->findOrFail($solicitud->id);
+            $this->exigirSolicitudClinica($solicitud);
+            $this->clinicalModels($solicitud);
             $this->requireState($solicitud, [InsumoSolicitado::ESTADO_AUTORIZADO]);
             if (! $solicitud->autorizado || ! $solicitud->docente_id || ! $solicitud->fecha_autorizacion) {
                 $this->invalid('estado', 'El docente debe autorizar la solicitud antes de aprobarla en Insumos.');
@@ -206,9 +221,11 @@ class SolicitudInsumoService
     {
         $saved = DB::transaction(function () use ($actor, $solicitud): InsumoSolicitado {
             $solicitud = InsumoSolicitado::query()->lockForUpdate()->findOrFail($solicitud->id);
+            $this->exigirSolicitudClinica($solicitud);
+            $this->clinicalModels($solicitud);
             $this->requireState($solicitud, [InsumoSolicitado::ESTADO_PENDIENTE]);
-            abort_unless($this->supervisorSolicitud($actor, $solicitud), 403, 'Solo el docente supervisor puede autorizar los insumos.');
-            $solicitud->update(['estado' => InsumoSolicitado::ESTADO_AUTORIZADO, 'autorizado' => true, 'docente_autoriza' => true, 'docente_id' => $actor->id, 'fecha_autorizacion' => now()]);
+            abort_unless($actor->hasAnyRole(['admin', 'subadmin', 'director']) || $this->supervisorSolicitud($actor, $solicitud), 403, 'Solo el docente supervisor puede autorizar los insumos.');
+            $solicitud->update(['estado' => InsumoSolicitado::ESTADO_AUTORIZADO, 'autorizado' => true, 'docente_autoriza' => true, 'docente_id' => $solicitud->docente_id ?? $solicitud->historiaClinica?->docente_id ?? $actor->id, 'fecha_autorizacion' => now()]);
 
             return $solicitud;
         });
@@ -222,11 +239,12 @@ class SolicitudInsumoService
     {
         return DB::transaction(function () use ($actor, $solicitud, $motivo): InsumoSolicitado {
             $solicitud = InsumoSolicitado::query()->lockForUpdate()->findOrFail($solicitud->id);
-            if ($actor->hasAnyRole(['insumos', 'admin', 'subadmin']) && in_array($solicitud->estado, [InsumoSolicitado::ESTADO_AUTORIZADO, InsumoSolicitado::ESTADO_APROBADO], true)) {
+            $this->exigirSolicitudClinica($solicitud);
+            if ($actor->hasAnyRole(['insumos', 'admin', 'subadmin', 'director']) && in_array($solicitud->estado, [InsumoSolicitado::ESTADO_AUTORIZADO, InsumoSolicitado::ESTADO_APROBADO], true)) {
                 abort_if($solicitud->entregas()->exists(), 422, 'No puede rechazar una solicitud con entregas.');
             } else {
                 $this->requireState($solicitud, [InsumoSolicitado::ESTADO_PENDIENTE]);
-                abort_unless($this->supervisorSolicitud($actor, $solicitud), 403, 'Solo el docente supervisor puede rechazar esta solicitud pendiente.');
+                abort_unless($actor->hasAnyRole(['admin', 'subadmin', 'director']) || $this->supervisorSolicitud($actor, $solicitud), 403, 'Solo el docente supervisor puede rechazar esta solicitud pendiente.');
             }
             $solicitud->update(['estado' => InsumoSolicitado::ESTADO_RECHAZADO, 'rechazado_por' => $actor->id, 'fecha_rechazo' => now(), 'motivo_rechazo' => $motivo]);
             NotificacionService::a($solicitud->usuario_id, Notificacion::TIPO_SOLICITUD_RECHAZADA, 'Solicitud #'.$solicitud->id.' rechazada', $motivo, $this->url($solicitud));
@@ -238,12 +256,14 @@ class SolicitudInsumoService
     /** @param array<string, mixed> $input */
     public function entregar(Usuario $actor, InsumoSolicitado $solicitud, array $input): InsumoSolicitado
     {
-        abort_unless($actor->hasAnyRole(['insumos', 'admin', 'subadmin']), 403, 'Solo el encargado de insumos puede registrar entregas.');
+        abort_unless($actor->hasAnyRole(['insumos', 'admin', 'subadmin', 'director']), 403, 'Solo el encargado de insumos puede registrar entregas.');
         $data = $this->validateQuantities($input, 'cantidad_entregada');
 
         $saved = DB::transaction(function () use ($actor, $solicitud, $data): InsumoSolicitado {
             $solicitud = InsumoSolicitado::query()->lockForUpdate()->findOrFail($solicitud->id);
-            $this->requireState($solicitud, [InsumoSolicitado::ESTADO_AUTORIZADO, InsumoSolicitado::ESTADO_APROBADO, InsumoSolicitado::ESTADO_PARCIAL]);
+            $this->exigirSolicitudClinica($solicitud);
+            $this->requireState($solicitud, [InsumoSolicitado::ESTADO_APROBADO, InsumoSolicitado::ESTADO_PARCIAL]);
+            $this->clinicalModels($solicitud);
             if ($solicitud->sesion_atencion_id) {
                 $this->clinicalModels($solicitud);
             } elseif ($solicitud->historia_clinica_id) {
@@ -299,11 +319,18 @@ class SolicitudInsumoService
     {
         $data = $this->validateQuantities($input, 'cantidad_usada');
 
-        return DB::transaction(function () use ($actor, $solicitud, $data): InsumoSolicitado {
+        return DB::transaction(function () use ($actor, $solicitud, $data, $input): InsumoSolicitado {
             $solicitud = InsumoSolicitado::query()->lockForUpdate()->findOrFail($solicitud->id);
             $this->requireState($solicitud, [InsumoSolicitado::ESTADO_PARCIAL, InsumoSolicitado::ESTADO_ENTREGADO]);
+            $this->exigirSolicitudClinica($solicitud);
+            if (! $solicitud->sesion_atencion_id && ! empty($input['sesion_atencion_id'])) {
+                $solicitud->sesion_atencion_id = $input['sesion_atencion_id'];
+            }
             [$tratamiento, $sesion] = $this->clinicalModels($solicitud);
-            abort_unless($actor->hasAnyRole(['admin', 'subadmin', 'insumos']) || $actor->id === (int) $solicitud->usuario_id || $this->isSupervisor($actor, $tratamiento, $sesion), 403, 'No puedes registrar el consumo de esta solicitud.');
+            if (! $sesion) {
+                $this->invalid('sesion_atencion_id', 'Seleccione el avance autorizado donde se utilizaron los materiales.');
+            }
+            abort_unless($actor->hasAnyRole(['admin', 'subadmin', 'director', 'insumos']) || $actor->id === (int) $solicitud->usuario_id || $this->isSupervisor($actor, $tratamiento, $sesion), 403, 'No puedes registrar el consumo de esta solicitud.');
             $detalles = $solicitud->detalles()->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             foreach ($data['detalles'] as $item) {
                 $cantidad = (float) $item['cantidad_usada'];
@@ -324,12 +351,16 @@ class SolicitudInsumoService
 
     public function assertOwner(Usuario $actor, InsumoSolicitado $solicitud): void
     {
-        abort_unless($actor->id === (int) $solicitud->usuario_id || $actor->hasAnyRole(['admin', 'subadmin']), 403, 'Solo el solicitante puede modificar la solicitud.');
+        abort_unless($actor->id === (int) $solicitud->usuario_id || $actor->hasAnyRole(['admin', 'subadmin', 'director']), 403, 'Solo el solicitante puede modificar la solicitud.');
     }
 
-    private function isSupervisor(Usuario $actor, TratamientoRealizado $tratamiento, SesionAtencion $sesion): bool
+    private function isSupervisor(Usuario $actor, TratamientoRealizado $tratamiento, ?SesionAtencion $sesion): bool
     {
-        return $actor->hasAnyRole(['docente', 'jefe-catedra']) && ($actor->id === (int) $sesion->docente_id || $actor->id === (int) $tratamiento->historiaClinica?->docente_id);
+        if ($actor->hasRole('jefe-catedra')) {
+            return AccesoClinico::supervisaClinica($actor, $tratamiento->clinica_id);
+        }
+
+        return $actor->hasRole('docente') && ($actor->id === (int) $sesion?->docente_id || $actor->id === (int) $tratamiento->historiaClinica?->docente_id);
     }
 
     private function assertClinicalLink(TratamientoRealizado $tratamiento, SesionAtencion $sesion, int $clinicaId): void
@@ -346,18 +377,126 @@ class SolicitudInsumoService
         }
     }
 
-    /** @return array{TratamientoRealizado, SesionAtencion} */
+    /** @return array{TratamientoRealizado, ?SesionAtencion} */
     private function clinicalModels(InsumoSolicitado $solicitud): array
     {
-        if (! $solicitud->tratamiento_realizado_id || ! $solicitud->sesion_atencion_id) {
-            $this->invalid('sesion_atencion_id', 'Vincula la solicitud con su tratamiento y avance autorizado.');
+        if (! $solicitud->tratamiento_realizado_id) {
+            $this->invalid('tratamiento_realizado_id', 'Vincule la solicitud con el tratamiento autorizado y pagado del paciente.');
         }
         $tratamiento = TratamientoRealizado::query()->with('historiaClinica')->lockForUpdate()->findOrFail($solicitud->tratamiento_realizado_id);
-        $sesion = SesionAtencion::query()->lockForUpdate()->findOrFail($solicitud->sesion_atencion_id);
-        $this->assertClinicalLink($tratamiento, $sesion, (int) $solicitud->clinica_id);
-        $this->assertSessionAuthorized($sesion);
+        $this->exigirPago($tratamiento);
+        $this->exigirHistoriaVigente($tratamiento->historiaClinica);
+        $sesion = $solicitud->sesion_atencion_id ? SesionAtencion::query()->lockForUpdate()->findOrFail($solicitud->sesion_atencion_id) : null;
+        if ($sesion) {
+            $this->assertClinicalLink($tratamiento, $sesion, (int) $solicitud->clinica_id);
+            $this->assertSessionAuthorized($sesion);
+        } elseif ((int) $tratamiento->clinica_id !== (int) $solicitud->clinica_id) {
+            $this->invalid('clinica_id', 'La solicitud debe pertenecer a la clínica del tratamiento.');
+        }
 
         return [$tratamiento, $sesion];
+    }
+
+    private function exigirPago(TratamientoRealizado $tratamiento): void
+    {
+        if (! $tratamiento->estaAutorizado() || $tratamiento->resumenPago()['estado'] !== 'pagado') {
+            $this->invalid('pago', 'El tratamiento debe estar autorizado y completamente pagado en Cajas.');
+        }
+    }
+
+    private function exigirSolicitudClinica(InsumoSolicitado $solicitud): void
+    {
+        abort_if($solicitud->tipo_solicitud === 'reposicion', 403, 'Utilice el flujo de reposición para esta solicitud.');
+    }
+
+    /** @param array<string, mixed> $input */
+    public function guardarReposicion(Usuario $actor, array $input): InsumoSolicitado
+    {
+        abort_unless($actor->hasAnyRole(['insumos', 'admin']), 403);
+        $data = Validator::make($input, [
+            'observaciones' => ['required', 'string', 'min:10', 'max:2000'],
+            'detalles' => ['required', 'array', 'min:1', 'max:100'],
+            'detalles.*.insumo_id' => ['required', 'integer', 'distinct', 'exists:insumos,id'],
+            'detalles.*.cantidad_solicitada' => ['required', 'numeric', 'min:0.01', 'max:99999999.99', 'decimal:0,2'],
+        ])->validate();
+        $solicitud = DB::transaction(function () use ($actor, $data): InsumoSolicitado {
+            $ids = array_column($data['detalles'], 'insumo_id');
+            Insumo::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
+            if (InsumoSolicitado::where('tipo_solicitud', 'reposicion')->whereIn('estado', ['pendiente', 'autorizado', 'aprobado', 'parcial'])
+                ->whereHas('detalles', fn ($query) => $query->whereIn('insumo_id', $ids))->exists()) {
+                $this->invalid('detalles', 'Ya existe una reposición abierta para uno de los insumos seleccionados.');
+            }
+            $solicitud = InsumoSolicitado::create(['tipo_solicitud' => 'reposicion', 'usuario_id' => $actor->id,
+                'estado' => 'pendiente', 'fecha_solicitud' => today(), 'observaciones' => $data['observaciones']]);
+            $solicitud->detalles()->createMany($data['detalles']);
+
+            return $solicitud;
+        });
+        NotificacionService::aRol(['jefatura-clinicas', 'director'], 'reposicion_creada', 'Reposición #'.$solicitud->id.' solicitada',
+            'Pendiente de validación por Jefatura y posterior aprobación de Dirección.', route('insumos.reposiciones'));
+
+        return $solicitud;
+    }
+
+    /** @param array<string, mixed> $input */
+    public function revisarReposicion(Usuario $actor, InsumoSolicitado $solicitud, string $accion, array $input): InsumoSolicitado
+    {
+        return DB::transaction(function () use ($actor, $solicitud, $accion, $input): InsumoSolicitado {
+            $solicitud = InsumoSolicitado::where('tipo_solicitud', 'reposicion')->lockForUpdate()->findOrFail($solicitud->id);
+            if ($accion === 'jefatura') {
+                abort_unless($actor->hasAnyRole(['jefatura-clinicas', 'admin']), 403);
+                $this->requireState($solicitud, ['pendiente']);
+                $solicitud->update(['estado' => 'autorizado', 'jefatura_aprobado_por' => $actor->id, 'fecha_aprobacion_jefatura' => now()]);
+                NotificacionService::aRol('director', 'reposicion_autorizada', 'Reposición #'.$solicitud->id.' validada por Jefatura',
+                    'Revise y autorice el abastecimiento.', route('insumos.reposiciones'));
+            } elseif ($accion === 'director') {
+                abort_unless($actor->hasAnyRole(['director', 'admin']), 403);
+                $this->requireState($solicitud, ['autorizado']);
+                abort_if((int) $solicitud->jefatura_aprobado_por === $actor->id, 403, 'Las dos aprobaciones requieren responsables distintos.');
+                $solicitud->update(['estado' => 'aprobado', 'aprobado_por' => $actor->id, 'fecha_aprobacion' => now()]);
+                NotificacionService::a($solicitud->usuario_id, 'reposicion_aprobada', 'Reposición #'.$solicitud->id.' aprobada',
+                    'Registre la recepción cuando llegue el material.', route('insumos.reposiciones'));
+            } elseif ($accion === 'rechazar') {
+                abort_unless($actor->hasAnyRole(['jefatura-clinicas', 'director', 'admin']), 403);
+                $this->requireState($solicitud, ['pendiente', 'autorizado']);
+                $data = Validator::make($input, ['motivo' => ['required', 'string', 'min:5', 'max:2000']])->validate();
+                $solicitud->update(['estado' => 'rechazado', 'rechazado_por' => $actor->id, 'fecha_rechazo' => now(), 'motivo_rechazo' => $data['motivo']]);
+                NotificacionService::a($solicitud->usuario_id, 'reposicion_rechazada', 'Reposición #'.$solicitud->id.' rechazada', $data['motivo'], route('insumos.reposiciones'));
+            } elseif ($accion === 'recibir') {
+                abort_unless($actor->hasAnyRole(['insumos', 'director', 'admin']), 403);
+                $this->requireState($solicitud, ['aprobado', 'parcial']);
+                abort_unless($solicitud->jefatura_aprobado_por && $solicitud->aprobado_por, 422, 'Faltan las dos aprobaciones de reposición.');
+                $data = $this->validateQuantities($input, 'cantidad_entregada');
+                $detalles = $solicitud->detalles()->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                $insumos = Insumo::whereIn('id', $detalles->pluck('insumo_id'))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                foreach ($data['detalles'] as $item) {
+                    $detalle = $detalles->get($item['detalle_id']);
+                    $cantidad = (float) $item['cantidad_entregada'];
+                    if (! $detalle || $this->cents($cantidad) > $this->cents($detalle->pendiente)) {
+                        $this->invalid('detalles', 'La recepción supera lo solicitado o contiene un detalle ajeno.');
+                    }
+                    if ($cantidad === 0.0) {
+                        continue;
+                    }
+                    $insumo = $insumos->get($detalle->insumo_id);
+                    if (! $insumo || $this->cents((float) $insumo->cantidad_numerica + $cantidad) > 9999999999) {
+                        $this->invalid('detalles', 'La cantidad recibida supera el límite del inventario.');
+                    }
+                    $insumo->increment('cantidad_numerica', $cantidad);
+                    $detalle->update(['cantidad_entregada' => round((float) $detalle->cantidad_entregada + $cantidad, 2), 'fecha' => today()]);
+                    $solicitud->entregas()->create(['insumo_solicitado_detalle_id' => $detalle->id, 'insumo_id' => $insumo->id,
+                        'usuario_id' => $actor->id, 'cantidad' => $cantidad, 'costo_unitario' => $insumo->costo_unitario ?? 0, 'fecha_entrega' => now()]);
+                }
+                $completa = $detalles->every(fn (InsumoSolicitadoDetalle $detalle): bool => $this->cents($detalle->pendiente) === 0);
+                $solicitud->update(['estado' => $completa ? 'recibido' : 'parcial', 'recibido_por' => $actor->id, 'fecha_recepcion' => now()]);
+                NotificacionService::aRol(['jefatura-clinicas', 'director'], 'reposicion_recibida', 'Recepción registrada para reposición #'.$solicitud->id,
+                    $completa ? 'Material recibido completamente.' : 'Recepción parcial; quedan materiales pendientes.', route('insumos.reposiciones'));
+            } else {
+                abort(404);
+            }
+
+            return $solicitud;
+        });
     }
 
     /** @param array<int, string> $states */

@@ -6,7 +6,6 @@ use App\Models\Admision;
 use App\Models\Odontograma;
 use App\Models\Paciente;
 use App\Models\Usuario;
-use Database\Seeders\OdontogramaDemoSeeder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -263,24 +262,6 @@ class Odontograma3dTest extends TestCase
         ])->assertForbidden();
 
         $this->assertDatabaseCount('odontograma_hallazgos', 0);
-    }
-
-    public function test_el_seeder_demo_conserva_los_odontogramas_de_pacientes_reales(): void
-    {
-        $usuario = $this->usuario();
-        $pacienteReal = Paciente::create(['ci' => '12345678', 'nombre' => 'Paciente real']);
-        $odontogramaReal = $this->odontograma($usuario, [], $pacienteReal);
-        $hallazgoReal = $odontogramaReal->hallazgos()->create(['pieza_dental' => '16', 'condicion' => 'caries']);
-
-        $this->seed(OdontogramaDemoSeeder::class);
-        $demoId = Odontograma::where('paciente_id', Paciente::where('ci', 'ODONTO-DEMO-3D')->value('id'))->value('id');
-        $this->seed(OdontogramaDemoSeeder::class);
-
-        $this->assertModelExists($odontogramaReal);
-        $this->assertModelExists($hallazgoReal);
-        $this->assertDatabaseCount('odontogramas', 2);
-        $this->assertDatabaseHas('odontogramas', ['id' => $demoId]);
-        $this->assertDatabaseCount('odontograma_hallazgos', 18);
     }
 
     private function usuario(string ...$permisos): Usuario

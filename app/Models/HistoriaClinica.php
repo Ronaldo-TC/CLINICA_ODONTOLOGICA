@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class HistoriaClinica extends Model
 {
@@ -81,6 +82,11 @@ class HistoriaClinica extends Model
     public function tratamientosRealizados()
     {
         return $this->hasMany(TratamientoRealizado::class, 'historia_clinica_id');
+    }
+
+    public function solicitudesRadiologicas(): HasMany
+    {
+        return $this->hasMany(SolicitudRadiologica::class, 'historia_clinica_id');
     }
 
     public function archivos()

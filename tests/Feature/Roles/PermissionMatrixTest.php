@@ -30,12 +30,42 @@ class PermissionMatrixTest extends TestCase
     public static function restrictedRoles(): array
     {
         $cases = [];
-        foreach (['estudiante', 'interno', 'docente', 'admision'] as $role) {
+        foreach (['estudiante', 'interno', 'admision'] as $role) {
             $cases[$role.' nuevo'] = [$role, false];
             $cases[$role.' con permisos antiguos'] = [$role, true];
         }
 
         return $cases;
+    }
+
+    /** @return array<string, array{string}> */
+    public static function academicSupervisors(): array
+    {
+        return [
+            'docente' => ['docente'],
+            'jefe de catedra' => ['jefe-catedra'],
+            'jefatura de clinicas' => ['jefatura-clinicas'],
+        ];
+    }
+
+    #[DataProvider('academicSupervisors')]
+    public function test_academic_supervisors_can_view_payments_without_modifying_them(string $roleName): void
+    {
+        $this->seed([RolesSeeder::class, PermissionsSeeder::class]);
+        $role = Role::findByName($roleName, 'web');
+        $role->syncPermissions([]);
+
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+        $this->seed(SolicitudesInsumosPermissionsSeeder::class);
+
+        $user = $this->clinicalUser($roleName);
+        $this->assertTrue($user->can('cajas.ver'));
+        $this->assertFalse($user->canAny(['cajas.crear', 'cajas.editar', 'cajas.eliminar', 'cajas.gestionar']));
+        $this->assertContains('cajas.index', array_column(MenuBuilder::forUser($user), 'route'));
+
+        $this->actingAs($user)->get(route('cajas.index'))->assertOk();
+        $this->getJson(route('cajas.tabla'))->assertOk();
+        $this->postJson(route('cajas.store'), [])->assertForbidden();
     }
 
     #[DataProvider('restrictedRoles')]

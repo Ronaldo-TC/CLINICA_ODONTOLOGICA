@@ -17,6 +17,12 @@ return new class extends Migration
             $table->string('genero', 50)->nullable();
             $table->date('fecha_nacimiento')->nullable();
             $table->timestamps();
+            $table->string('telefono', 30)->nullable();
+            $table->string('estado_civil', 200)->nullable();
+            $table->string('ocupacion', 200)->nullable();
+            $table->string('direccion', 200)->nullable();
+            $table->string('emergencia', 200)->nullable();
+            $table->string('telefono_emergencia', 30)->nullable();
             $table->index(['apellido_paterno', 'apellido_materno']);
         });
     }

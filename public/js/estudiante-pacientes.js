@@ -72,6 +72,7 @@
         });
         filters.addEventListener('reset', event => {
             event.preventDefault();
+        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;
             for (const field of filters.querySelectorAll('input, select')) field.value = '';
             applyFilters();
         });
@@ -79,6 +80,7 @@
             const link = event.target.closest('.pagination a, nav a');
             if (!link || !table.contains(link)) return;
             event.preventDefault();
+        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;
             clearTimeout(searchTimer);
             loadTable(new URL(link.href, location.origin));
         });
@@ -107,6 +109,7 @@
         const form = event.target.closest('[data-estudiante-form]');
         if (!form) return;
         event.preventDefault();
+        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;
         if (form.dataset.saving === 'true') return;
         if (!form.reportValidity()) return;
         form.dataset.saving = 'true';

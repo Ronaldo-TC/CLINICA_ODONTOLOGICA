@@ -12,7 +12,10 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 100);
             $table->string('descripcion', 100)->default('');
-            $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('clinica_id')
+                ->constrained('clinicas')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
             $table->timestamps();
         });
     }

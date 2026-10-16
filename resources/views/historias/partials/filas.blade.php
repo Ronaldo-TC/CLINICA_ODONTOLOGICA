@@ -47,26 +47,26 @@
         <span class="badge badge-info">
             {{ $historia->tratamientos_realizados_count ?? 0 }}
         </span>
-        <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#tratamientos"><x-icono nombre="tratamientos" /> Ver tratamientos</a>
+        <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#tratamientos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="tratamientos" data-seguimiento-titulo="Tratamientos"><x-icono nombre="tratamientos" /> Ver tratamientos</a>
     </td>
 
     <td>
         @canany(['cajas.ver', 'cajas.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#cajas"><x-icono nombre="recibo" /> Ver recibos</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#cajas" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="recibos" data-seguimiento-titulo="Recibos de Caja"><x-icono nombre="recibo" /> Ver recibos</a>
         @else
             <small>Sin acceso</small>
         @endcanany
     </td>
     <td>
         @canany(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#insumos"><x-icono nombre="insumos" /> Ver solicitudes</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#insumos" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="solicitudes" data-seguimiento-titulo="Solicitudes de insumos"><x-icono nombre="insumos" /> Ver solicitudes</a>
         @else
             <small>Sin acceso</small>
         @endcanany
     </td>
     <td>
         @canany(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#esterilizaciones"><x-icono nombre="control" /> Ver controles</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.show', $historia->id) }}#esterilizaciones" data-historia-seguimiento="{{ $historia->id }}" data-seguimiento-seccion="controles" data-seguimiento-titulo="Controles de esterilización"><x-icono nombre="control" /> Ver controles</a>
         @else
             <small>Sin acceso</small>
         @endcanany
@@ -85,13 +85,14 @@
     <td>
         <div class="actions">
             @if(!$historia->autorizado) @canany(['historias.autorizar','historias.gestionar'])<form method="POST" action="{{ route('historias.autorizar', $historia->id) }}">@csrf<button class="btn btn-sm btn-primary"><x-icono nombre="autorizar" /> Autorizar historia</button></form>@endcanany @endif
-            <button type="button"
-                class="btn btn-sm btn-secondary"
-                data-action="archivos"
-                data-id="{{ $historia->id }}"
+            <a class="btn btn-sm btn-secondary"
+                href="{{ route('historias.show', $historia->id) }}"
+                data-historia-seguimiento="{{ $historia->id }}"
+                data-seguimiento-seccion="archivos"
+                data-seguimiento-titulo="Archivos adjuntos"
                 title="Ver archivos adjuntos">
                 <x-icono nombre="archivos" /> Archivos
-            </button>
+            </a>
 
             @can('historias.editar')
             <button type="button"

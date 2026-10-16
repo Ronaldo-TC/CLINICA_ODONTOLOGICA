@@ -214,6 +214,7 @@ class TratamientosCatalogoTest extends TestCase
     public function test_registering_material_saves_stock_and_links_selected_treatment(): void
     {
         $case = $this->clinicalCase();
+        $this->paidTreatment($case);
         $this->actingAs($this->clinicalUser('insumos'));
         $data = [
             'clinica_id' => $case['clinic']->id, 'tratamiento_id' => $case['treatment']->id,

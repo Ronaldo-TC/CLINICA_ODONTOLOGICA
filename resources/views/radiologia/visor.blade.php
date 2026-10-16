@@ -6,7 +6,7 @@
     <div class="card-body">
         <p>{{ $registro->paciente?->nombre_completo }} · {{ $registro->clinica?->especialidad }} · {{ $registro->fecha_toma?->format('d/m/Y') }}</p>
         @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
-        @if(auth()->user()->hasAnyRole(['admin', 'subadmin', 'radiologia']))
+        @if(auth()->user()->hasAnyRole(['admin', 'subadmin', 'director', 'radiologia']) && auth()->user()->canAny(['radiologias.editar', 'radiologias.gestionar']))
         <form action="{{ route('radiologia.archivos.store', $registro->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <label for="estudio-archivos">Radiografías periapicales (JPG/PNG) o serie de tomografía (DICOM .dcm)</label>

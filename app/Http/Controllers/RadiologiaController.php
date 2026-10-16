@@ -9,8 +9,10 @@ use App\Models\Clinica;
 use App\Models\Paciente;
 use App\Models\Radiologia;
 use App\Models\Remision;
+use App\Models\SolicitudRadiologica;
 use App\Services\AccesoClinico;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -96,6 +98,14 @@ class RadiologiaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
+            'solicitudesPagadas' => AccesoClinico::solicitudesRadiologicas(SolicitudRadiologica::query(), $request->user())
+                ->where('estado', SolicitudRadiologica::AUTORIZADA)
+                ->whereDoesntHave('estudio')
+                ->whereRaw('COALESCE((SELECT SUM(cajas.cancelado) FROM cajas WHERE cajas.solicitud_radiologica_id = solicitudes_radiologicas.id AND cajas.habilitada = 1), 0) >= solicitudes_radiologicas.costo_autorizado')
+                ->with(['historiaClinica.estudiante', 'paciente', 'recibos' => fn ($query) => $query->where('habilitada', true)])
+                ->orderBy('created_at')
+                ->limit(100)
+                ->get(),
             'estados' => Radiologia::query()
                 ->select('estado')
                 ->whereNotNull('estado')
@@ -184,7 +194,11 @@ class RadiologiaController extends Controller
 
     private function vincularPaciente(array $data): array
     {
-        $caja = Caja::findOrFail($data['caja_id']);
+        $caja = Caja::query()->lockForUpdate()->findOrFail($data['caja_id']);
+        $this->exigirPagoEstudio($caja);
+        if ((int) $caja->clinica_id !== (int) $data['clinica_id']) {
+            throw ValidationException::withMessages(['clinica_id' => 'Seleccione la clínica del servicio radiológico pagado.']);
+        }
         if ($caja->paciente_id) {
             if (! empty($data['paciente_id']) && (int) $data['paciente_id'] !== (int) $caja->paciente_id) {
                 throw ValidationException::withMessages(['paciente_id' => 'El paciente debe corresponder al recibo seleccionado.']);
@@ -230,7 +244,7 @@ class RadiologiaController extends Controller
         $this->authorizeAction('ver');
         $q = trim((string) $request->input('q'));
 
-        $pacientes = Paciente::query()
+        $pacientes = AccesoClinico::pacientes(Paciente::query(), $request->user())
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($x) use ($q) {
                     $x->where('nombre', 'like', "%{$q}%")
@@ -258,6 +272,17 @@ class RadiologiaController extends Controller
         $q = trim((string) $request->input('q'));
 
         $cajas = Caja::query()
+            ->where('habilitada', true)
+            ->where('recibo', '>', 0)
+            ->where('tipo', 'radiologia')
+            ->whereNotNull('tratamiento_realizado_id')
+            ->with([
+                'tratamientoRealizado.tratamiento',
+                'tratamientoRealizado.cajas.detalles',
+                'tratamientoRealizado.cajaDetalles.caja.detalles',
+            ])
+            ->when(! AccesoClinico::esAdministrador($request->user()) && $request->user()->hasAnyRole(['docente', 'jefe-catedra']),
+                fn (Builder $query) => $query->whereIn('paciente_id', AccesoClinico::pacientes(Paciente::query(), $request->user())->select('id')))
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($x) use ($q) {
                     $x->where('recibo', 'like', "%{$q}%")
@@ -265,8 +290,11 @@ class RadiologiaController extends Controller
                 });
             })
             ->orderByDesc('id')
-            ->limit(20)
-            ->get(['id', 'recibo', 'paciente_nombre_completo', 'costo_total'])
+            ->limit(100)
+            ->get(['id', 'recibo', 'paciente_id', 'tratamiento_realizado_id', 'paciente_nombre_completo', 'costo_total'])
+            ->filter(fn (Caja $caja): bool => $caja->tratamientoRealizado?->estaAutorizado()
+                && $caja->tratamientoRealizado->resumenPago()['estado'] === 'pagado')
+            ->take(20)
             ->map(fn ($c) => [
                 'id' => $c->id,
                 'texto' => 'Recibo #'.($c->recibo ?: $c->id).' - '.($c->paciente_nombre_completo ?: 'Sin paciente'),
@@ -297,10 +325,22 @@ class RadiologiaController extends Controller
         ])]);
     }
 
+    public function show(int $id): RedirectResponse
+    {
+        $registro = $this->findOrFail($id);
+
+        return redirect()->route('radiologia.visor', $registro);
+    }
+
     public function guardarArchivos(Request $request, int $radiologia): RedirectResponse
     {
         $registro = $this->radiologiaVisible($request, $radiologia);
-        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin', 'radiologia']) && ($request->user()->can('radiologias.editar') || $request->user()->can('radiologias.gestionar')), 403);
+        $this->exigirPagoEstudio($registro->caja);
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'subadmin', 'director', 'radiologia'])
+                && $request->user()->canAny(['radiologias.editar', 'radiologias.gestionar']),
+            403,
+        );
         $request->validate(['archivos' => ['required', 'array', 'min:1', 'max:200'], 'archivos.*' => ['required', 'file', 'max:51200']]);
         $preparados = [];
         foreach ($request->file('archivos') as $indice => $file) {
@@ -341,6 +381,26 @@ class RadiologiaController extends Controller
         }
 
         return back()->with('success', 'Archivos del estudio guardados.');
+    }
+
+    private function exigirPagoEstudio(Caja $recibo): void
+    {
+        $solicitud = $recibo->solicitudRadiologica;
+        if ($solicitud) {
+            if (! $recibo->habilitada || (int) $recibo->recibo <= 0 || $recibo->tipo !== 'radiologia'
+                || $solicitud->estado !== SolicitudRadiologica::AUTORIZADA
+                || $solicitud->resumenPago()['estado'] !== 'pagado') {
+                throw ValidationException::withMessages(['caja_id' => 'El estudio debe corresponder a una solicitud autorizada y completamente pagada.']);
+            }
+
+            return;
+        }
+
+        $tratamiento = $recibo->tratamientoRealizado;
+        if (! $recibo->habilitada || (int) $recibo->recibo <= 0 || $recibo->tipo !== 'radiologia'
+            || ! $tratamiento || ! $tratamiento->estaAutorizado() || $tratamiento->resumenPago()['estado'] !== 'pagado') {
+            throw ValidationException::withMessages(['caja_id' => 'Seleccione un recibo vigente del estudio radiológico autorizado y completamente pagado.']);
+        }
     }
 
     public function archivo(Request $request, int $radiologia, int $archivo): BinaryFileResponse

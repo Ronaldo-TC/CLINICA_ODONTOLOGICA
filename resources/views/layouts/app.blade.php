@@ -1338,7 +1338,6 @@
             position: absolute;
             inset: 0;
             background: rgba(15, 23, 23, 0.5);
-            backdrop-filter: blur(3px);
             animation: fadeIn 0.16s ease both;
         }
 
@@ -1786,7 +1785,6 @@
             inset: 0;
             z-index: 150;
             background: rgba(15, 23, 23, 0.48);
-            backdrop-filter: blur(2px);
             opacity: 0;
             animation: fadeIn 0.16s ease forwards;
         }
@@ -3524,8 +3522,6 @@
             justify-content: center !important;
             padding: 20px !important;
             background: rgba(24, 37, 45, 0.55) !important;
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
             animation: fadeInModal 0.18s ease both;
         }
 
@@ -3776,8 +3772,6 @@
             justify-content: center;
             padding: 20px;
             background: rgba(24, 37, 45, 0.55);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
         }
 
         .modal-iframe {
@@ -3829,8 +3823,6 @@
             display: grid;
             place-items: center;
             background: rgba(15, 23, 23, 0.35);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
             animation: fadeInModal 0.15s ease both;
         }
 
@@ -4939,8 +4931,7 @@
         }
 
         .modal-backdrop {
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            /* Sin backdrop-filter */
         }
 
         .modal {
@@ -4952,6 +4943,7 @@
         }
 
         @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+
             .stat-card:hover,
             .metric-card:hover {
                 transform: translateY(-3px);
@@ -4977,19 +4969,11 @@
                 navigation: auto;
             }
 
-            .sidebar {
-                view-transition-name: app-sidebar;
-            }
-
-            .topbar {
-                view-transition-name: app-topbar;
-            }
-
             .content {
                 view-transition-name: app-content;
             }
 
-            ::view-transition-group(*) {
+            ::view-transition-group(app-content) {
                 animation-duration: 0.24s;
                 animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
             }
@@ -5002,12 +4986,6 @@
                 animation: none;
             }
 
-            ::view-transition-group(app-sidebar),
-            ::view-transition-old(app-sidebar),
-            ::view-transition-new(app-sidebar) {
-                animation: none;
-            }
-
             ::view-transition-old(app-content) {
                 animation: pageFadeOut 0.16s ease-out both;
             }
@@ -5016,32 +4994,45 @@
                 animation: contentEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
             }
 
-            .content {
-                animation: pageFadeIn 0.24s ease-out;
-            }
-
-            .table-wrap tbody tr {
-                animation: pageFadeIn 0.2s ease-out;
-            }
-
-            .stats-grid > .stat-card {
+            .stats-grid>.stat-card {
                 animation: pageFadeIn 0.4s ease-out backwards;
             }
 
-            .stats-grid > .stat-card:nth-child(2) { animation-delay: 0.04s; }
-            .stats-grid > .stat-card:nth-child(3) { animation-delay: 0.08s; }
-            .stats-grid > .stat-card:nth-child(4) { animation-delay: 0.12s; }
-            .stats-grid > .stat-card:nth-child(n+5) { animation-delay: 0.16s; }
+            .stats-grid>.stat-card:nth-child(2) {
+                animation-delay: 0.04s;
+            }
+
+            .stats-grid>.stat-card:nth-child(3) {
+                animation-delay: 0.08s;
+            }
+
+            .stats-grid>.stat-card:nth-child(4) {
+                animation-delay: 0.12s;
+            }
+
+            .stats-grid>.stat-card:nth-child(n+5) {
+                animation-delay: 0.16s;
+            }
         }
 
         @keyframes pageFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes pageFadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
         }
 
         @keyframes contentEnter {
@@ -5049,6 +5040,7 @@
                 opacity: 0;
                 transform: translateY(8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -5062,8 +5054,6 @@
         .sidebar *::before,
         .sidebar *::after,
         .sidebar-backdrop {
-            animation: none !important;
-            transition: none !important;
             scroll-behavior: auto;
         }
 
@@ -5096,9 +5086,7 @@
         }
 
         .topbar {
-            background: color-mix(in srgb, var(--topbar-bg) 92%, transparent);
-            -webkit-backdrop-filter: blur(16px);
-            backdrop-filter: blur(16px);
+            background: var(--topbar-bg);
         }
 
         .content {
@@ -5253,7 +5241,7 @@
             background: var(--line);
         }
 
-        .sidebar-nav > .nav-item,
+        .sidebar-nav>.nav-item,
         .sidebar-nav .nav-item-toggle {
             min-height: 42px;
             padding: 6px 9px;
@@ -5558,7 +5546,7 @@
             list-style: none;
         }
 
-        .activity-list > li {
+        .activity-list>li {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -5568,7 +5556,7 @@
             font-size: 13px;
         }
 
-        .activity-list > li:last-child {
+        .activity-list>li:last-child {
             border-bottom: 0;
         }
 
@@ -5588,7 +5576,8 @@
         }
 
         @media (max-width: 600px) {
-            .sidebar-nav > .nav-item,
+
+            .sidebar-nav>.nav-item,
             .sidebar-nav .nav-item-toggle {
                 min-height: 44px;
             }
@@ -5603,7 +5592,7 @@
                 gap: 8px;
             }
 
-            .toolbar-actions > .btn {
+            .toolbar-actions>.btn {
                 flex-grow: 1;
             }
 
@@ -5619,7 +5608,7 @@
                 padding: 16px;
             }
 
-            .activity-list > li {
+            .activity-list>li {
                 flex-direction: column;
                 gap: 8px;
             }
@@ -5686,6 +5675,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             :root.theme-transitioning,
             :root.theme-transitioning body,
             :root.theme-transitioning .sidebar *,
@@ -5726,8 +5716,305 @@
                 display: none !important;
             }
         }
+
+        /* ============================================================
+           ACABADO GENERAL · navegación, superficies e interacciones
+           ============================================================ */
+        .sidebar {
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--teal) 3%, var(--sidebar-bg)), var(--sidebar-bg) 28%);
+            box-shadow: 1px 0 0 color-mix(in srgb, var(--line) 80%, transparent);
+            view-transition-name: none;
+            transition:
+                background-color var(--transition-base),
+                border-color var(--transition-base),
+                box-shadow var(--transition-base),
+                transform var(--transition-base),
+                visibility var(--transition-base);
+        }
+
+        .sidebar-brand {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--sidebar-bg);
+        }
+
+        .sidebar .brand-logo {
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+        }
+
+        .sidebar-user {
+            transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+        }
+
+        .sidebar .avatar-md {
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 14%, var(--surface));
+        }
+
+        .sidebar-filter {
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 4%, transparent);
+        }
+
+        .sidebar-nav {
+            scrollbar-gutter: stable;
+        }
+
+        #appSidebar:not(.has-nav-interaction) .sidebar-nav .nav-children {
+            animation: none;
+            transition: none;
+        }
+
+        .sidebar-nav .nav-label {
+            padding-top: 18px;
+            font-size: 9px;
+            font-weight: 750;
+        }
+
+        .sidebar-nav>.nav-item,
+        .sidebar-nav .nav-item-toggle {
+            min-height: 44px;
+            border-radius: 12px;
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                transform var(--transition-fast);
+        }
+
+        .sidebar-nav .nav-item:hover {
+            border-color: color-mix(in srgb, var(--teal) 14%, transparent);
+        }
+
+        .sidebar-nav .nav-item:not(.disabled):active {
+            transform: scale(0.985);
+        }
+
+        .sidebar-nav .nav-item.active {
+            background: linear-gradient(100deg,
+                    color-mix(in srgb, var(--teal) 13%, var(--surface)),
+                    color-mix(in srgb, var(--cyan) 5%, var(--surface)));
+            border-color: color-mix(in srgb, var(--teal) 18%, transparent);
+            box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+        }
+
+        .sidebar-nav .nav-item.active::before {
+            inset-block: 9px;
+            inset-inline-start: -1px;
+            width: 3px;
+            border-radius: 0 var(--radius-full) var(--radius-full) 0;
+            box-shadow: 0 0 12px color-mix(in srgb, var(--teal) 35%, transparent);
+        }
+
+        .sidebar-nav .nav-item.active .nav-icon {
+            background: color-mix(in srgb, var(--teal) 12%, var(--surface));
+            color: var(--teal-dark);
+            transform: scale(1.04);
+        }
+
+        .sidebar-nav .nav-group.is-active>.nav-item-toggle:not(.active) {
+            color: var(--teal-dark);
+        }
+
+        .sidebar-nav .nav-children {
+            display: flex;
+            max-height: 0;
+            overflow: hidden;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-5px);
+            transition:
+                max-height 320ms cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 180ms ease,
+                transform 220ms ease,
+                visibility 0s linear 220ms;
+        }
+
+        .sidebar-nav .nav-group.is-open>.nav-children {
+            max-height: 80rem;
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                max-height 380ms cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 220ms ease 40ms,
+                transform 240ms ease,
+                visibility 0s;
+        }
+
+        .sidebar-nav .nav-item-child {
+            transition:
+                background-color var(--transition-fast),
+                color var(--transition-fast),
+                border-color var(--transition-fast),
+                transform var(--transition-fast);
+        }
+
+        .sidebar-nav .nav-item-child.active {
+            background: color-mix(in srgb, var(--teal) 9%, var(--surface));
+            color: var(--teal-dark);
+            font-weight: 650;
+        }
+
+        .sidebar-nav .nav-item-child.active::before {
+            inset-inline-start: -10px;
+            width: 2px;
+        }
+
+        .sidebar-nav .nav-badge {
+            border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+            box-shadow: 0 2px 5px color-mix(in srgb, var(--ink) 6%, transparent);
+        }
+
+        .sidebar-footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
+            background: var(--sidebar-bg);
+        }
+
+        .sidebar-shortcut,
+        .sidebar .logout-btn {
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                transform var(--transition-fast);
+        }
+
+        .sidebar-shortcut:hover,
+        .sidebar .logout-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .topbar {
+            background: var(--topbar-bg);
+            border-bottom-color: color-mix(in srgb, var(--line) 88%, transparent);
+            box-shadow: 0 4px 20px color-mix(in srgb, var(--ink) 4%, transparent);
+            view-transition-name: none;
+        }
+
+        .topbar-actions {
+            gap: 8px;
+        }
+
+        .topbar-icon-btn,
+        .topbar-mobile-toggle {
+            border-radius: 12px;
+        }
+
+        .topbar-heading {
+            text-wrap: balance;
+        }
+
+        .content {
+            isolation: isolate;
+        }
+
+        .content> :is(.alert, .dashboard-toolbar, .stats-grid, .metrics-grid, .card, .welcome-card) {
+            animation: contentEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .content> :is(.alert, .dashboard-toolbar, .stats-grid, .metrics-grid, .card, .welcome-card):nth-child(2) {
+            animation-delay: 35ms;
+        }
+
+        .content> :is(.alert, .dashboard-toolbar, .stats-grid, .metrics-grid, .card, .welcome-card):nth-child(3) {
+            animation-delay: 70ms;
+        }
+
+        .card,
+        .stat-card,
+        .metric-card,
+        .welcome-card {
+            border-color: color-mix(in srgb, var(--line) 88%, transparent);
+            transition:
+                transform var(--transition-base),
+                background-color var(--transition-base),
+                border-color var(--transition-base),
+                box-shadow var(--transition-base);
+        }
+
+        .card-header {
+            background: linear-gradient(110deg, var(--surface), color-mix(in srgb, var(--surface-soft) 54%, var(--surface)));
+        }
+
+        .table-wrap {
+            border-radius: var(--radius-md);
+        }
+
+        tbody tr:hover {
+            background: color-mix(in srgb, var(--teal) 5%, var(--surface));
+        }
+
+        .form-control,
+        .form-select {
+            transition:
+                background-color var(--transition-fast),
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast),
+                color var(--transition-fast);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--teal);
+            box-shadow: var(--focus-ring);
+        }
+
+        .alert {
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 14px color-mix(in srgb, var(--ink) 5%, transparent);
+        }
+
+        @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+            .sidebar .brand-logo:hover {
+                transform: translateY(-2px) rotate(-4deg);
+                box-shadow: 0 8px 20px color-mix(in srgb, var(--teal) 30%, transparent);
+            }
+
+            .sidebar-nav .nav-item:hover .nav-icon {
+                transform: translateX(2px);
+            }
+
+            .card:hover,
+            .stat-card:hover,
+            .metric-card:hover,
+            .welcome-card:hover {
+                border-color: color-mix(in srgb, var(--teal) 24%, var(--line));
+                box-shadow: var(--shadow-card-hover);
+            }
+
+            .card:hover,
+            .welcome-card:hover {
+                transform: translateY(-2px);
+            }
+
+            .btn:not(:disabled):hover {
+                box-shadow: 0 6px 18px color-mix(in srgb, var(--teal) 18%, transparent);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar.is-open {
+                box-shadow: 20px 0 56px color-mix(in srgb, #000 24%, transparent);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .sidebar-nav .nav-children,
+            .sidebar-nav .nav-group.is-open>.nav-children,
+            .content> :is(.alert, .dashboard-toolbar, .stats-grid, .metrics-grid, .card, .welcome-card) {
+                animation: none;
+                transition: none;
+            }
+        }
     </style>
 
+    @include('layouts.partials.pagination-styles')
     @stack('styles')
 </head>
 
@@ -5862,6 +6149,7 @@
                 backdrop.addEventListener('click', (e) => {
                     if (e.target === backdrop) close();
                 });
+
                 function handleKeydown(e) {
                     const modals = document.querySelectorAll('.modal-dynamic-backdrop');
                     if (modals[modals.length - 1] !== backdrop) return;

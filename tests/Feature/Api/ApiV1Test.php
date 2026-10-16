@@ -198,6 +198,7 @@ class ApiV1Test extends TestCase
     public function test_crear_solicitud_por_api(): void
     {
         $case = $this->approvedProgress();
+        $this->paidTreatment($case);
         $token = $this->token();
 
         if (! $token) {

@@ -23,6 +23,6 @@
     </table>
 </div>
 
-<div id="remitidos-paginacion" class="pagination-wrap">
+<div id="remitidos-paginacion">
     {{ $items->withQueryString()->links() }}
 </div>

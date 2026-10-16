@@ -35,8 +35,8 @@
 <div class="card" style="margin-top:16px">
     <div class="card-header"><h2>1. Autorización docente</h2></div>
     <div class="card-body">
-        <p>{{ $registro->autorizado ? 'Solicitud autorizada' : 'Pendiente de firma del docente asignado' }} {{ $registro->fecha_autorizacion?->format('d/m/Y H:i') }}</p>
-        @if($activo && !$registro->autorizado && (int) auth()->id() === (int) $registro->docente_id)
+        <p>{{ $registro->autorizado ? 'Solicitud autorizada' : 'Pendiente de firma del docente o jefe de cátedra' }} {{ $registro->fecha_autorizacion?->format('d/m/Y H:i') }}</p>
+        @if($activo && !$registro->autorizado && $puedeAutorizar)
             @canany(['esterilizaciones.autorizar', 'esterilizaciones.gestionar'])
             <form method="POST" action="{{ route('esterilizacion.autorizar', $registro->id) }}">@csrf
                 <x-firma-digital nombre="firma_docente" /><button class="btn btn-primary">Firmar y autorizar</button>

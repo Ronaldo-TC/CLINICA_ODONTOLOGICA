@@ -13,7 +13,9 @@ use App\Models\Esterilizacion;
 use App\Models\HistoriaClinica;
 use App\Models\InsumoSolicitado;
 use App\Models\Periodo;
+use App\Models\Radiologia;
 use App\Models\Remision;
+use App\Models\SolicitudRadiologica;
 use App\Models\Tratamiento;
 use App\Models\Usuario;
 use App\Services\AccesoClinico;
@@ -21,9 +23,11 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +38,8 @@ class HistoriaController extends Controller
     use HasCrudAjax;
 
     private const ESTADOS_CERRADOS = ['cerrada', 'finalizada', 'culminada', 'completada', 'cancelada', 'completado', 'culminado', 'cancelado'];
+
+    private const SECCIONES_SEGUIMIENTO = ['tratamientos', 'recibos', 'solicitudes', 'controles', 'archivos'];
 
     protected string $modelClass = HistoriaClinica::class;
 
@@ -73,8 +79,34 @@ class HistoriaController extends Controller
         $puedeAutorizarTratamientos = $registro->autorizado && ! $cerrada
             && $usuario->canAny(['atenciones.autorizar', 'atenciones.gestionar'])
             && (AccesoClinico::esAdministrador($usuario)
-                || ($usuario->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $usuario->id
+                || (AccesoClinico::supervisaHistoria($usuario, $registro)
                     && Especialidad::query()->where('usuario_id', $usuario->id)->where('clinica_id', $registro->clinica_id)->where('habilitado', true)->exists()));
+        $solicitudesRadiologicas = $usuario->canAny(['radiologias.ver', 'radiologias.gestionar'])
+            ? AccesoClinico::solicitudesRadiologicas(SolicitudRadiologica::query(), $usuario)
+                ->where('historia_clinica_id', $registro->id)
+                ->with([
+                    'solicitante',
+                    'revisor',
+                    'recibos' => fn (HasMany $recibos) => $recibos->where('habilitada', true),
+                    'estudio' => fn (HasOne $estudio) => $estudio->withCount('archivos'),
+                ])
+                ->orderByDesc('id')->get()
+            : collect();
+        $estudiosRadiologicos = $usuario->canAny(['radiologias.ver', 'radiologias.gestionar'])
+            ? AccesoClinico::radiologias(Radiologia::query(), $usuario)
+                ->where('paciente_id', $registro->paciente_id)
+                ->with('clinica')
+                ->withCount('archivos')
+                ->orderByDesc('fecha_toma')
+                ->orderByDesc('id')
+                ->get()
+            : collect();
+        $puedeSolicitarRadiologia = $registro->autorizado && ! $cerrada
+            && $usuario->canAny(['radiologias.crear', 'radiologias.gestionar'])
+            && ((AccesoClinico::esEstudiante($usuario) && (int) $registro->estudiante_id === (int) $usuario->id)
+                || ($usuario->hasRole('docente') && (int) $registro->docente_id === (int) $usuario->id));
+        $puedeRevisarRadiologia = ! $cerrada && $usuario->canAny(['radiologias.revisar', 'radiologias.gestionar'])
+            && AccesoClinico::supervisaHistoria($usuario, $registro);
         $solicitudes = $usuario->canAny(['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'])
             ? AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)
                 ->where(function (Builder $query) use ($registro, $tratamientoIds): void {
@@ -94,9 +126,8 @@ class HistoriaController extends Controller
                 ->orderByDesc('id')->get()
             : collect();
         $esterilizaciones = $usuario->canAny(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
-            ? Esterilizacion::query()->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
+            ? AccesoClinico::esterilizaciones(Esterilizacion::query(), $usuario)->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
                 ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
-                ->when(! AccesoClinico::esAdministrador($usuario) && $usuario->hasAnyRole(['docente', 'jefe-catedra']), fn (Builder $query) => $query->where('docente_id', $usuario->id))
                 ->where(function (Builder $query) use ($registro): void {
                     $query->whereNull('remision_id');
                     if ($registro->remision_id) {
@@ -105,7 +136,118 @@ class HistoriaController extends Controller
                 })->orderByDesc('id')->get()
             : collect();
 
-        return view('historias.show', compact('registro', 'solicitudes', 'pagos', 'esterilizaciones', 'puedeAutorizarTratamientos'));
+        return view('historias.show', compact(
+            'registro',
+            'solicitudes',
+            'pagos',
+            'esterilizaciones',
+            'puedeAutorizarTratamientos',
+            'solicitudesRadiologicas',
+            'estudiosRadiologicos',
+            'puedeSolicitarRadiologia',
+            'puedeRevisarRadiologia',
+        ));
+    }
+
+    public function seguimiento(Request $request, int $historia, string $seccion): JsonResponse
+    {
+        $this->authorizeAction('ver');
+        abort_unless(in_array($seccion, self::SECCIONES_SEGUIMIENTO, true), 404);
+
+        $usuario = $request->user();
+        $registro = $this->buildIndexQuery($request)->findOrFail($historia);
+        $this->autorizarSeccionSeguimiento($usuario, $seccion);
+
+        $cerrada = in_array($registro->estado, self::ESTADOS_CERRADOS, true) || $registro->fecha_fin !== null;
+        $datos = ['registro' => $registro, 'cerrada' => $cerrada];
+        if ($seccion === 'tratamientos') {
+            $registro->load([
+                'tratamientosRealizados' => fn (HasMany $query) => $query->withExists([
+                    'cajaDetalles as tiene_pago' => fn (Builder $detalle) => $detalle->where('monto', '>', 0)
+                        ->whereHas('caja', fn (Builder $caja) => $caja->where('habilitada', true)->where('cancelado', '>', 0)->whereNotNull('recibo')->where('recibo', '!=', '')),
+                ]),
+                'tratamientosRealizados.tratamiento',
+                'tratamientosRealizados.autorizador',
+                'tratamientosRealizados.sesionesAtencion.autorizador',
+            ]);
+            $datos['catalogo'] = Tratamiento::query()->where('clinica_id', $registro->clinica_id)->orderBy('nombre')->get();
+            $datos['esEstudiante'] = AccesoClinico::esEstudiante($usuario);
+            $datos['puedeAutorizarTratamientos'] = $registro->autorizado && ! $cerrada
+                && $usuario->canAny(['atenciones.autorizar', 'atenciones.gestionar'])
+                && (AccesoClinico::esAdministrador($usuario)
+                    || (AccesoClinico::supervisaHistoria($usuario, $registro)
+                        && Especialidad::query()->where('usuario_id', $usuario->id)->where('clinica_id', $registro->clinica_id)->where('habilitado', true)->exists()));
+            $datos['puedeAutorizarAvances'] = ! $cerrada
+                && $usuario->canAny(['historias.autorizar', 'historias.gestionar'])
+                && AccesoClinico::supervisaHistoria($usuario, $registro);
+        } elseif ($seccion === 'archivos') {
+            $registro->load(['archivos' => fn (HasMany $query) => $query->orderByDesc('id')]);
+            $datos['puedeEditarArchivos'] = $usuario->canAny(['historias.editar', 'historias.gestionar']) && ! $cerrada;
+        } else {
+            $tratamientoIds = $registro->tratamientosRealizados()->pluck('id');
+            if ($seccion === 'recibos') {
+                $datos['pagos'] = Caja::query()->where('habilitada', true)
+                    ->where(fn (Builder $query) => $query->whereIn('tratamiento_realizado_id', $tratamientoIds)
+                        ->orWhereHas('detalles', fn (Builder $detalle) => $detalle->whereIn('tratamiento_realizado_id', $tratamientoIds)))
+                    ->with(['tratamiento', 'detalles' => fn (HasMany $detalles) => $detalles->whereIn('tratamiento_realizado_id', $tratamientoIds),
+                        'detalles.tratamientoRealizado.tratamiento'])
+                    ->orderByDesc('id')->get();
+            }
+            if ($seccion === 'solicitudes') {
+                $datos['solicitudes'] = AccesoClinico::solicitudes(InsumoSolicitado::query(), $usuario)
+                    ->where(function (Builder $query) use ($registro, $tratamientoIds): void {
+                        $query->where('historia_clinica_id', $registro->id)
+                            ->orWhere(fn (Builder $legacy) => $legacy->whereNull('historia_clinica_id')->whereIn('tratamiento_realizado_id', $tratamientoIds));
+                    })
+                    ->with(['estudiante', 'historiaClinica', 'tratamiento', 'tratamientoRealizado.tratamiento', 'tratamientoRealizado.historiaClinica',
+                        'sesionAtencion', 'detalles.insumo', 'detalles.consumos', 'docente', 'encargado'])
+                    ->withCount('entregas')->orderByDesc('id')->get();
+            }
+            if ($seccion === 'controles') {
+                $datos['esterilizaciones'] = AccesoClinico::esterilizaciones(Esterilizacion::query(), $usuario)
+                    ->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
+                    ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
+                    ->where(function (Builder $query) use ($registro): void {
+                        $query->whereNull('remision_id');
+                        if ($registro->remision_id) {
+                            $query->orWhere('remision_id', $registro->remision_id);
+                        }
+                    })->orderByDesc('id')->get();
+            }
+        }
+
+        $titulos = [
+            'tratamientos' => 'Tratamientos',
+            'recibos' => 'Recibos de Caja',
+            'solicitudes' => 'Solicitudes de insumos',
+            'controles' => 'Controles de esterilizacion',
+            'archivos' => 'Archivos adjuntos',
+        ];
+
+        return response()->json([
+            'success' => true,
+            'title' => $titulos[$seccion].' - '.$registro->paciente?->nombre_completo,
+            'html' => view('historias.partials.seguimiento.'.$seccion, $datos)->render(),
+            'url' => AccesoClinico::esEstudiante($usuario)
+                ? route('estudiante.historia', $registro->id)
+                : route('historias.show', $registro->id),
+        ]);
+    }
+
+    private function autorizarSeccionSeguimiento(Usuario $usuario, string $seccion): void
+    {
+        if (in_array($seccion, ['tratamientos', 'archivos'], true) || ($seccion === 'recibos' && AccesoClinico::esEstudiante($usuario))) {
+            return;
+        }
+
+        $permisos = match ($seccion) {
+            'recibos' => ['cajas.ver', 'cajas.gestionar'],
+            'solicitudes' => ['solicitudes-insumos.ver', 'solicitudes-insumos.gestionar', 'insumos.gestionar'],
+            'controles' => ['esterilizaciones.ver', 'esterilizaciones.gestionar'],
+            default => [],
+        };
+
+        abort_unless($usuario->canAny($permisos), 403);
     }
 
     protected function buildTablaQuery(Request $request): Builder
@@ -205,7 +347,7 @@ class HistoriaController extends Controller
 
     protected function canDestroy($model): array
     {
-        abort_unless(request()->user()->hasAnyRole(['admin', 'subadmin']), 403);
+        abort_unless(request()->user()->hasAnyRole(['admin', 'subadmin', 'director']), 403);
 
         return $model->autorizado || $model->archivos()->exists() || $model->tratamientosRealizados()->exists()
             ? [false, 'La historia tiene registros clínicos y debe conservarse.'] : [true, ''];
@@ -232,7 +374,7 @@ class HistoriaController extends Controller
     public function autorizar(Request $request, int $historia): RedirectResponse
     {
         $registro = $this->findOrFail($historia);
-        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin']) || ($request->user()->hasAnyRole(['docente', 'jefe-catedra']) && (int) $registro->docente_id === $request->user()->id), 403);
+        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin', 'director']) || AccesoClinico::supervisaHistoria($request->user(), $registro), 403);
         $registro->update(['autorizado' => true, 'estado_revision' => true, 'estado' => 'abierta']);
 
         return back()->with('success', 'Historia autorizada para proponer tratamientos.');
@@ -395,24 +537,24 @@ class HistoriaController extends Controller
 
             $archivo = DB::transaction(function () use ($historia, $file, $nombreGuardado, $ruta, $extension, $bytes, $hash): Archivo {
                 $archivo = Archivo::create([
-                'paciente_id' => $historia->paciente_id,
-                'historia_clinica_id' => $historia->id,
-                'nombre_original' => $file->getClientOriginalName(),
-                'nombre_guardado' => $nombreGuardado,
-                'ruta' => $ruta,
-                'extension' => $extension,
-                'tamano_bytes' => $bytes,
-                'tipo' => $file->getMimeType(),
-                'hash' => $hash,
-                'usuario_id' => auth()->id() ?? session('user_id'),
-                'clinica_id' => $historia->clinica_id,
-            ]);
+                    'paciente_id' => $historia->paciente_id,
+                    'historia_clinica_id' => $historia->id,
+                    'nombre_original' => $file->getClientOriginalName(),
+                    'nombre_guardado' => $nombreGuardado,
+                    'ruta' => $ruta,
+                    'extension' => $extension,
+                    'tamano_bytes' => $bytes,
+                    'tipo' => $file->getMimeType(),
+                    'hash' => $hash,
+                    'usuario_id' => auth()->id() ?? session('user_id'),
+                    'clinica_id' => $historia->clinica_id,
+                ]);
 
-            $historia->update([
-                'archivo' => $nombreGuardado,
-                'archivo_nombre' => mb_substr((string) $file->getClientOriginalName(), 0, 100),
-                'archivo_hash' => substr($hash, 0, 50),
-            ]);
+                $historia->update([
+                    'archivo' => $nombreGuardado,
+                    'archivo_nombre' => mb_substr((string) $file->getClientOriginalName(), 0, 100),
+                    'archivo_hash' => substr($hash, 0, 50),
+                ]);
 
                 return $archivo;
             });
@@ -443,7 +585,7 @@ class HistoriaController extends Controller
      * GET /historias/{id}/archivos/{archivo}
      * Descarga o previsualiza el adjunto.
      */
-    public function descargarArchivo(int|string $id, int|string $archivo): \Illuminate\Http\Response
+    public function descargarArchivo(int|string $id, int|string $archivo): Response
     {
         $this->authorizeAction('ver');
         $historia = $this->findOrFail($id);
@@ -676,7 +818,7 @@ class HistoriaController extends Controller
         $historia = AccesoClinico::historias(HistoriaClinica::query(), $request->user())->findOrFail($data['historia_clinica_id']);
         $usuario = $request->user();
         if ($request->exists('revision_docente')) {
-            abort_unless($usuario->hasAnyRole(['admin', 'subadmin']) || ($usuario->hasAnyRole(['docente', 'jefe-catedra']) && (int) $historia->docente_id === $usuario->id), 403);
+            abort_unless($usuario->hasAnyRole(['admin', 'subadmin', 'director']) || AccesoClinico::supervisaHistoria($usuario, $historia), 403);
         }
         $historia->update(array_filter([
             'estado' => $data['estado'] ?? null,

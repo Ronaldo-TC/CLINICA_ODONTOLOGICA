@@ -24,6 +24,7 @@ class SolicitudesInsumosPermisosTest extends TestCase
         $this->seed(SolicitudesInsumosPermissionsSeeder::class);
         $this->seed(SolicitudesInsumosPermissionsSeeder::class);
         $case = $this->clinicalCase();
+        $this->paidTreatment($case);
         $type = InsumoTratamiento::create(['nombre' => 'Material dental', 'clinica_id' => $case['clinic']->id]);
         $material = Insumo::create(['nombre' => 'Guantes', 'clinica_id' => $case['clinic']->id,
             'insumo_tratamiento_id' => $type->id, 'cantidad_numerica' => 10, 'cantidad' => 'pares', 'stock_minimo' => 0, 'costo_unitario' => 2]);

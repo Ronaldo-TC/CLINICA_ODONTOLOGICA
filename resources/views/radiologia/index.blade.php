@@ -24,6 +24,34 @@
     </div>
 </div>
 
+@if($solicitudesPagadas->isNotEmpty())
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2>Solicitudes autorizadas y pagadas · pendientes de realización</h2></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Paciente / ficha</th><th>Estudiante</th><th>Clínica</th><th>Estudio solicitado</th><th>Pago</th><th>Acción</th></tr></thead>
+        <tbody>
+        @foreach($solicitudesPagadas as $solicitud)
+            <tr>
+                <td>{{ $solicitud->paciente?->nombre_completo }}<br><small>Ficha #{{ $solicitud->historiaClinica?->admision_id }}</small></td>
+                <td>{{ $solicitud->historiaClinica?->estudiante?->nombre_completo }}</td>
+                <td>{{ $solicitud->clinica?->especialidad }}</td>
+                <td>{{ $solicitud->descripcion }}</td>
+                <td>Pagado · Bs {{ number_format($solicitud->resumenPago()['pagado'], 2) }}</td>
+                <td>
+                    @can('radiologias.gestionar')
+                    <form action="{{ route('radiologia.solicitudes.realizar', $solicitud) }}" method="POST">
+                        @csrf
+                        <button class="btn btn-sm btn-primary" type="submit">Registrar estudio y cargar imágenes</button>
+                    </form>
+                    @endcan
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table></div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-header">
         <h2>Estudios Radiológicos</h2>
@@ -102,7 +130,7 @@
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->links() }}</div>
 </div>
 
 @include('radiologia.partials.modal')

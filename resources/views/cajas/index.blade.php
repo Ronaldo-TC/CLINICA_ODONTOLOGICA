@@ -24,6 +24,57 @@
     </div>
 </div>
 
+@if($solicitudesRadiologicas->isNotEmpty())
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2>Estudios radiológicos autorizados · pendientes de pago</h2></div>
+    <div class="card-body">
+        <label for="buscar-pago-radiologico">Buscar por CI de estudiante o número de ficha</label>
+        <input id="buscar-pago-radiologico" type="search" class="form-control" placeholder="CI del estudiante/interno o ficha">
+    </div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Paciente / ficha</th><th>Estudiante</th><th>Clínica</th><th>Concepto exacto</th><th>Costo</th><th>Pagado</th><th>Saldo</th><th>Registrar pago</th></tr></thead>
+        <tbody>
+        @foreach($solicitudesRadiologicas as $solicitud)
+            @php($pagoRadiologico = $solicitud->resumenPago())
+            <tr data-pago-radiologico-row>
+                <td>{{ $solicitud->paciente?->nombre_completo }}<br><small>Ficha #{{ $solicitud->historiaClinica?->admision_id }} · CI {{ $solicitud->paciente?->ci }}</small></td>
+                <td>{{ $solicitud->historiaClinica?->estudiante?->nombre_completo }}<br><small>CI {{ $solicitud->historiaClinica?->estudiante?->ci }}</small></td>
+                <td>{{ $solicitud->clinica?->especialidad }}</td>
+                <td>{{ $solicitud->descripcion }}</td>
+                <td>{{ number_format($pagoRadiologico['autorizado'], 2) }} Bs</td>
+                <td>{{ number_format($pagoRadiologico['pagado'], 2) }} Bs</td>
+                <td>{{ number_format($pagoRadiologico['saldo'], 2) }} Bs</td>
+                <td>
+                    @canany(['cajas.crear', 'cajas.gestionar'])
+                    <form action="{{ route('cajas.solicitudes-radiologicas.pago', $solicitud) }}" method="POST" class="actions">
+                        @csrf
+                        <input aria-label="Monto a pagar" name="monto" type="number" min="0.01" max="{{ $pagoRadiologico['saldo'] }}" step="0.01" required placeholder="Monto" class="form-control">
+                        <select aria-label="Tipo de pago" name="tipo_pago" class="form-control">
+                            <option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option><option value="Tarjeta">Tarjeta</option><option value="QR">QR</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" type="submit">Registrar pago</button>
+                    </form>
+                    @else
+                        Consulta solamente
+                    @endcanany
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table></div>
+</div>
+@push('scripts')
+<script>
+    document.getElementById('buscar-pago-radiologico')?.addEventListener('input', function () {
+        const criterio = this.value.trim().toLocaleLowerCase();
+        document.querySelectorAll('[data-pago-radiologico-row]').forEach(function (fila) {
+            fila.hidden = !fila.textContent.toLocaleLowerCase().includes(criterio);
+        });
+    });
+</script>
+@endpush
+@endif
+
 @can('tratamientos.precios')
 @include('cajas.partials.precios')
 @endcan
@@ -107,7 +158,7 @@
         </table>
     </div>
 
-    <div id="paginacionWrap"></div>
+    <div id="paginacionWrap">{{ $registros->links() }}</div>
 </div>
 
 @include('cajas.partials.modal')

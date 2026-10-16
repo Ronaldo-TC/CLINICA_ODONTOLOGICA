@@ -133,7 +133,7 @@
         </table>
     </div>
 
-    <div class="pagination-wrap" id="paginacionEspecialidades">
+    <div id="paginacionEspecialidades">
         {{ $asignaciones->links() }}
     </div>
 </div>

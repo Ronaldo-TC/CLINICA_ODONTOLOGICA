@@ -10,6 +10,7 @@ use App\Models\MotivoConsulta;
 use App\Models\Paciente;
 use App\Models\Periodo;
 use App\Models\Remision;
+use App\Models\Tratamiento;
 use App\Models\Usuario;
 use App\Services\AccesoClinico;
 use App\Services\ReportePaciente;
@@ -58,6 +59,7 @@ class AdmisionController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(),
+            'tratamientosPropuestos' => Tratamiento::orderBy('nombre')->get(['id', 'nombre', 'clinica_id']),
             'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(),
             'motivos' => MotivoConsulta::where('habilitado', true)->orderBy('nombre')->get(),
             'camposAutocompletar' => self::CAMPOS_AUTOCOMPLETAR,
@@ -205,6 +207,10 @@ class AdmisionController extends Controller
             'especialidad_responsable' => ['nullable', 'required_with:estudiante_id,especialidad_estudiante,responsable_id', 'integer', 'exists:clinicas,id'],
             'clinica_ids' => ['nullable', 'array'],
             'clinica_ids.*' => ['required', 'integer', 'distinct', 'exists:clinicas,id'],
+            'tratamientos_propuestos' => ['nullable', 'array'],
+            'tratamientos_propuestos.*' => ['nullable', 'integer', 'exists:tratamientos,id'],
+            'observaciones_propuestas' => ['nullable', 'array'],
+            'observaciones_propuestas.*' => ['nullable', 'string', 'max:2000'],
             'actualizar_derivaciones' => ['nullable', 'boolean'],
 
             'estado_civil' => ['nullable', 'string', 'max:200'],
@@ -427,7 +433,7 @@ class AdmisionController extends Controller
         $data['odontograma_denticion'] = $data['odontograma_denticion'] ?? 'adulto';
         $data['estado'] = 'revision';
         $data['registrado_por'] = request()->user()->id;
-        unset($data['clinica_ids'], $data['actualizar_derivaciones']);
+        unset($data['clinica_ids'], $data['actualizar_derivaciones'], $data['tratamientos_propuestos'], $data['observaciones_propuestas']);
 
         return $data;
     }
@@ -456,7 +462,7 @@ class AdmisionController extends Controller
         $data['consentimiento_datos'] = request()->boolean('consentimiento_datos') ? 1 : 0;
         $data['consentimiento_fotografias'] = request()->boolean('consentimiento_fotografias');
         $data['consentimiento_investigacion'] = request()->boolean('consentimiento_investigacion') ? 1 : 0;
-        unset($data['clinica_ids'], $data['actualizar_derivaciones']);
+        unset($data['clinica_ids'], $data['actualizar_derivaciones'], $data['tratamientos_propuestos'], $data['observaciones_propuestas']);
 
         return $data;
     }
@@ -488,7 +494,8 @@ class AdmisionController extends Controller
     {
         $this->authorizeAction('autorizar');
         $registro = $this->findOrFail($admision);
-        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin']) || $registro->responsable_id === $request->user()->id, 403, 'La ficha debe ser revisada por su docente responsable.');
+        abort_unless($request->user()->hasAnyRole(['admin', 'subadmin', 'director']) || (! $request->user()->hasRole('jefe-catedra') && $registro->responsable_id === $request->user()->id)
+            || AccesoClinico::supervisaAdmision($request->user(), $registro), 403, 'La ficha debe ser revisada por su docente responsable o el jefe de cátedra de la clínica.');
         if (! $registro->consentimiento_datos || ! $registro->firma) {
             throw ValidationException::withMessages(['consentimiento_datos' => 'Complete el consentimiento de datos y la firma del paciente antes de autorizar.']);
         }
@@ -513,6 +520,13 @@ class AdmisionController extends Controller
             return;
         }
         $seleccionadas = array_map('intval', request()->input('clinica_ids') ?? []);
+        $propuestas = request()->input('tratamientos_propuestos', []);
+        foreach ($propuestas as $clinicaId => $tratamientoId) {
+            if ($tratamientoId && (! in_array((int) $clinicaId, $seleccionadas, true)
+                || ! Tratamiento::whereKey($tratamientoId)->where('clinica_id', $clinicaId)->exists())) {
+                throw ValidationException::withMessages(['tratamientos_propuestos.'.$clinicaId => 'Seleccione un tratamiento de la clínica derivada.']);
+            }
+        }
         Admision::whereKey($admision->id)->lockForUpdate()->firstOrFail();
         $existentes = $admision->remisiones()->lockForUpdate()->get();
         foreach ($existentes as $remision) {
@@ -525,10 +539,16 @@ class AdmisionController extends Controller
         }
         foreach ($seleccionadas as $clinicaId) {
             $remision = $existentes->firstWhere('clinica_id', $clinicaId);
+            $propuesta = array_key_exists($clinicaId, $propuestas)
+                ? ['tratamiento_propuesto_id' => $propuestas[$clinicaId] ?: null,
+                    'observacion_propuesta' => request()->input('observaciones_propuestas.'.$clinicaId)]
+                : [];
             if (! $remision) {
-                Remision::create(['admision_id' => $admision->id, 'paciente_id' => $admision->paciente_id, 'periodo_id' => $admision->periodo_id, 'clinica_id' => $clinicaId, 'estado' => 'pendiente', 'habilitado' => true]);
+                Remision::create($propuesta + ['admision_id' => $admision->id, 'paciente_id' => $admision->paciente_id, 'periodo_id' => $admision->periodo_id, 'clinica_id' => $clinicaId, 'estado' => 'pendiente', 'habilitado' => true]);
             } elseif ($remision->estado === 'pendiente') {
-                $remision->update(['habilitado' => true, 'periodo_id' => $admision->periodo_id]);
+                $remision->update($propuesta + ['habilitado' => true, 'periodo_id' => $admision->periodo_id]);
+            } elseif ($propuesta && (int) $remision->tratamiento_propuesto_id !== (int) $propuesta['tratamiento_propuesto_id']) {
+                throw ValidationException::withMessages(['tratamientos_propuestos.'.$clinicaId => 'La propuesta ya se transfirió a la historia; revísela con el docente.']);
             } elseif (! $remision->habilitado) {
                 throw ValidationException::withMessages(['clinica_ids' => 'La derivación ya fue asignada y está inhabilitada. Revísela desde el módulo de remisiones.']);
             }
@@ -568,7 +588,7 @@ class AdmisionController extends Controller
             return response()->json([]);
         }
 
-        $pacientes = Paciente::query()
+        $pacientes = AccesoClinico::pacientes(Paciente::query(), $request->user())
             ->where(function ($x) use ($q) {
                 $x->where('nombre', 'like', "%{$q}%")
                     ->orWhere('apellido_paterno', 'like', "%{$q}%")
@@ -596,7 +616,7 @@ class AdmisionController extends Controller
     {
         $this->authorizeAction('ver');
 
-        $paciente = Paciente::query()->findOrFail($paciente);
+        $paciente = AccesoClinico::pacientes(Paciente::query(), $request->user())->findOrFail($paciente);
         $admisionAnterior = AccesoClinico::admisiones(Admision::query(), $request->user())
             ->where('paciente_id', $paciente->id)
             ->select(['id', 'fecha_admision', 'created_at', ...self::CAMPOS_AUTOCOMPLETAR])

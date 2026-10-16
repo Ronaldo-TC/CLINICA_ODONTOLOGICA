@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Especialidad;
 use App\Models\HistoriaClinica;
+use App\Models\InsumoSolicitado;
+use App\Models\OdontogramaHallazgo;
 use App\Models\SesionAtencion;
 use App\Models\Tratamiento;
 use App\Models\TratamientoRealizado;
@@ -72,7 +74,7 @@ class FlujoTratamiento
             $tratamiento = $this->bloquear($tratamiento);
             $this->exigirEstudiante($tratamiento->historiaClinica, $usuario);
             $this->exigirHistoriaActiva($tratamiento->historiaClinica);
-            $this->exigir(in_array($tratamiento->estado, ['pendiente', 'propuesta'], true) && ! $tratamiento->estaAutorizado(), 'estado', 'Solo puede editar una propuesta pendiente de aprobación.');
+            $this->exigir(in_array($tratamiento->estado, ['pendiente', 'propuesta', 'rechazado'], true) && ! $tratamiento->estaAutorizado(), 'estado', 'Solo puede editar una propuesta pendiente o rechazada.');
             $catalogo = Tratamiento::query()->findOrFail($datos['tratamiento_id']);
             $this->exigir($catalogo->precio_asignado, 'tratamiento_id', 'Caja debe asignar el precio del tratamiento antes de registrar una atención.');
             $this->exigir((int) $catalogo->clinica_id === (int) $tratamiento->clinica_id, 'tratamiento_id', 'El tratamiento debe pertenecer a la especialidad de la historia clínica.');
@@ -81,6 +83,7 @@ class FlujoTratamiento
                 'costo_cobrado' => $catalogo->costo,
                 'pieza_dental' => $datos['pieza_dental'] ?? null,
                 'observacion' => $datos['observacion'] ?? null,
+                'estado' => 'pendiente',
             ]);
 
             return $tratamiento;
@@ -102,13 +105,50 @@ class FlujoTratamiento
         });
     }
 
+    public function rechazar(TratamientoRealizado $tratamiento, Usuario $usuario, string $motivo): TratamientoRealizado
+    {
+        $this->exigirPermiso($usuario, ['atenciones.autorizar', 'atenciones.gestionar']);
+
+        return DB::transaction(function () use ($tratamiento, $usuario, $motivo): TratamientoRealizado {
+            $tratamiento = $this->bloquear($tratamiento);
+            $this->exigirDocente($tratamiento->historiaClinica, $usuario);
+            $this->exigirHistoriaActiva($tratamiento->historiaClinica);
+            $this->exigir(in_array($tratamiento->estado, ['pendiente', 'propuesta'], true) && ! $tratamiento->estaAutorizado(), 'estado', 'Solo puede rechazar una propuesta pendiente.');
+            $tratamiento->update([
+                'estado' => 'rechazado',
+                'observacion' => trim((string) $tratamiento->observacion)."\n\nMotivo de rechazo docente: ".trim($motivo),
+            ]);
+
+            return $tratamiento;
+        });
+    }
+
+    public function eliminarPropuesta(TratamientoRealizado $tratamiento, Usuario $usuario): void
+    {
+        $this->exigirPermiso($usuario, ['atenciones.editar', 'atenciones.gestionar']);
+
+        DB::transaction(function () use ($tratamiento, $usuario): void {
+            $tratamiento = $this->bloquear($tratamiento);
+            $this->exigirEstudiante($tratamiento->historiaClinica, $usuario);
+            $this->exigirHistoriaActiva($tratamiento->historiaClinica);
+            $this->exigir(in_array($tratamiento->estado, ['pendiente', 'propuesta', 'rechazado'], true) && ! $tratamiento->estaAutorizado(), 'estado', 'Solo puede eliminar una propuesta que todavía no fue aprobada.');
+            $this->exigir(
+                ! $tratamiento->sesionesAtencion()->exists()
+                && ! $tratamiento->cajaDetalles()->exists()
+                && ! $tratamiento->cajas()->exists()
+                && ! $tratamiento->insumosUsados()->exists()
+                && ! InsumoSolicitado::query()->where('tratamiento_realizado_id', $tratamiento->id)->exists()
+                && ! OdontogramaHallazgo::query()->where('tratamiento_realizado_id', $tratamiento->id)->exists(),
+                'estado',
+                'La propuesta tiene registros clínicos, pagos o insumos asociados y no puede eliminarse.',
+            );
+            $tratamiento->delete();
+        });
+    }
+
     public function tienePago(TratamientoRealizado $tratamiento): bool
     {
-        return $tratamiento->cajaDetalles()->where('monto', '>', 0)
-            ->whereHas('caja', function (Builder $query): void {
-                $query->where('habilitada', true)->where('cancelado', '>', 0)
-                    ->whereNotNull('recibo')->where('recibo', '!=', '');
-            })->exists();
+        return $tratamiento->resumenPago()['estado'] === 'pagado';
     }
 
     /** @param array<string, mixed> $datos */
@@ -211,7 +251,7 @@ class FlujoTratamiento
 
     private function exigirEstudiante(HistoriaClinica $historia, Usuario $usuario, bool $permitirAdministrador = true): void
     {
-        if ($permitirAdministrador && $usuario->hasAnyRole(['admin', 'subadmin'])) {
+        if ($permitirAdministrador && $usuario->hasAnyRole(['admin', 'subadmin', 'director'])) {
             return;
         }
         abort_unless((int) $historia->estudiante_id === (int) $usuario->id && $usuario->hasAnyRole(['estudiante', 'interno']), 403, 'Esta atención corresponde a otro estudiante.');
@@ -220,10 +260,15 @@ class FlujoTratamiento
 
     private function exigirDocente(HistoriaClinica $historia, Usuario $usuario, ?int $docenteSesion = null): void
     {
-        if ($usuario->hasAnyRole(['admin', 'subadmin'])) {
+        if ($usuario->hasAnyRole(['admin', 'subadmin', 'director'])) {
             return;
         }
-        abort_unless($usuario->hasAnyRole(['docente', 'jefe-catedra']) && ((int) $historia->docente_id === (int) $usuario->id || $docenteSesion === $usuario->id), 403, 'Solo el docente asignado puede autorizar esta atención.');
+
+        $esDocenteAsignado = $usuario->hasAnyRole(['docente', 'jefe-catedra'])
+            && ((int) $historia->docente_id === (int) $usuario->id || $docenteSesion === $usuario->id);
+        $esJefeDeCatedraDeLaClinica = AccesoClinico::supervisaClinica($usuario, $historia->clinica_id);
+
+        abort_unless($esDocenteAsignado || $esJefeDeCatedraDeLaClinica, 403, 'Solo el docente asignado o el jefe de cátedra de la clínica puede autorizar esta atención.');
         $this->exigirEspecialidad($historia, $usuario);
     }
 
@@ -243,7 +288,7 @@ class FlujoTratamiento
     {
         $this->exigirHistoriaActiva($tratamiento->historiaClinica);
         $this->exigir($tratamiento->estaAutorizado() && in_array($tratamiento->estado, ['autorizado', 'en_proceso'], true), 'estado', 'El tratamiento debe estar autorizado y abierto para registrar avances.');
-        $this->exigir($this->tienePago($tratamiento), 'pago', 'Registre en Cajas un recibo con pago para este tratamiento antes de iniciar la atención.');
+        $this->exigir($this->tienePago($tratamiento), 'pago', 'Complete el pago del tratamiento en Cajas antes de iniciar la atención.');
     }
 
     private function exigir(bool $condicion, string $campo, string $mensaje): void

@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -79,15 +80,12 @@ class KardexTest extends TestCase
         $tratamiento = DB::table('tratamientos')->where('clinica_id', $this->clinicaId)->first()
             ?: DB::table('tratamientos')->first();
 
-        // La admisión y la historia exigen (usuario_id, clinica_id) presentes en `especialidades`.
-        $especialidad = DB::table('especialidades')->where('clinica_id', $this->clinicaId)->first()
-            ?: DB::table('especialidades')->first();
-
-        $estudianteId = (int) $especialidad->usuario_id;
-        $docenteId = (int) (DB::table('especialidades')
-            ->where('clinica_id', $especialidad->clinica_id)
-            ->where('usuario_id', '!=', $estudianteId)
-            ->value('usuario_id') ?: $estudianteId);
+        $estudiante = $this->crearUsuarioClinico('estudiante');
+        $docente = $this->crearUsuarioClinico('docente');
+        $estudiante->especialidades()->attach($this->clinicaId, ['habilitado' => true]);
+        $docente->especialidades()->attach($this->clinicaId, ['habilitado' => true]);
+        $estudianteId = $estudiante->id;
+        $docenteId = $docente->id;
 
         $marca = 'KARDEX'.random_int(100000, 999999);
 
@@ -109,9 +107,9 @@ class KardexTest extends TestCase
             'ocupacion' => 'Estudiante',
             'diagnostico' => 'Prueba de integración Kardex',
             'estudiante_id' => $estudianteId,
-            'especialidad_estudiante' => (int) $especialidad->clinica_id,
+            'especialidad_estudiante' => $this->clinicaId,
             'responsable_id' => $docenteId,
-            'especialidad_responsable' => (int) $especialidad->clinica_id,
+            'especialidad_responsable' => $this->clinicaId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -124,9 +122,9 @@ class KardexTest extends TestCase
             'estado' => 'abierta',
             'autorizado' => 1,
             'estudiante_id' => $estudianteId,
-            'especialidad_estudiante' => (int) $especialidad->clinica_id,
+            'especialidad_estudiante' => $this->clinicaId,
             'docente_id' => $docenteId,
-            'especialidad_docente' => (int) $especialidad->clinica_id,
+            'especialidad_docente' => $this->clinicaId,
             'fecha_inicio' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),
@@ -175,6 +173,22 @@ class KardexTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    private function crearUsuarioClinico(string $rol): Usuario
+    {
+        $identificador = substr((string) Str::uuid(), 0, 12);
+        $usuario = Usuario::create([
+            'ci' => $identificador,
+            'nombre_usuario' => $identificador,
+            'nombre_completo' => 'Prueba '.$rol.' '.$identificador,
+            'contrasena' => 'unused',
+            'habilitado' => true,
+            'permitir_login' => true,
+        ]);
+        $usuario->assignRole($rol);
+
+        return $usuario;
     }
 
     /** GET /kardex responde 200 con las métricas y los filtros. */

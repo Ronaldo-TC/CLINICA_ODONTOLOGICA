@@ -8,12 +8,12 @@
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group" style="grid-column:1 / -1;">
-                        <label for="caja-paciente-buscar">Buscar por CI o nombre del paciente</label>
+                        <label for="caja-paciente-buscar">Buscar por CI o nombre del estudiante o paciente</label>
                         <div class="autocomplete-wrap" id="caja-paciente-busqueda">
-                            <input type="search" id="caja-paciente-buscar" class="form-control" maxlength="100" autocomplete="off" placeholder="Ingrese CI, nombre o apellidos" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="caja-paciente-resultados" aria-describedby="caja-paciente-buscar-ayuda">
+                            <input type="search" id="caja-paciente-buscar" class="form-control" maxlength="100" autocomplete="off" placeholder="CI o nombre del estudiante, CI o nombre del paciente" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="caja-paciente-resultados" aria-describedby="caja-paciente-buscar-ayuda">
                             <div id="caja-paciente-resultados" class="autocomplete-dropdown" role="listbox" aria-label="Pacientes y fichas de admisión encontrados" hidden></div>
                         </div>
-                        <small id="caja-paciente-buscar-ayuda">Escriba al menos dos caracteres y seleccione la ficha del paciente, o busque directamente por número de ficha.</small>
+                        <small id="caja-paciente-buscar-ayuda">Escriba al menos dos caracteres y seleccione la ficha correspondiente, o busque directamente por número de ficha.</small>
                         <p id="caja-paciente-buscar-estado" role="status" aria-live="polite"></p>
                     </div>
                     <div class="form-group"><label for="caja-ficha">Número de ficha de admisión <span class="req">*</span></label><input type="number" id="caja-ficha" name="ficha" min="1" class="form-control" required aria-describedby="caja-ficha-ayuda"><small id="caja-ficha-ayuda">Al ingresar la ficha se completan automáticamente el estudiante y el paciente designados.</small></div>
@@ -21,7 +21,8 @@
                     <div class="form-group" style="grid-column:1 / -1;"><label for="caja-atencion">Tratamiento autorizado del paciente <span class="req">*</span></label><select id="caja-atencion" name="tratamiento_realizado_id" class="form-control" required><option value="">Busque primero la ficha</option></select></div>
                     <div class="form-group"><label for="caja-estudiante">Estudiante designado</label><input id="caja-estudiante" class="form-control" readonly></div>
                     <div class="form-group"><label for="caja-paciente">Paciente designado</label><input id="caja-paciente" class="form-control" readonly></div>
-                    <div class="form-group"><label for="caja-recibo">Número de recibo <span class="req">*</span></label><input id="caja-recibo" name="recibo" type="number" min="1" max="2147483647" class="form-control" required></div>
+                    <div class="form-group"><label for="caja-recibo">Número de recibo</label><input id="caja-recibo" name="recibo" type="number" class="form-control" readonly aria-describedby="caja-recibo-ayuda"><small id="caja-recibo-ayuda">Se asigna automáticamente al registrar el pago.</small></div>
+                    <div class="form-group"><label for="caja-servicio">Servicio pagado</label><select id="caja-servicio" name="tipo" class="form-control"><option value="tratamiento">Tratamiento clínico</option><option value="radiologia">Estudio radiológico</option></select></div>
                     <div class="form-group"><label for="caja-tipo-pago">Tipo de pago</label><select id="caja-tipo-pago" name="tipo_pago" class="form-control"><option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option><option value="Tarjeta">Tarjeta</option><option value="QR">QR</option></select></div>
                     <div class="form-group"><label for="caja-costo-total">Costo autorizado (Bs)</label><input id="caja-costo-total" class="form-control" readonly></div>
                     <div class="form-group"><label for="caja-anterior">Cancelado en otros recibos (Bs)</label><input id="caja-anterior" class="form-control" readonly value="0.00"></div>

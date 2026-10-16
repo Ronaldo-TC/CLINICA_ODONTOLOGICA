@@ -39,7 +39,7 @@ class MenuBuilder
                 'route' => 'pacientes.index',
                 'icon' => 'users',
                 'pattern' => 'pacientes.*',
-                'permission' => 'pacientes.ver',
+                'permission' => ['pacientes.ver', 'pacientes.gestionar'],
             ],
             [
                 'type' => 'link',
@@ -72,7 +72,7 @@ class MenuBuilder
                 'icon' => 'inbox',
                 'pattern' => 'remisiones.*',
                 'permission' => ['remisiones.ver', 'remisiones.gestionar'],
-                'role' => ['admin', 'admision'],
+                'role' => ['admin', 'admision', 'jefatura-clinicas'],
             ],
             [
                 'type' => 'link',
@@ -128,6 +128,9 @@ class MenuBuilder
                 'pattern' => 'cajas.*',
                 'permission' => 'cajas.ver',
             ],
+
+            ['type' => 'link', 'label' => 'Reposición de insumos', 'route' => 'insumos.reposiciones',
+                'icon' => 'package', 'pattern' => 'insumos.reposiciones*', 'role' => ['insumos', 'jefatura-clinicas', 'director', 'admin']],
 
             ['type' => 'label', 'label' => 'Análisis'],
 
@@ -197,7 +200,7 @@ class MenuBuilder
                 'route' => 'clinicas.index',
                 'icon' => 'hospital',
                 'pattern' => 'clinicas.*',
-                'permission' => 'clinicas.ver',
+                'permission' => ['clinicas.ver', 'clinicas.gestionar'],
             ],
             [
                 'type' => 'link',
@@ -267,7 +270,7 @@ class MenuBuilder
             // ---- Filtro por rol (string o array) ----
             if (! empty($item['role'])) {
                 $roles = (array) $item['role'];
-                if (! $user->hasAnyRole($roles)) {
+                if (! $user->hasRole('director') && ! $user->hasAnyRole($roles)) {
                     continue;
                 }
             }

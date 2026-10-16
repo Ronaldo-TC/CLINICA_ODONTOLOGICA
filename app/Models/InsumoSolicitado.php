@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\AccesoClinico;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ class InsumoSolicitado extends Model
     protected $table = 'insumos_solicitados';
 
     protected $fillable = [
+        'tipo_solicitud', 'jefatura_aprobado_por', 'fecha_aprobacion_jefatura', 'recibido_por', 'fecha_recepcion',
         'historia_clinica_id', 'tratamiento_id', 'aprobado_por', 'fecha_aprobacion',
         'pieza',
         'insumos',
@@ -34,6 +36,7 @@ class InsumoSolicitado extends Model
     ];
 
     protected $casts = [
+        'fecha_aprobacion_jefatura' => 'datetime', 'fecha_recepcion' => 'datetime',
         'fecha_aprobacion' => 'datetime',
         'docente_autoriza' => 'integer',
         'autorizado' => 'boolean',
@@ -58,6 +61,16 @@ class InsumoSolicitado extends Model
     const ESTADO_CANCELADO = 'cancelado';
 
     /* RELACIONES */
+    public function aprobadorJefatura(): BelongsTo
+    {
+        return $this->belongsTo(Usuario::class, 'jefatura_aprobado_por');
+    }
+
+    public function receptor(): BelongsTo
+    {
+        return $this->belongsTo(Usuario::class, 'recibido_por');
+    }
+
     public function historiaClinica(): BelongsTo
     {
         return $this->belongsTo(HistoriaClinica::class);
@@ -120,8 +133,13 @@ class InsumoSolicitado extends Model
 
     public function scopeVisibleTo(Builder $query, Usuario $usuario): Builder
     {
+        $query->where('tipo_solicitud', 'clinica');
         if ($usuario->hasAnyRole(['admin', 'subadmin', 'insumos'])) {
             return $query;
+        }
+
+        if ($usuario->hasRole('jefe-catedra')) {
+            return $query->whereIn('clinica_id', AccesoClinico::clinicas($usuario));
         }
 
         return $query->where(function (Builder $scope) use ($usuario): void {

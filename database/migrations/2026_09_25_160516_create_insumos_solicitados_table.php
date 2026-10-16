@@ -38,6 +38,24 @@ return new class extends Migration
 
             $table->date('fecha_solicitud')->useCurrent();
             $table->text('observaciones')->nullable();
+
+            // ── NUEVAS: tipo de solicitud y flujo de jefatura ──
+            $table->string('tipo_solicitud', 20)->default('clinica');
+
+            $table->foreignId('jefatura_aprobado_por')
+                ->nullable()
+                ->constrained('usuarios')
+                ->restrictOnDelete();
+
+            $table->timestamp('fecha_aprobacion_jefatura')->nullable();
+
+            $table->foreignId('recibido_por')
+                ->nullable()
+                ->constrained('usuarios')
+                ->restrictOnDelete();
+
+            $table->timestamp('fecha_recepcion')->nullable();
+
             $table->timestamps();
         });
     }

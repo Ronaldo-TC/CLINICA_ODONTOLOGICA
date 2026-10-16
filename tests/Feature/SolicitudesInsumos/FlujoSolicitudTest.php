@@ -43,6 +43,7 @@ class FlujoSolicitudTest extends TestCase
     public function test_flujo_completo_de_solicitud_de_insumos(): void
     {
         $case = $this->approvedProgress();
+        $this->paidTreatment($case);
         $case['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
         $estudiante = $case['student'];
         $admin = $this->usuarioConRol('admin');
@@ -115,7 +116,11 @@ class FlujoSolicitudTest extends TestCase
 
         $this->assertSame(10.0, (float) $insumo->fresh()->cantidad_numerica, 'El stock no debe cambiar si la entrega falla');
 
-        // ---------- 4. Entregar correctamente ----------
+        // ---------- 4. Aprobar disponibilidad y entregar correctamente ----------
+        $this->actingAs($admin)
+            ->postJson(route('solicitudes-insumos.aprobar', $solicitudId))
+            ->assertOk();
+
         $this->actingAs($admin)
             ->postJson(route('solicitudes-insumos.entregar', $solicitudId), [
                 'detalles' => [

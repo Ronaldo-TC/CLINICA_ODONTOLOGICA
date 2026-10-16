@@ -2,12 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admision;
 use App\Models\Clinica;
+use App\Models\Esterilizacion;
+use App\Models\HistoriaClinica;
+use App\Models\Paciente;
 use App\Models\Periodo;
+use App\Models\Radiologia;
+use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
+use App\Services\AccesoClinico;
 use App\Services\ReporteModulo;
 use App\Services\ReportePdf;
 use Carbon\Carbon;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -404,7 +412,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('admisiones as a')
+        $query = $this->consultaReporte($request, 'admisiones as a')
             ->leftJoin('periodos as p', 'p.id', '=', 'a.periodo_id')
             ->selectRaw("COALESCE(NULLIF(p.nombre, ''), 'Sin periodo') AS etiqueta, COUNT(*) AS total, MAX(p.fecha_inicio) AS orden")
             ->groupBy('a.periodo_id', 'p.nombre');
@@ -427,7 +435,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('historias_clinicas as h')
+        $query = $this->consultaReporte($request, 'historias_clinicas as h')
             ->leftJoin('clinicas as c', 'c.id', '=', 'h.clinica_id')
             ->selectRaw("COALESCE(NULLIF(c.especialidad, ''), NULLIF(c.modulo, ''), 'Sin clínica') AS etiqueta, COUNT(DISTINCT h.admision_id) AS total")
             ->groupBy('h.clinica_id', 'c.especialidad', 'c.modulo')
@@ -463,7 +471,7 @@ class ReporteController extends Controller
             WHEN TIMESTAMPDIFF(YEAR, pa.fecha_nacimiento, CURDATE()) <= 50 THEN '31-50'
             ELSE '51+' END";
 
-        $query = DB::table('pacientes as pa')
+        $query = $this->consultaReporte($request, 'pacientes as pa')
             ->selectRaw("{$caso} AS etiqueta, COUNT(*) AS total")
             ->groupByRaw($caso);
 
@@ -508,7 +516,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('pacientes as pa')
+        $query = $this->consultaReporte($request, 'pacientes as pa')
             ->selectRaw('pa.genero AS etiqueta, COUNT(*) AS total')
             ->groupBy('pa.genero');
 
@@ -548,7 +556,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('admisiones as a')
+        $query = $this->consultaReporte($request, 'admisiones as a')
             ->leftJoin('motivos_consulta as m', 'm.id', '=', 'a.motivo_consulta_id')
             ->selectRaw("COALESCE(NULLIF(m.nombre, ''), MAX(NULLIF(a.motivo_consulta, '')), 'Sin especificar') AS etiqueta, COUNT(*) AS total")
             ->groupBy('a.motivo_consulta_id', 'm.nombre')
@@ -573,7 +581,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('tratamientos_realizados as tr')
+        $query = $this->consultaReporte($request, 'tratamientos_realizados as tr')
             ->leftJoin('clinicas as c', 'c.id', '=', 'tr.clinica_id')
             ->selectRaw("COALESCE(NULLIF(c.especialidad, ''), NULLIF(c.modulo, ''), 'Sin clínica') AS etiqueta, COUNT(*) AS total")
             ->groupBy('tr.clinica_id', 'c.especialidad', 'c.modulo')
@@ -597,7 +605,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('historias_clinicas as h')
+        $query = $this->consultaReporte($request, 'historias_clinicas as h')
             ->join('usuarios as u', 'u.id', '=', 'h.docente_id')
             ->where('h.autorizado', 1)
             ->selectRaw('u.nombre_completo AS etiqueta, COUNT(*) AS total')
@@ -624,7 +632,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('tratamientos_realizados as tr')
+        $query = $this->consultaReporte($request, 'tratamientos_realizados as tr')
             ->join('historias_clinicas as h', 'h.id', '=', 'tr.historia_clinica_id')
             ->join('usuarios as u', 'u.id', '=', 'h.estudiante_id')
             ->selectRaw('u.nombre_completo AS etiqueta, COUNT(*) AS total')
@@ -651,7 +659,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('insumos_tratamiento_usados as iu')
+        $query = $this->consultaReporte($request, 'insumos_tratamiento_usados as iu')
             ->join('insumos as i', 'i.id', '=', 'iu.insumo_id')
             ->leftJoin('tratamientos_realizados as tr', 'tr.id', '=', 'iu.tratamiento_realizado_id')
             ->leftJoin('historias_clinicas as h', 'h.id', '=', 'tr.historia_clinica_id')
@@ -681,7 +689,7 @@ class ReporteController extends Controller
 
         $expresion = "DATE_FORMAT(COALESCE(r.fecha_toma, r.created_at), '%Y-%m')";
 
-        $query = DB::table('radiologias as r')
+        $query = $this->consultaReporte($request, 'radiologias as r')
             ->selectRaw("{$expresion} AS periodo, COUNT(*) AS total")
             ->groupByRaw($expresion)
             ->orderBy('periodo');
@@ -708,7 +716,7 @@ class ReporteController extends Controller
 
         $expresion = "DATE_FORMAT(e.created_at, '%Y-%m')";
 
-        $query = DB::table('esterilizaciones as e')
+        $query = $this->consultaReporte($request, 'esterilizaciones as e')
             ->selectRaw("{$expresion} AS periodo, COUNT(*) AS total")
             ->groupByRaw($expresion)
             ->orderBy('periodo');
@@ -735,7 +743,7 @@ class ReporteController extends Controller
     {
         $f = $this->filtros($request);
 
-        $query = DB::table('cajas as ca')
+        $query = $this->consultaReporte($request, 'cajas as ca')
             ->selectRaw("COALESCE(NULLIF(ca.tipo_pago, ''), 'Sin especificar') AS etiqueta, SUM(ca.cancelado) AS total")
             ->groupBy('ca.tipo_pago')
             ->orderByDesc('total');
@@ -759,7 +767,7 @@ class ReporteController extends Controller
 
         $expresion = "DATE_FORMAT(ca.created_at, '%Y-%m')";
 
-        $query = DB::table('cajas as ca')
+        $query = $this->consultaReporte($request, 'cajas as ca')
             ->selectRaw("{$expresion} AS periodo, SUM(ca.cancelado) AS total")
             ->groupByRaw($expresion)
             ->orderBy('periodo');
@@ -797,6 +805,30 @@ class ReporteController extends Controller
             'periodo_id' => $this->enteroValido($request->input('periodo_id')),
             'clinica_id' => $this->enteroValido($request->input('clinica_id')),
         ];
+    }
+
+    private function consultaReporte(Request $request, string $tabla): Builder
+    {
+        $query = DB::table($tabla);
+        $usuario = $request->user();
+        if (AccesoClinico::esAdministrador($usuario) || ! $usuario->hasAnyRole(['docente', 'jefe-catedra'])) {
+            return $query;
+        }
+
+        $historias = AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('id');
+
+        return match ($tabla) {
+            'admisiones as a' => $query->whereIn('a.id', AccesoClinico::admisiones(Admision::query(), $usuario)->select('id')),
+            'historias_clinicas as h' => $query->whereIn('h.id', $historias),
+            'pacientes as pa' => $query->whereIn('pa.id', AccesoClinico::pacientes(Paciente::query(), $usuario)->select('id')),
+            'tratamientos_realizados as tr' => $query->whereIn('tr.historia_clinica_id', $historias),
+            'insumos_tratamiento_usados as iu' => $query->whereIn('iu.tratamiento_realizado_id',
+                TratamientoRealizado::query()->whereIn('historia_clinica_id', $historias)->select('id')),
+            'radiologias as r' => $query->whereIn('r.id', AccesoClinico::radiologias(Radiologia::query(), $usuario)->select('id')),
+            'esterilizaciones as e' => $query->whereIn('e.id', AccesoClinico::esterilizaciones(Esterilizacion::query(), $usuario)->select('id')),
+            'cajas as ca' => $query->whereIn('ca.tratamiento_realizado_id',
+                TratamientoRealizado::query()->whereIn('historia_clinica_id', $historias)->select('id')),
+        };
     }
 
     protected function fechaValida($valor): ?string

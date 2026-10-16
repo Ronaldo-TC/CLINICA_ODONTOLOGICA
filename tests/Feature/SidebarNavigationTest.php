@@ -29,9 +29,10 @@ class SidebarNavigationTest extends TestCase
         $this->assertSame(['Dashboard', 'Seguridad', 'Clínicas', 'Periodos', 'Asignar especialidades',
             'Tratamientos', 'Bitácoras', 'Reportes', 'Kardex', 'Investigación', 'Pacientes', 'Admisiones',
             'Remisiones', 'Pacientes remitidos', 'Historias clínicas', 'Atención y avances', 'Radiología',
-            'Insumos', 'Solicitudes de insumos', 'Esterilización', 'Cajas'], array_column($menu, 'label'));
+            'Insumos', 'Solicitudes de insumos', 'Esterilización', 'Cajas', 'Reposición de insumos'], array_column($menu, 'label'));
         $this->assertSame(['Usuarios', 'Roles y permisos'], array_column($menu[1]['children'], 'label'));
         $this->assertSame(route('cajas.index'), $menu[20]['href']);
+        $this->assertSame(route('insumos.reposiciones'), $menu[21]['href']);
         $this->assertSame(1, count(array_filter($menu, fn (array $item): bool => $item['children'] !== [])));
         $response->assertDontSee('data-nav-group-id="nav-group-atencion-clinica"', false)
             ->assertDontSee('data-nav-group-id="nav-group-administracion"', false);

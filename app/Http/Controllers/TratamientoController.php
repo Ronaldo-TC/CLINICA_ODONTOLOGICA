@@ -28,6 +28,12 @@ class TratamientoController extends Controller
 {
     use HasCrudAjax;
 
+    private const ESTADOS_REALIZADOS = [
+        'pendiente' => 'Pendiente', 'propuesta' => 'Propuesta', 'autorizado' => 'Autorizado',
+        'en_proceso' => 'En proceso', 'finalizado' => 'Finalizado', 'culminado' => 'Culminado',
+        'realizado' => 'Realizado', 'completado' => 'Completado', 'rechazado' => 'Rechazado', 'cancelado' => 'Cancelado',
+    ];
+
     /* ============================================================
        CONFIGURACIÓN DEL TRAIT
        ============================================================ */
@@ -254,7 +260,7 @@ class TratamientoController extends Controller
         $this->flujo->exigirPermiso($request->user(), ['atenciones.ver', 'atenciones.gestionar']);
         $reporte->validarFiltros($request);
 
-        return $reporte->generar($this->flujo->tratamientosVisibles($request->user())->orderByDesc('id'), 'tratamientos-realizados', $request);
+        return $reporte->generar($this->consultaRealizados($request), 'tratamientos-realizados', $request);
     }
 
     public function realizados(Request $request): View
@@ -262,10 +268,102 @@ class TratamientoController extends Controller
         $this->flujo->exigirPermiso($request->user(), ['atenciones.ver', 'atenciones.gestionar']);
 
         return view('tratamientos-realizados.index', [
-            'registros' => $this->flujo->tratamientosVisibles($request->user())->with(['tratamiento', 'historiaClinica.paciente', 'sesionesAtencion.docente'])->orderByDesc('id')->paginate(15),
+            'registros' => $this->consultaRealizados($request)->paginate(15)->withQueryString(),
             'historias' => AccesoClinico::historias(HistoriaClinica::query(), $request->user())->where('autorizado', true)->with('paciente')->get(),
             'catalogo' => Tratamiento::orderBy('nombre')->get(),
+            'estados' => self::ESTADOS_REALIZADOS,
+            'resumenRevision' => $request->user()->hasRole('jefe-catedra')
+                ? $this->resumenRevision($request)
+                : null,
+            'revisionActual' => $request->user()->hasRole('jefe-catedra')
+                ? $request->query('revision', 'pendientes')
+                : $request->query('revision', 'todos'),
         ]);
+    }
+
+    public function tablaRealizados(Request $request): JsonResponse
+    {
+        $this->flujo->exigirPermiso($request->user(), ['atenciones.ver', 'atenciones.gestionar']);
+        $registros = $this->consultaRealizados($request)->paginate(15)->withQueryString();
+
+        return response()->json([
+            'filas' => view('tratamientos-realizados.partials.filas', ['registros' => $registros, 'estados' => self::ESTADOS_REALIZADOS])->render(),
+            'paginacion' => $registros->links()->toHtml(),
+            'total' => $registros->total(),
+            'resumenRevision' => $request->user()->hasRole('jefe-catedra') ? $this->resumenRevision($request) : null,
+        ]);
+    }
+
+    private function consultaRealizados(Request $request): Builder
+    {
+        $filtros = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:200'],
+            'estado' => ['nullable', Rule::in(array_keys(self::ESTADOS_REALIZADOS))],
+            'revision' => ['nullable', Rule::in(['pendientes', 'propuestas', 'avances', 'culminaciones', 'todos'])],
+        ]);
+
+        return $this->flujo->tratamientosVisibles($request->user())
+            ->with([
+                'tratamiento',
+                'clinica',
+                'historiaClinica.paciente',
+                'historiaClinica.estudiante',
+                'historiaClinica.docente',
+                'autorizador',
+                'sesionesAtencion.docente',
+                'sesionesAtencion.estudiante',
+                'sesionesAtencion.autorizador',
+            ])
+            ->when(trim($filtros['buscar'] ?? '') !== '', function (Builder $query) use ($filtros): void {
+                $buscar = '%'.trim($filtros['buscar']).'%';
+                $query->where(function (Builder $query) use ($buscar): void {
+                    $query->where('pieza_dental', 'like', $buscar)
+                        ->orWhereHas('tratamiento', fn (Builder $tratamiento) => $tratamiento->where('nombre', 'like', $buscar))
+                        ->orWhereHas('historiaClinica.paciente', function (Builder $paciente) use ($buscar): void {
+                            $paciente->where('ci', 'like', $buscar)->orWhere('nombre', 'like', $buscar)
+                                ->orWhere('apellido_paterno', 'like', $buscar)->orWhere('apellido_materno', 'like', $buscar);
+                        });
+                });
+            })
+            ->when($filtros['estado'] ?? null, fn (Builder $query, string $estado) => $query->where('estado', $estado))
+            ->when($filtros['revision'] ?? ($request->user()->hasRole('jefe-catedra') ? 'pendientes' : 'todos'), fn (Builder $query, string $revision) => $this->filtrarRevision($query, $revision))
+            ->orderByDesc('id');
+    }
+
+    /** @return array{propuestas: int, avances: int, culminaciones: int} */
+    private function resumenRevision(Request $request): array
+    {
+        $base = $this->flujo->tratamientosVisibles($request->user());
+
+        return [
+            'propuestas' => $this->filtrarRevision(clone $base, 'propuestas')->count(),
+            'avances' => $this->filtrarRevision(clone $base, 'avances')->count(),
+            'culminaciones' => $this->filtrarRevision(clone $base, 'culminaciones')->count(),
+        ];
+    }
+
+    private function filtrarRevision(Builder $query, string $revision): Builder
+    {
+        return match ($revision) {
+            'pendientes' => $query->where(function (Builder $query): void {
+                $query->whereIn('estado', ['pendiente', 'propuesta'])
+                    ->orWhere('estado', 'finalizado')
+                    ->orWhereHas('sesionesAtencion', fn (Builder $sesiones) => $this->sesionesPendientes($sesiones));
+            }),
+            'propuestas' => $query->whereIn('estado', ['pendiente', 'propuesta']),
+            'avances' => $query->whereHas('sesionesAtencion', fn (Builder $sesiones) => $this->sesionesPendientes($sesiones)),
+            'culminaciones' => $query->where('estado', 'finalizado'),
+            default => $query,
+        };
+    }
+
+    private function sesionesPendientes(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where('autorizado', false)
+                ->orWhereNull('autorizado_por')
+                ->orWhereNull('fecha_autorizacion');
+        });
     }
 
     public function proponer(Request $request): RedirectResponse|JsonResponse
@@ -281,11 +379,50 @@ class TratamientoController extends Controller
             : back()->with('success', 'Propuesta enviada para autorización docente.');
     }
 
-    public function autorizarRealizado(Request $request, int $tratamiento): RedirectResponse
+    public function actualizarPropuesta(Request $request, int $tratamiento): RedirectResponse|JsonResponse
+    {
+        $registro = $this->flujo->editarPropuesta($this->tratamientoRealizadoVisible($request, $tratamiento), $request->user(), $request->validate([
+            'tratamiento_id' => ['required', 'integer', 'exists:tratamientos,id'],
+            'pieza_dental' => ['nullable', 'string', 'max:20'],
+            'observacion' => ['nullable', 'string', 'max:2000'],
+        ]));
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'id' => $registro->id, 'message' => 'Propuesta actualizada y enviada para revisión docente.'])
+            : back()->with('success', 'Propuesta actualizada y enviada para revisión docente.');
+    }
+
+    public function autorizarRealizado(Request $request, int $tratamiento): RedirectResponse|JsonResponse
     {
         $this->flujo->autorizar($this->tratamientoRealizadoVisible($request, $tratamiento), $request->user());
 
-        return back()->with('success', 'Tratamiento autorizado para Cajas.');
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'message' => 'Tratamiento autorizado para Cajas.'])
+            : back()->with('success', 'Tratamiento autorizado para Cajas.');
+    }
+
+    public function rechazarRealizado(Request $request, int $tratamiento): RedirectResponse|JsonResponse
+    {
+        $data = $request->validate([
+            'motivo' => ['required', 'string', 'min:5', 'max:2000'],
+        ], [
+            'motivo.required' => 'Debe indicar el motivo del rechazo.',
+            'motivo.min' => 'El motivo del rechazo debe tener al menos 5 caracteres.',
+        ]);
+        $this->flujo->rechazar($this->tratamientoRealizadoVisible($request, $tratamiento), $request->user(), $data['motivo']);
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'message' => 'Propuesta rechazada. El estudiante puede corregirla y reenviarla.'])
+            : back()->with('success', 'Propuesta rechazada. El estudiante puede corregirla y reenviarla.');
+    }
+
+    public function eliminarPropuesta(Request $request, int $tratamiento): RedirectResponse|JsonResponse
+    {
+        $this->flujo->eliminarPropuesta($this->tratamientoRealizadoVisible($request, $tratamiento), $request->user());
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'message' => 'Propuesta eliminada.'])
+            : back()->with('success', 'Propuesta eliminada.');
     }
 
     public function finalizar(Request $request, int $tratamiento): RedirectResponse|JsonResponse
@@ -297,11 +434,13 @@ class TratamientoController extends Controller
             : back()->with('success', 'Tratamiento finalizado por el estudiante.');
     }
 
-    public function culminar(Request $request, int $tratamiento): RedirectResponse
+    public function culminar(Request $request, int $tratamiento): RedirectResponse|JsonResponse
     {
         $this->flujo->culminar($this->tratamientoRealizadoVisible($request, $tratamiento), $request->user());
 
-        return back()->with('success', 'Culminación confirmada por el docente.');
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'message' => 'Culminación confirmada por el docente.'])
+            : back()->with('success', 'Culminación confirmada por el docente.');
     }
 
     private function tratamientoRealizadoVisible(Request $request, int $id): TratamientoRealizado
@@ -319,12 +458,14 @@ class TratamientoController extends Controller
             : back()->with('success', 'Avance registrado para revisión docente.');
     }
 
-    public function autorizarSesion(Request $request, int $sesion): RedirectResponse
+    public function autorizarSesion(Request $request, int $sesion): RedirectResponse|JsonResponse
     {
         $registro = SesionAtencion::whereIn('tratamiento_realizado_id', $this->flujo->tratamientosVisibles($request->user())->select('id'))->findOrFail($sesion);
         $data = $request->validate(['observacion_docente' => ['nullable', 'string', 'max:2000']]);
         $this->flujo->autorizarSesion($registro, $request->user(), $data['observacion_docente'] ?? null);
 
-        return back()->with('success', 'Avance autorizado para solicitar insumos.');
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'message' => 'Avance autorizado para solicitar insumos.'])
+            : back()->with('success', 'Avance autorizado para solicitar insumos.');
     }
 }

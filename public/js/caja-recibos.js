@@ -131,7 +131,7 @@
         save.disabled = true;
         const buscar = buscarPaciente.value.trim();
         if (buscar.length < 2) {
-            estadoPaciente.textContent = 'Ingrese al menos dos caracteres del CI o nombre del paciente.';
+            estadoPaciente.textContent = 'Ingrese al menos dos caracteres del CI o nombre del estudiante o paciente.';
             return;
         }
         const sequence = patientSequence;
@@ -159,7 +159,11 @@
                 nombre.textContent = item.paciente;
                 const detalle = document.createElement('span');
                 detalle.className = 'autocomplete-meta';
-                detalle.textContent = 'CI: ' + item.ci + ' · Ficha #' + item.ficha + (item.fecha ? ' · ' + item.fecha : '');
+                const datosEstudiantes = (item.estudiantes || [])
+                    .map(estudiante => estudiante.nombre + ' (CI: ' + estudiante.ci + ')')
+                    .join(' / ');
+                detalle.textContent = (datosEstudiantes ? 'Estudiante: ' + datosEstudiantes + ' · ' : '') +
+                    'CI paciente: ' + item.ci + ' · Ficha #' + item.ficha + (item.fecha ? ' · ' + item.fecha : '');
                 info.append(nombre, detalle);
                 opcion.append(info);
                 opcion.addEventListener('click', () => elegirPaciente(item));
@@ -238,7 +242,7 @@
                 cancelado_anterior: data.cancelado_anterior || 0, paciente: caja.paciente_nombre_completo,
                 estudiante: caso?.historia_clinica?.estudiante?.nombre_completo || '', tratamiento_id: caja.tratamiento_id}];
             atencion.replaceChildren(new Option('Atención #' + caja.tratamiento_realizado_id, caja.tratamiento_realizado_id));
-            ['recibo', 'cancelado', 'descripcion', 'tipo_pago'].forEach(field => { form[field].value = caja[field] ?? ''; });
+            ['recibo', 'cancelado', 'descripcion', 'tipo_pago', 'tipo'].forEach(field => { form[field].value = caja[field] || (field === 'tipo' ? 'tratamiento' : ''); });
             form.habilitada.checked = !!caja.habilitada;
             clinica.disabled = ficha.readOnly = atencion.disabled = true;
             buscarPaciente.disabled = true;
@@ -320,7 +324,8 @@
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error(Object.values(result.errors || {}).flat()[0] || result.message || 'No se pudo guardar el recibo.');
             close();
-            window.CajasLista?.toast('success', result.message);
+            const numeroRecibo = result.registro?.recibo;
+            window.CajasLista?.toast('success', result.message + (numeroRecibo ? ' Número asignado: ' + numeroRecibo + '.' : ''));
             window.dispatchEvent(new Event('caja:guardada'));
         } catch (failure) { error.textContent = failure.message; }
         finally { save.disabled = false; }

@@ -21,8 +21,8 @@ class DashboardController extends Controller
         return view('dashboard', [
             'user' => $user,
             'tarjetas' => $user ? DashboardMetrics::tarjetas($user) : [],
-            'pacientesPorMes' => DashboardMetrics::pacientesPorMes(),
-            'topEspecialidades' => DashboardMetrics::topEspecialidades(),
+            'pacientesPorMes' => DashboardMetrics::pacientesPorMes($user),
+            'topEspecialidades' => DashboardMetrics::topEspecialidades(5, $user),
             'actividadReciente' => $user ? DashboardMetrics::actividadReciente($user) : collect(),
             'proximosVencimientos' => DashboardMetrics::proximosVencimientos(),
         ]);
@@ -34,10 +34,12 @@ class DashboardController extends Controller
      */
     public function stats(): JsonResponse
     {
+        $user = $this->usuarioActual();
+
         return response()->json([
             'success' => true,
-            'por_mes' => DashboardMetrics::pacientesPorMes(),
-            'especialidades' => DashboardMetrics::topEspecialidades(),
+            'por_mes' => DashboardMetrics::pacientesPorMes($user),
+            'especialidades' => DashboardMetrics::topEspecialidades(5, $user),
             'generado' => now()->toIso8601String(),
         ]);
     }
@@ -56,8 +58,8 @@ class DashboardController extends Controller
             'success' => true,
             'data' => [
                 'tarjetas' => DashboardMetrics::tarjetas($usuario),
-                'pacientes_por_mes' => DashboardMetrics::pacientesPorMes(),
-                'especialidades' => DashboardMetrics::topEspecialidades(),
+                'pacientes_por_mes' => DashboardMetrics::pacientesPorMes($usuario),
+                'especialidades' => DashboardMetrics::topEspecialidades(5, $usuario),
                 'no_leidas' => Notificacion::query()->delUsuario($usuario->id)->noLeidas()->count(),
             ],
         ]);

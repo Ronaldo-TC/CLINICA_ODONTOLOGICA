@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Models\Usuario;
 use App\Support\FilesystemTolerante;
 use App\Support\MenuBuilder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,11 +17,14 @@ class AppServiceProvider extends ServiceProvider
     {
         // Escritura de archivos tolerante a los avisos de `tempnam()` en Windows
         // (afecta a la compilación de vistas Blade).
-        $this->app->singleton('files', fn () => new FilesystemTolerante());
+        $this->app->singleton('files', fn () => new FilesystemTolerante);
     }
 
     public function boot(): void
     {
+        Gate::before(fn (Usuario $usuario, string $habilidad): ?bool => $usuario->hasRole('director') ? true : null);
+        Paginator::defaultView('pagination.tables');
+
         // Aplica a sidebar y topbar
         View::composer(
             ['layouts.partials.sidebar', 'layouts.partials.topbar'],
@@ -28,11 +33,11 @@ class AppServiceProvider extends ServiceProvider
                 // 1. Usuario autenticado: primero por Auth, luego por sesión custom
                 $user = Auth::user()
                     ?? Usuario::with('roles', 'permissions')
-                    ->find(session('user_id'));
+                        ->find(session('user_id'));
 
-                $sidebarRole  = null;
+                $sidebarRole = null;
                 $sidebarRoleName = null;
-                $sidebarMenu  = [];
+                $sidebarMenu = [];
 
                 if ($user) {
                     // Rol principal (primero de la lista)
@@ -51,10 +56,10 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 $view->with([
-                    'sidebarUser'     => $user,
-                    'sidebarRole'     => $sidebarRole,       // descripción legible
+                    'sidebarUser' => $user,
+                    'sidebarRole' => $sidebarRole,       // descripción legible
                     'sidebarRoleName' => $sidebarRoleName,   // 'admin', 'docente', etc.
-                    'sidebarMenu'     => $sidebarMenu,
+                    'sidebarMenu' => $sidebarMenu,
                 ]);
             }
         );

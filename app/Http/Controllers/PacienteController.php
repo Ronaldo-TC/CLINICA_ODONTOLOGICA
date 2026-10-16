@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Http\Resources\PacienteResource;
 use App\Models\Paciente;
+use App\Services\AccesoClinico;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -32,11 +35,19 @@ class PacienteController extends Controller
        QUERIES
        ============================================================ */
 
-    protected function buildIndexQuery(Request $request)
+    protected function buildIndexQuery(Request $request): Builder
     {
-        return Paciente::query()
-            ->withCount(['admisiones', 'historiasClinicas'])
+        return AccesoClinico::pacientes(Paciente::query(), $request->user())
+            ->withCount([
+                'admisiones' => fn (Builder $query) => AccesoClinico::admisiones($query, $request->user()),
+                'historiasClinicas' => fn (Builder $query) => AccesoClinico::historias($query, $request->user()),
+            ])
             ->orderByDesc('id');
+    }
+
+    protected function findOrFail(int|string $id): Model
+    {
+        return $this->buildIndexQuery(request())->findOrFail($id);
     }
 
     protected function buildTablaQuery(Request $request)
@@ -66,7 +77,7 @@ class PacienteController extends Controller
     protected function extraIndexData(Request $request): array
     {
         return [
-            'generos' => Paciente::query()
+            'generos' => AccesoClinico::pacientes(Paciente::query(), $request->user())
                 ->select('genero')
                 ->whereNotNull('genero')
                 ->distinct()
@@ -168,7 +179,7 @@ class PacienteController extends Controller
 
         $buscar = trim((string) $request->input('buscar'));
 
-        $paginador = Paciente::query()
+        $paginador = AccesoClinico::pacientes(Paciente::query(), $request->user())
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($x) use ($buscar) {
                     $x->where('nombre', 'like', "%{$buscar}%")
@@ -191,9 +202,7 @@ class PacienteController extends Controller
     {
         $this->autorizarApi($request, 'pacientes.ver');
 
-        $paciente = Paciente::query()
-            ->withCount(['admisiones', 'historiasClinicas'])
-            ->findOrFail($id);
+        $paciente = $this->buildIndexQuery($request)->findOrFail($id);
 
         return response()->json([
             'success' => true,

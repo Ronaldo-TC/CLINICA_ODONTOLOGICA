@@ -24,7 +24,7 @@ class Notificacion extends Model
     ];
 
     protected $casts = [
-        'leida'         => 'boolean',
+        'leida' => 'boolean',
         'fecha_lectura' => 'datetime',
     ];
 
@@ -32,15 +32,28 @@ class Notificacion extends Model
        TIPOS
        ============================================================ */
 
-    public const TIPO_SOLICITUD_CREADA    = 'solicitud_creada';
+    public const TIPO_SOLICITUD_CREADA = 'solicitud_creada';
+
     public const TIPO_SOLICITUD_AUTORIZADA = 'solicitud_autorizada';
+
     public const TIPO_SOLICITUD_RECHAZADA = 'solicitud_rechazada';
+
+    public const TIPO_SOLICITUD_OBSERVADA = 'solicitud_observada';
+
+    public const TIPO_PAGO_RADIOLOGIA = 'pago_radiologia';
+
     public const TIPO_SOLICITUD_ENTREGADA = 'solicitud_entregada';
-    public const TIPO_STOCK_BAJO          = 'stock_bajo';
-    public const TIPO_ADMISION_NUEVA      = 'admision_nueva';
+
+    public const TIPO_STOCK_BAJO = 'stock_bajo';
+
+    public const TIPO_ADMISION_NUEVA = 'admision_nueva';
+
     public const TIPO_HISTORIA_AUTORIZADA = 'historia_autorizada';
-    public const TIPO_RADIOGRAFIA_NUEVA   = 'radiografia_nueva';
-    public const TIPO_REMISION_NUEVA      = 'remision_nueva';
+
+    public const TIPO_RADIOGRAFIA_NUEVA = 'radiografia_nueva';
+
+    public const TIPO_REMISION_NUEVA = 'remision_nueva';
+
     public const TIPO_TRATAMIENTO_AUTORIZADO = 'tratamiento_autorizado';
 
     /* ============================================================
@@ -82,7 +95,7 @@ class Notificacion extends Model
         }
 
         return $this->update([
-            'leida'         => true,
+            'leida' => true,
             'fecha_lectura' => now(),
         ]);
     }
@@ -99,16 +112,18 @@ class Notificacion extends Model
     public function getIconoAttribute(): string
     {
         return match ($this->tipo) {
-            self::TIPO_SOLICITUD_CREADA     => 'clipboard',
+            self::TIPO_SOLICITUD_CREADA => 'clipboard',
             self::TIPO_SOLICITUD_AUTORIZADA => 'check-square',
-            self::TIPO_SOLICITUD_RECHAZADA  => 'x',
-            self::TIPO_SOLICITUD_ENTREGADA  => 'package',
-            self::TIPO_STOCK_BAJO           => 'package',
-            self::TIPO_ADMISION_NUEVA       => 'user-plus',
-            self::TIPO_HISTORIA_AUTORIZADA  => 'file-text',
-            self::TIPO_RADIOGRAFIA_NUEVA    => 'image',
-            self::TIPO_REMISION_NUEVA       => 'inbox',
-            default                         => 'bell',
+            self::TIPO_SOLICITUD_RECHAZADA => 'x',
+            self::TIPO_SOLICITUD_OBSERVADA => 'message-circle',
+            self::TIPO_PAGO_RADIOLOGIA => 'credit-card',
+            self::TIPO_SOLICITUD_ENTREGADA => 'package',
+            self::TIPO_STOCK_BAJO => 'package',
+            self::TIPO_ADMISION_NUEVA => 'user-plus',
+            self::TIPO_HISTORIA_AUTORIZADA => 'file-text',
+            self::TIPO_RADIOGRAFIA_NUEVA => 'image',
+            self::TIPO_REMISION_NUEVA => 'inbox',
+            default => 'bell',
         };
     }
 
@@ -116,11 +131,13 @@ class Notificacion extends Model
     {
         return match ($this->tipo) {
             self::TIPO_SOLICITUD_RECHAZADA => 'danger',
-            self::TIPO_STOCK_BAJO          => 'warning',
+            self::TIPO_SOLICITUD_OBSERVADA => 'warning',
+            self::TIPO_STOCK_BAJO => 'warning',
             self::TIPO_SOLICITUD_AUTORIZADA,
             self::TIPO_SOLICITUD_ENTREGADA,
+            self::TIPO_PAGO_RADIOLOGIA,
             self::TIPO_HISTORIA_AUTORIZADA => 'success',
-            default                        => 'info',
+            default => 'info',
         };
     }
 }

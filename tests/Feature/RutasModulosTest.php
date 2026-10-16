@@ -9,6 +9,7 @@ use App\Http\Controllers\InsumoController;
 use App\Http\Controllers\OdontogramaController;
 use App\Http\Controllers\RadiologiaController;
 use App\Http\Controllers\RemisionController;
+use App\Http\Controllers\SolicitudRadiologicaController;
 use App\Http\Controllers\TratamientoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,9 +42,9 @@ class RutasModulosTest extends TestCase
             'remisiones.' => RemisionController::class,
             'pacientes-remitidos.' => RemisionController::class,
             'admisiones.' => AdmisionController::class,
-            'historias.' => HistoriaController::class,
+            'historias.' => [HistoriaController::class, SolicitudRadiologicaController::class],
             'api.v1.historias.' => HistoriaController::class,
-            'radiologia.' => RadiologiaController::class,
+            'radiologia.' => [RadiologiaController::class, SolicitudRadiologicaController::class],
             'tratamientos.' => TratamientoController::class,
             'tratamientos-realizados.' => TratamientoController::class,
             'sesiones-atencion.' => TratamientoController::class,
@@ -58,7 +59,7 @@ class RutasModulosTest extends TestCase
             $rutas = collect(Route::getRoutes())->filter(fn ($ruta): bool => str_starts_with($ruta->getName() ?? '', $prefijo));
             $this->assertNotEmpty($rutas->all(), $prefijo);
             foreach ($rutas as $ruta) {
-                $this->assertSame($controlador, $ruta->getControllerClass(), $ruta->getName());
+                $this->assertContains($ruta->getControllerClass(), (array) $controlador, $ruta->getName());
             }
         }
     }

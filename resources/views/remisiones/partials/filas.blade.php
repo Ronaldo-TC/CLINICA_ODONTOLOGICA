@@ -57,6 +57,11 @@
 
     <td>
         <div class="actions">
+            @if ($remision->habilitado && $remision->estado === 'pendiente' && ($remision->historias_clinicas_count ?? 0) === 0)
+            @canany(['remisiones.asignar', 'remisiones.gestionar'])
+            <a class="btn btn-sm btn-primary" href="{{ route('remisiones.asignacion', $remision->id) }}"><x-icono nombre="asignar" /> Asignar atención</a>
+            @endcanany
+            @endif
             @if ($remision->admision_id)
             @canany(['admisiones.ver', 'admisiones.gestionar'])
             <a class="btn btn-sm btn-secondary" href="{{ route('admisiones.show', $remision->admision_id) }}"><x-icono nombre="ficha" /> Ver ficha</a>

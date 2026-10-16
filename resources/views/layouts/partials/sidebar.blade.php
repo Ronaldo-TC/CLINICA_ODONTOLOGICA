@@ -533,6 +533,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
             if (!group) return;
 
             const willOpen = !group.classList.contains('is-open');
+            sidebar.classList.add('has-nav-interaction');
 
             if (willOpen && !isMobile()) {
                 sidebar.querySelectorAll('[data-nav-group].is-open').forEach((other) => {

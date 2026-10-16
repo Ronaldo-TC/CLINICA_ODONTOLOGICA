@@ -94,11 +94,7 @@
         </table>
     </div>
 
-    <div class="pagination-wrap">
-        <span class="info">
-            Mostrando <strong>{{ $registros->count() }}</strong> de
-            <strong>{{ $registros->total() }}</strong> notificaciones
-        </span>
+    <div>
         {{ $registros->links() }}
     </div>
 </div>

@@ -439,6 +439,7 @@ class EsterilizacionWorkflowTest extends TestCase
         $this->seed(EsterilizacionPermissionsSeeder::class);
         $case = $this->caso();
         $head = $this->clinicalUser('jefe-catedra');
+        $head->especialidades()->attach($case['clinic']->id, ['habilitado' => true]);
         $case['record']->update(['docente_id' => $head->id]);
 
         $this->actingAs($head)->get(route('esterilizacion.control', $case['record']->id))->assertOk()->assertSee('Firmar y autorizar');

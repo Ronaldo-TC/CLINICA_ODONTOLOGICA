@@ -8,6 +8,7 @@ use App\Models\InsumoTratamiento;
 use App\Models\Notificacion;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Str;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
@@ -65,7 +66,7 @@ class NotificacionesTest extends TestCase
             'leida' => false,
         ]);
 
-        $otro = Usuario::query()->where('id', '!=', $admin->id)->firstOrFail();
+        $otro = $this->crearUsuarioDePrueba();
 
         Notificacion::create([
             'usuario_id' => $otro->id,
@@ -135,7 +136,7 @@ class NotificacionesTest extends TestCase
             $this->markTestSkipped('No hay usuario admin');
         }
 
-        $otro = Usuario::query()->where('id', '!=', $admin->id)->firstOrFail();
+        $otro = $this->crearUsuarioDePrueba();
 
         $ajena = Notificacion::create([
             'usuario_id' => $otro->id,
@@ -154,6 +155,7 @@ class NotificacionesTest extends TestCase
     public function test_crear_una_solicitud_notifica_a_los_docentes(): void
     {
         $case = $this->approvedProgress();
+        $this->paidTreatment($case);
         $estudiante = $case['student'];
         $docente = $case['teacher'];
 
@@ -210,6 +212,7 @@ class NotificacionesTest extends TestCase
     public function test_autorizar_notifica_al_estudiante(): void
     {
         $case = $this->approvedProgress();
+        $this->paidTreatment($case);
         $estudiante = $case['student'];
         $admin = $case['teacher'];
 
@@ -247,5 +250,19 @@ class NotificacionesTest extends TestCase
 
         $this->assertNotNull($aviso, 'El estudiante debe recibir el aviso de autorización');
         $this->assertStringContainsString('autorizada', $aviso->titulo);
+    }
+
+    private function crearUsuarioDePrueba(): Usuario
+    {
+        $identificador = substr((string) Str::uuid(), 0, 12);
+
+        return Usuario::create([
+            'ci' => $identificador,
+            'nombre_usuario' => $identificador,
+            'nombre_completo' => 'Otro usuario '.$identificador,
+            'contrasena' => 'unused',
+            'habilitado' => true,
+            'permitir_login' => true,
+        ]);
     }
 }

@@ -21,11 +21,43 @@ return new class extends Migration
             $table->string('tipo_pago', 100)->nullable();
             $table->string('paciente_nombre_completo', 100)->nullable();
             $table->string('grado', 100)->nullable();
-            $table->foreignId('tratamiento_id')->constrained('tratamientos')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('remision_id')->nullable()->constrained('remisiones')->nullOnDelete()->cascadeOnUpdate();
-            $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete()->cascadeOnUpdate();
+
+            // ── Relaciones ──
+            $table->foreignId('tratamiento_id')
+                ->nullable()
+                ->constrained('tratamientos')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreignId('clinica_id')
+                ->constrained('clinicas')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreignId('remision_id')
+                ->nullable()
+                ->constrained('remisiones')
+                ->nullOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreignId('usuario_id')
+                ->constrained('usuarios')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreignId('paciente_id')
+                ->nullable()
+                ->constrained('pacientes')
+                ->restrictOnDelete();
+
+            $table->foreignId('periodo_id')
+                ->nullable()
+                ->constrained('periodos')
+                ->restrictOnDelete();
+
             $table->timestamps();
+
+            $table->unique('recibo');
         });
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Caja;
 use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\InsumoTratamiento;
@@ -29,10 +30,11 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     public function test_designated_student_requests_configured_materials_before_any_authorized_session(): void
     {
         $case = $this->clinicalCase();
-        $case['history']->update(['estado' => 'revision', 'autorizado' => false]);
+        $case['history']->update(['estado' => 'abierta', 'autorizado' => true]);
         $material = $this->material($case);
         $other = $this->material($case, 'Gasas');
         $case['treatment']->insumos()->attach([$material->id => ['cantidad' => 2], $other->id => ['cantidad' => 1]]);
+        $this->authorizeAndPay($case);
 
         $response = $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))
             ->assertCreated()->assertJsonPath('success', true);
@@ -67,6 +69,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $case = $this->clinicalCase();
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->authorizeAndPay($case);
         $this->actingAs($case['student']);
         $requestIds = [];
 
@@ -95,6 +98,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $case['teacher']->givePermissionTo(['solicitudes-insumos.autorizar', 'solicitudes-insumos.ver']);
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->authorizeAndPay($case);
         $this->actingAs($case['student']);
         $id = $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertCreated()->json('id');
         $warehouse = $this->clinicalUser('insumos');
@@ -229,6 +233,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $second['history']->update(['remision_id' => $referral->id]);
         $material = $this->material($second);
         $second['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->authorizeAndPay($second);
         $id = $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.store'), $this->payload($second, $material))->assertCreated()->json('id');
 
         $this->assertDatabaseHas('insumos_solicitados', [
@@ -249,6 +254,8 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $secondMaterial = $this->material($second);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
         $second['treatment']->insumos()->attach($secondMaterial, ['cantidad' => 3]);
+        $this->authorizeAndPay($case);
+        $this->authorizeAndPay($second);
         $this->actingAs($case['student']);
         $data = $this->payload($second, $secondMaterial);
         $data['historia_clinica_id'] = $case['history']->id;
@@ -273,6 +280,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $case['teacher']->givePermissionTo('solicitudes-insumos.autorizar');
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->authorizeAndPay($case);
         $id = $this->actingAs($case['student'])->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertCreated()->json('id');
         $this->actingAs($case['teacher'])->postJson(route('solicitudes-insumos.autorizar', $id))->assertOk();
         $warehouse = $this->clinicalUser('insumos');
@@ -289,6 +297,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $case = $this->clinicalCase();
         $material = $this->material($case);
         $case['treatment']->insumos()->attach($material, ['cantidad' => 2]);
+        $this->authorizeAndPay($case);
 
         $this->actingAs($this->clinicalUser('estudiante'))->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertForbidden();
 
@@ -299,6 +308,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     {
         $case = $this->clinicalCase();
         $material = $this->material($case);
+        $this->authorizeAndPay($case);
         $this->actingAs($case['student']);
 
         $this->postJson(route('solicitudes-insumos.store'), $this->payload($case, $material))->assertUnprocessable()->assertJsonValidationErrors('detalles.0.insumo_id');
@@ -347,5 +357,24 @@ class SolicitudesPacientesDesignadosTest extends TestCase
     {
         return ['historia_clinica_id' => $case['history']->id, 'clinica_id' => $case['clinic']->id,
             'tratamiento_id' => $case['treatment']->id, 'detalles' => [['insumo_id' => $material->id, 'cantidad_solicitada' => 2]]];
+    }
+
+    /** @param array<string, mixed> $case */
+    private function authorizeAndPay(array $case): TratamientoRealizado
+    {
+        $treatment = TratamientoRealizado::create([
+            'historia_clinica_id' => $case['history']->id, 'tratamiento_id' => $case['treatment']->id,
+            'clinica_id' => $case['clinic']->id, 'estado' => 'autorizado', 'costo_cobrado' => 100,
+            'autorizado_por' => $case['teacher']->id, 'fecha_autorizacion' => now(),
+        ]);
+        Caja::create([
+            'tratamiento_realizado_id' => $treatment->id, 'paciente_id' => $case['history']->paciente_id,
+            'tratamiento_id' => $case['treatment']->id, 'clinica_id' => $case['clinic']->id,
+            'periodo_id' => $case['history']->periodo_id, 'usuario_id' => $case['teacher']->id,
+            'recibo' => 600000000 + $treatment->id, 'monto' => 100, 'costo_total' => 100,
+            'cancelado' => 100, 'habilitada' => true, 'ci' => 0, 'tipo' => 'tratamiento',
+        ]);
+
+        return $treatment;
     }
 }
