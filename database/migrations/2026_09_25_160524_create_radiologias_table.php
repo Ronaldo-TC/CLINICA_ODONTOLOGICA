@@ -37,6 +37,12 @@ return new class extends Migration
                 ->nullOnDelete()
                 ->cascadeOnUpdate();
 
+            $table->foreignId('periodo_id')
+                ->nullable()
+                ->constrained('periodos')
+                ->nullOnDelete()
+                ->cascadeOnUpdate();
+
             $table->foreignId('remision_id')
                 ->nullable()
                 ->constrained('remisiones')

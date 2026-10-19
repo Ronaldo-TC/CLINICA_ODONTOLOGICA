@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamps();
             $table->string('telefono', 30)->nullable();
             $table->string('estado_civil', 200)->nullable();
+            $table->string('escuela', 200)->nullable();
             $table->string('ocupacion', 200)->nullable();
             $table->string('direccion', 200)->nullable();
             $table->string('emergencia', 200)->nullable();

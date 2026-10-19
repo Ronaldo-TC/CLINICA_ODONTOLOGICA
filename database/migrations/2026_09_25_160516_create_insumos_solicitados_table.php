@@ -21,6 +21,8 @@ return new class extends Migration
                 ->constrained('usuarios')
                 ->restrictOnDelete();
 
+            $table->foreignId('historia_clinica_id')->nullable()->constrained('historias_clinicas')->nullOnDelete();
+            $table->foreignId('tratamiento_id')->nullable()->constrained('tratamientos')->nullOnDelete();
             $table->foreignId('clinica_id')->nullable()->constrained('clinicas')->nullOnDelete();
             $table->foreignId('insumo_tratamiento_id')->nullable()->constrained('insumos_tratamiento')->nullOnDelete();
             $table->foreignId('tratamiento_realizado_id')->nullable()->constrained('tratamientos_realizados')->nullOnDelete();
@@ -31,6 +33,8 @@ return new class extends Migration
             $table->boolean('docente_autoriza')->default(false);
             $table->boolean('autorizado')->default(false);
             $table->timestamp('fecha_autorizacion')->nullable();
+            $table->foreignId('aprobado_por')->nullable()->constrained('usuarios')->restrictOnDelete();
+            $table->timestamp('fecha_aprobacion')->nullable();
             $table->foreignId('rechazado_por')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->timestamp('fecha_rechazo')->nullable();
             $table->text('motivo_rechazo')->nullable();

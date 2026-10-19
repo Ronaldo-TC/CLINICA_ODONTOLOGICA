@@ -16,11 +16,20 @@ return new class extends Migration
             $table->string('info', 200)->default('');
             $table->string('descripcion', 200)->default('');
             $table->date('fecha_entrega')->nullable();
+            $table->time('hora_entrega')->nullable();
             $table->date('fecha_recojo')->nullable();
+            $table->time('hora_recojo')->nullable();
+            $table->foreignId('remision_id')->nullable()->constrained('remisiones')->nullOnDelete();
             $table->foreignId('estudiante_id')->nullable()->constrained('usuarios')->nullOnDelete()->cascadeOnUpdate();
+            $table->foreignId('docente_id')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('periodo_id')->constrained('periodos')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->boolean('autorizado')->default(false);
+            $table->timestamp('fecha_autorizacion')->nullable();
+            $table->longText('firma_docente')->nullable();
+            $table->foreignId('recibido_por')->nullable()->constrained('usuarios')->nullOnDelete();
+            $table->foreignId('entregado_por')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->timestamps();
         });
     }

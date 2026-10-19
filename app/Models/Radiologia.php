@@ -52,6 +52,11 @@ class Radiologia extends Model
         return $this->belongsTo(Paciente::class, 'paciente_id');
     }
 
+    public function periodo(): BelongsTo
+    {
+        return $this->belongsTo(Periodo::class, 'periodo_id');
+    }
+
     public function remision()
     {
         return $this->belongsTo(Remision::class, 'remision_id');

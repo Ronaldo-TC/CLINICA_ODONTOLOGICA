@@ -6003,6 +6003,119 @@
             }
         }
 
+        /* ============================================================
+           SIDEBAR RESPONSIVE · rail de iconos y drawer móvil
+           ============================================================ */
+        .app {
+            transition: grid-template-columns var(--transition-base);
+        }
+
+        .topbar-mobile-toggle {
+            display: grid;
+        }
+
+        .sidebar-toggle-icon {
+            transition: transform var(--transition-base);
+        }
+
+        .sidebar-toggle-icon--mobile {
+            display: none;
+        }
+
+        @media (min-width: 1025px) {
+            .app.sidebar-collapsed {
+                grid-template-columns: 82px minmax(0, 1fr);
+            }
+
+            .app.sidebar-collapsed .sidebar {
+                width: 82px;
+            }
+
+            .app.sidebar-collapsed .sidebar-brand {
+                justify-content: center;
+                min-height: 72px;
+                padding-inline: 10px;
+            }
+
+            .app.sidebar-collapsed .brand-text,
+            .app.sidebar-collapsed .sidebar-user .user-info,
+            .app.sidebar-collapsed .sidebar-user .user-quick,
+            .app.sidebar-collapsed .sidebar-tools,
+            .app.sidebar-collapsed .sidebar-nav .nav-label,
+            .app.sidebar-collapsed .sidebar-nav .nav-text,
+            .app.sidebar-collapsed .sidebar-nav .nav-badge,
+            .app.sidebar-collapsed .sidebar-nav .nav-caret,
+            .app.sidebar-collapsed .sidebar-nav .nav-children,
+            .app.sidebar-collapsed .sidebar-shortcut .shortcut-text,
+            .app.sidebar-collapsed .sidebar-shortcut .kbd,
+            .app.sidebar-collapsed .sidebar .logout-btn span,
+            .app.sidebar-collapsed .sidebar-meta {
+                display: none;
+            }
+
+            .app.sidebar-collapsed .sidebar-user {
+                justify-content: center;
+                margin: 10px 9px 0;
+                padding: 9px;
+            }
+
+            .app.sidebar-collapsed .sidebar-nav {
+                align-items: stretch;
+                padding: 10px 9px 16px;
+                scrollbar-width: none;
+            }
+
+            .app.sidebar-collapsed .sidebar-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .app.sidebar-collapsed .sidebar-nav > .nav-item,
+            .app.sidebar-collapsed .sidebar-nav .nav-item-toggle {
+                justify-content: center;
+                min-height: 46px;
+                padding: 6px;
+            }
+
+            .app.sidebar-collapsed .sidebar-nav .nav-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .app.sidebar-collapsed .sidebar-nav .nav-item.active::before {
+                inset-block: 8px;
+            }
+
+            .app.sidebar-collapsed .sidebar-footer {
+                padding: 10px 9px;
+            }
+
+            .app.sidebar-collapsed .sidebar-shortcut,
+            .app.sidebar-collapsed .sidebar .logout-btn {
+                justify-content: center;
+                min-height: 42px;
+                padding: 0;
+            }
+
+            .app.sidebar-collapsed .sidebar-shortcut .shortcut-icon,
+            .app.sidebar-collapsed .sidebar .logout-btn svg {
+                margin: 0;
+            }
+
+            .app.sidebar-collapsed .sidebar-toggle-icon--desktop {
+                transform: rotate(180deg);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar-toggle-icon--desktop {
+                display: none;
+            }
+
+            .sidebar-toggle-icon--mobile {
+                display: block;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             .sidebar-nav .nav-children,

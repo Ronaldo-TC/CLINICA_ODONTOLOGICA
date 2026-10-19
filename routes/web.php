@@ -505,6 +505,7 @@ Route::middleware(['auth.session'])->group(function () {
         Route::middleware('permission:cajas.ver|cajas.crear|cajas.gestionar')->group(function () {
             Route::get('/buscar-ficha', 'buscarFicha')->name('buscar-ficha');
             Route::get('/buscar-pacientes', 'buscarPacientes')->name('buscar-pacientes');
+            Route::get('/{caja}/recibo', 'recibo')->name('recibo');
         });
 
         Route::middleware('permission:cajas.ver|cajas.gestionar')->group(function () {

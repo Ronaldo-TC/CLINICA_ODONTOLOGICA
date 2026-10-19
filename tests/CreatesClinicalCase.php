@@ -38,7 +38,12 @@ trait CreatesClinicalCase
         $period = Periodo::query()->firstOrFail();
         $admission = Admision::create(['paciente_id' => $patient->id, 'periodo_id' => $period->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'responsable_id' => $teacher->id, 'especialidad_responsable' => $clinic->id]);
         $history = HistoriaClinica::create(['admision_id' => $admission->id, 'paciente_id' => $patient->id, 'periodo_id' => $period->id, 'clinica_id' => $clinic->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'docente_id' => $teacher->id, 'especialidad_docente' => $clinic->id, 'estado' => 'abierta', 'autorizado' => true]);
-        $treatment = Tratamiento::create(['clinica_id' => $clinic->id, 'nombre' => 'Tratamiento prueba', 'costo' => 100]);
+        $treatment = Tratamiento::create([
+            'clinica_id' => $clinic->id,
+            'nombre' => 'Tratamiento prueba',
+            'costo' => 100,
+            'precio_asignado' => true,
+        ]);
 
         return compact('student', 'teacher', 'clinic', 'admission', 'history', 'treatment');
     }

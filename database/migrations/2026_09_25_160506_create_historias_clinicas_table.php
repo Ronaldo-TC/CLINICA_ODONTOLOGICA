@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('historias_clinicas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('remision_id')->nullable()->constrained('remisiones')->nullOnDelete()->cascadeOnUpdate();
             $table->foreignId('admision_id')->constrained('admisiones')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('paciente_id')->constrained('pacientes')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();

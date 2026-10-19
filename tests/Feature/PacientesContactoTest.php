@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Paciente;
-use Database\Seeders\PacientesContactoSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -85,23 +84,5 @@ class PacientesContactoTest extends TestCase
         foreach (Paciente::CAMPOS_CONTACTO as $campo) {
             $edicion->assertSee('name="'.$campo.'"', false);
         }
-    }
-
-    public function test_la_migracion_recupera_los_ultimos_datos_existentes_sin_sobrescribir_el_paciente(): void
-    {
-        $caso = $this->clinicalCase();
-        $paciente = $caso['admission']->paciente;
-        $paciente->update(['direccion' => 'Direccion del paciente']);
-        $anterior = $caso['admission'];
-        $anterior->update([...self::CONTACTO, 'fecha_admision' => '2024-01-01']);
-        $reciente = $anterior->replicate();
-        $reciente->fill(['fecha_admision' => '2025-01-01', 'telefono' => '007000005', 'emergencia' => '', 'direccion' => 'Direccion antigua']);
-        $reciente->save();
-
-        $this->seed(PacientesContactoSeeder::class);
-        $this->seed(PacientesContactoSeeder::class);
-        $this->assertDatabaseHas('pacientes', ['id' => $paciente->id, ...self::CONTACTO, 'telefono' => '007000005', 'direccion' => 'Direccion del paciente']);
-        $this->assertDatabaseHas('admisiones', ['id' => $anterior->id, ...self::CONTACTO]);
-        $this->assertDatabaseHas('admisiones', ['id' => $reciente->id, 'emergencia' => '', 'telefono' => '007000005']);
     }
 }

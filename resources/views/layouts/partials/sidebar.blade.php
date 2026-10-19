@@ -351,6 +351,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
             data-nav-search="{{ $groupTerms }}">
             <button type="button"
                 class="nav-item nav-item-toggle"
+                title="{{ $label }}"
                 aria-expanded="{{ $groupActive ? 'true' : 'false' }}"
                 aria-controls="{{ $groupId }}"
                 data-nav-search="{{ $groupTerms }}">
@@ -386,6 +387,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
                 @endphp
                 <a href="{{ $childHref }}"
                     class="nav-item nav-item-child {{ $childActive ? 'active' : '' }} {{ $childHasRoute ? '' : 'disabled' }}"
+                    title="{{ $childLabel }}"
                     @if ($childActive) aria-current="page" @endif
                     @if (! $childHasRoute) onclick="event.preventDefault()" aria-disabled="true" tabindex="-1" @endif
                     data-nav-search="{{ mb_strtolower($childLabel) }}">
@@ -418,6 +420,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
 
         <a href="{{ $href }}"
             class="nav-item {{ $isActive ? 'active' : '' }} {{ $hasRoute ? '' : 'disabled' }}"
+            title="{{ $label }}"
             @if ($isActive) aria-current="page" @endif
             @if (! $hasRoute) onclick="event.preventDefault()" aria-disabled="true" tabindex="-1" @endif
             data-nav-search="{{ mb_strtolower($label) }}">
@@ -483,7 +486,10 @@ return $entry['href'] !== null || ! empty($entry['children']);
         if (!sidebar || sidebar.dataset.ready === '1') return;
 
         const STORAGE_GROUPS = 'upea:nav:groups';
+        const STORAGE_SIDEBAR = 'upea:sidebar:collapsed';
         const MOBILE_QUERY = window.matchMedia('(max-width: 1024px)');
+        const appShell = sidebar.closest('.app');
+        const mainWrapper = appShell?.querySelector('.main-wrapper');
         const filterInput = document.getElementById('sidebarFilter');
         const filterClear = sidebar.querySelector('[data-sidebar-filter-clear]');
         const filterEmpty = sidebar.querySelector('[data-nav-filter-empty]');
@@ -531,6 +537,20 @@ return $entry['href'] !== null || ! empty($entry['children']);
             event.preventDefault();
             const group = toggle.closest('[data-nav-group]');
             if (!group) return;
+
+            if (!isMobile() && appShell?.classList.contains('sidebar-collapsed')) {
+                setCollapsed(false);
+                sidebar.classList.add('has-nav-interaction');
+                sidebar.querySelectorAll('[data-nav-group].is-open').forEach((other) => {
+                    if (other !== group) setExpanded(other, false);
+                });
+                setExpanded(group, true);
+
+                const state = readGroups();
+                state[group.dataset.navGroupId || ''] = true;
+                writeGroups(state);
+                return;
+            }
 
             const willOpen = !group.classList.contains('is-open');
             sidebar.classList.add('has-nav-interaction');
@@ -620,7 +640,11 @@ return $entry['href'] !== null || ! empty($entry['children']);
             if (event.key !== '/' || !filterInput) return;
 
             event.preventDefault();
-            if (isMobile()) window.upeaSidebar?.open();
+            if (isMobile()) {
+                window.upeaSidebar?.open();
+            } else {
+                setCollapsed(false);
+            }
             filterInput.focus();
             filterInput.select();
         });
@@ -676,48 +700,143 @@ return $entry['href'] !== null || ! empty($entry['children']);
 
         /* ---------------- Drawer móvil ---------------- */
         const topbarToggle = document.querySelector('.topbar-mobile-toggle');
+        let previousFocus = null;
 
-        const open = () => {
+        const readCollapsed = () => {
+            try {
+                return localStorage.getItem(STORAGE_SIDEBAR) === '1';
+            } catch {
+                return false;
+            }
+        };
+
+        const setCollapsed = (collapsed, persist = true) => {
+            const shouldCollapse = !isMobile() && collapsed;
+            appShell?.classList.toggle('sidebar-collapsed', shouldCollapse);
+            sidebar.classList.toggle('is-collapsed', shouldCollapse);
+
+            if (persist && !isMobile()) {
+                try {
+                    localStorage.setItem(STORAGE_SIDEBAR, shouldCollapse ? '1' : '0');
+                } catch {
+                    /* almacenamiento no disponible */
+                }
+            }
+
+            if (topbarToggle) {
+                const label = isMobile()
+                    ? 'Abrir menú de navegación'
+                    : (shouldCollapse ? 'Expandir menú lateral' : 'Contraer menú lateral');
+                topbarToggle.setAttribute('aria-expanded', isMobile() ? 'false' : (shouldCollapse ? 'false' : 'true'));
+                topbarToggle.setAttribute('aria-label', label);
+                topbarToggle.setAttribute('title', label);
+            }
+        };
+
+        const openDrawer = () => {
+            if (!isMobile()) return;
+            previousFocus = document.activeElement;
             sidebar.classList.add('is-open');
             const layer = backdrop();
             if (layer) layer.hidden = false;
-            if (topbarToggle) topbarToggle.setAttribute('aria-expanded', 'true');
-            if (isMobile()) document.body.classList.add('drawer-open');
+            if (topbarToggle) {
+                topbarToggle.setAttribute('aria-expanded', 'true');
+                topbarToggle.setAttribute('aria-label', 'Cerrar menú de navegación');
+                topbarToggle.setAttribute('title', 'Cerrar menú de navegación');
+            }
+            document.body.classList.add('drawer-open');
+            if (mainWrapper) mainWrapper.inert = true;
+
+            requestAnimationFrame(() => {
+                sidebar.querySelector('[data-sidebar-close]')?.focus();
+            });
         };
 
-        const close = () => {
+        const closeDrawer = (restoreFocus = true) => {
             sidebar.classList.remove('is-open');
             const layer = backdrop();
             if (layer) layer.hidden = true;
-            if (topbarToggle) topbarToggle.setAttribute('aria-expanded', 'false');
+            if (topbarToggle) {
+                topbarToggle.setAttribute('aria-expanded', 'false');
+                topbarToggle.setAttribute('aria-label', 'Abrir menú de navegación');
+                topbarToggle.setAttribute('title', 'Abrir menú de navegación');
+            }
             document.body.classList.remove('drawer-open');
+            if (mainWrapper) mainWrapper.inert = false;
+
+            if (restoreFocus && previousFocus instanceof HTMLElement && document.contains(previousFocus)) {
+                previousFocus.focus();
+            }
+            previousFocus = null;
+        };
+
+        const open = () => isMobile() ? openDrawer() : setCollapsed(false);
+        const close = () => isMobile() ? closeDrawer() : setCollapsed(true);
+        const toggle = () => {
+            if (isMobile()) {
+                sidebar.classList.contains('is-open') ? closeDrawer() : openDrawer();
+                return;
+            }
+
+            setCollapsed(!appShell?.classList.contains('sidebar-collapsed'));
         };
 
         sidebar.classList.remove('open');
+        setCollapsed(readCollapsed(), false);
 
         document.querySelectorAll('[data-sidebar-open]').forEach((trigger) => {
             trigger.addEventListener('click', (event) => {
                 event.preventDefault();
-                sidebar.classList.contains('is-open') ? close() : open();
+                toggle();
             });
         });
 
         sidebar.querySelectorAll('[data-sidebar-close]').forEach((trigger) => {
-            trigger.addEventListener('click', close);
+            trigger.addEventListener('click', () => closeDrawer());
         });
 
         document.addEventListener('click', (event) => {
-            if (event.target.closest && event.target.closest('#sidebarBackdrop')) close();
+            if (event.target.closest && event.target.closest('#sidebarBackdrop')) closeDrawer();
         });
 
         sidebar.addEventListener('click', (event) => {
             if (!isMobile()) return;
-            if (event.target.closest('a.nav-item')) close();
+            if (event.target.closest('a.nav-item')) closeDrawer(false);
+        });
+
+        sidebar.addEventListener('keydown', (event) => {
+            if (!isMobile() || !sidebar.classList.contains('is-open') || event.key !== 'Tab') return;
+
+            const items = Array.from(sidebar.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])'))
+                .filter((element) => element.offsetParent !== null && !element.hasAttribute('tabindex'));
+            if (items.length === 0) return;
+
+            const first = items[0];
+            const last = items[items.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && isMobile() && sidebar.classList.contains('is-open')) {
+                event.preventDefault();
+                closeDrawer();
+            }
         });
 
         const handleViewportChange = () => {
-            if (isMobile()) return;
-            close();
+            if (isMobile()) {
+                setCollapsed(false, false);
+                return;
+            }
+
+            closeDrawer(false);
+            setCollapsed(readCollapsed(), false);
         };
 
         if (typeof MOBILE_QUERY.addEventListener === 'function') {
@@ -730,7 +849,9 @@ return $entry['href'] !== null || ! empty($entry['children']);
         window.upeaSidebar = Object.assign(window.upeaSidebar || {}, {
             open,
             close,
-            toggle: () => (sidebar.classList.contains('is-open') ? close() : open()),
+            toggle,
+            expand: () => setCollapsed(false),
+            collapse: () => setCollapsed(true),
             filter: applyFilter,
             expandAll: () => sidebar.querySelectorAll('[data-nav-group]').forEach((group) => setExpanded(group, true)),
             collapseAll: () => sidebar.querySelectorAll('[data-nav-group]').forEach((group) => setExpanded(group, false)),

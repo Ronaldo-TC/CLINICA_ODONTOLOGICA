@@ -71,6 +71,10 @@ $estadoPago = $canceladoAcumulado <= 0
 
         <td>
             <div class="actions">
+                <a href="{{ route('cajas.recibo', $caja) }}" class="btn btn-sm btn-primary"
+                    target="_blank" rel="noopener" aria-label="Imprimir recibo {{ $caja->recibo }}">
+                    <x-icono nombre="imprimir" /> Imprimir
+                </a>
                 @if($caja->solicitud_radiologica_id === null)
                 @can('cajas.editar')
                 <button type="button" class="btn btn-sm btn-secondary"

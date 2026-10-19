@@ -23,6 +23,11 @@ return new class extends Migration
             $table->string('grado', 100)->nullable();
 
             // ── Relaciones ──
+            $table->foreignId('tratamiento_realizado_id')
+                ->nullable()
+                ->constrained('tratamientos_realizados')
+                ->restrictOnDelete();
+
             $table->foreignId('tratamiento_id')
                 ->nullable()
                 ->constrained('tratamientos')

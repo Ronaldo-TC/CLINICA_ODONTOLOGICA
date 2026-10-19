@@ -337,7 +337,12 @@ class TratamientosCatalogoTest extends TestCase
 
     private function treatment(Clinica $clinic, string $name = 'Tratamiento catálogo'): Tratamiento
     {
-        return Tratamiento::create(['clinica_id' => $clinic->id, 'nombre' => $name, 'costo' => 100]);
+        return Tratamiento::create([
+            'clinica_id' => $clinic->id,
+            'nombre' => $name,
+            'costo' => 100,
+            'precio_asignado' => true,
+        ]);
     }
 
     private function material(Clinica $clinic): Insumo

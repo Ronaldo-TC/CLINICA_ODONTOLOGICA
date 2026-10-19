@@ -43,5 +43,6 @@ class FlujoClinicoPermissionsSeeder extends Seeder
         }
         DB::table('role_has_permissions')->insertOrIgnore($assignments);
         $this->call(SolicitudesInsumosPermissionsSeeder::class);
+        $this->call(JefaturaClinicasPermissionsSeeder::class);
     }
 }

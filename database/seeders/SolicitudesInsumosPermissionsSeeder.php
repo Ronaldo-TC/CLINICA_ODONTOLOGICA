@@ -14,8 +14,9 @@ class SolicitudesInsumosPermissionsSeeder extends Seeder
             $matrix = [
                 'estudiante' => ['solicitudes-insumos.ver', 'solicitudes-insumos.crear', 'solicitudes-insumos.consumir'],
                 'interno' => ['solicitudes-insumos.ver', 'solicitudes-insumos.crear', 'solicitudes-insumos.consumir'],
-                'docente' => ['solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar'],
-                'jefe-catedra' => ['solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar'],
+                'docente' => ['cajas.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar'],
+                'jefe-catedra' => ['cajas.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar'],
+                'jefatura-clinicas' => ['cajas.ver'],
                 'director' => ['solicitudes-insumos.ver'],
                 'insumos' => ['solicitudes-insumos.ver', 'solicitudes-insumos.aprobar', 'solicitudes-insumos.rechazar', 'solicitudes-insumos.entregar', 'solicitudes-insumos.consumir'],
             ];

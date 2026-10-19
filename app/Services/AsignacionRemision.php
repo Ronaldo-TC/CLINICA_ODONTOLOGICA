@@ -70,7 +70,7 @@ class AsignacionRemision
                 abort_unless((int) $catalogo->clinica_id === (int) $registro->clinica_id, 422, 'La propuesta debe pertenecer a la clínica derivada.');
                 TratamientoRealizado::create(['historia_clinica_id' => $historia->id,
                     'tratamiento_id' => $catalogo->id, 'clinica_id' => $historia->clinica_id,
-                    'estado' => 'pendiente', 'costo_cobrado' => $catalogo->precio_asignado ? $catalogo->costo : null,
+                    'estado' => 'pendiente', 'costo_cobrado' => $catalogo->costo,
                     'observacion' => 'Sugerido en Admisión. '.($registro->observacion_propuesta ?? '')]);
             }
             NotificacionService::a($estudianteId, Notificacion::TIPO_REMISION_NUEVA, 'Paciente asignado a su clínica',

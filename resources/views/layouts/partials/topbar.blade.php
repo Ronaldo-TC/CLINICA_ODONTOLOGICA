@@ -119,13 +119,18 @@
     <button type="button"
         class="topbar-mobile-toggle"
         data-sidebar-open
-        aria-label="Abrir menú de navegación"
+        aria-label="Contraer menú lateral"
         aria-controls="appSidebar"
-        aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        aria-expanded="true">
+        <svg class="sidebar-toggle-icon sidebar-toggle-icon--mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="15" y2="18" />
+        </svg>
+        <svg class="sidebar-toggle-icon sidebar-toggle-icon--desktop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <line x1="9" y1="3" x2="9" y2="21" />
+            <polyline points="15 9 12 12 15 15" />
         </svg>
     </button>
 

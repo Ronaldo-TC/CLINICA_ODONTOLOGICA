@@ -174,5 +174,6 @@ class RoleHasPermissionsSeeder extends Seeder
 
         DB::table('role_has_permissions')->insertOrIgnore($pivote);
         $this->call(SolicitudesInsumosPermissionsSeeder::class);
+        $this->call(JefaturaClinicasPermissionsSeeder::class);
     }
 }

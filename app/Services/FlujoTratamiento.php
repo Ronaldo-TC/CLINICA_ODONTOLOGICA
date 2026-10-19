@@ -99,7 +99,14 @@ class FlujoTratamiento
             $this->exigirDocente($tratamiento->historiaClinica, $usuario);
             $this->exigirHistoriaActiva($tratamiento->historiaClinica);
             $this->exigir(in_array($tratamiento->estado, ['pendiente', 'propuesta'], true) && ! $tratamiento->estaAutorizado(), 'estado', 'Solo puede aprobar una propuesta pendiente.');
-            $tratamiento->update(['estado' => 'autorizado', 'autorizado_por' => $usuario->id, 'fecha_autorizacion' => now()]);
+            $catalogo = $tratamiento->tratamiento()->lockForUpdate()->firstOrFail();
+            $this->exigir($catalogo->precio_asignado, 'tratamiento_id', 'Caja debe asignar el precio del tratamiento antes de aprobarlo.');
+            $tratamiento->update([
+                'estado' => 'autorizado',
+                'costo_cobrado' => $catalogo->costo,
+                'autorizado_por' => $usuario->id,
+                'fecha_autorizacion' => now(),
+            ]);
 
             return $tratamiento;
         });

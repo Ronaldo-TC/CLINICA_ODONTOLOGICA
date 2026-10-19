@@ -12,6 +12,7 @@ use App\Models\Tratamiento;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
 use App\Services\NotificacionService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -387,6 +388,49 @@ class CajaController extends Controller
         ]);
     }
 
+    public function recibo(Caja $caja): View
+    {
+        $this->authorizeReceipt();
+
+        $caja->load([
+            'clinica:id,especialidad,modulo',
+            'detalles:id,caja_id,concepto,cantidad,precio_unitario,monto',
+            'solicitudRadiologica.historiaClinica.estudiante:id,ci,nombre_completo',
+            'solicitudRadiologica.historiaClinica.paciente:id,ci,nombre,apellido_paterno,apellido_materno',
+            'tratamiento:id,nombre',
+            'tratamientoRealizado.historiaClinica.estudiante:id,ci,nombre_completo',
+            'tratamientoRealizado.historiaClinica.paciente:id,ci,nombre,apellido_paterno,apellido_materno',
+            'usuario:id,nombre_completo',
+        ]);
+
+        $historia = $caja->solicitudRadiologica?->historiaClinica
+            ?? $caja->tratamientoRealizado?->historiaClinica;
+        $concepto = $caja->solicitudRadiologica?->descripcion
+            ?: ($caja->tratamiento?->nombre
+                ?: ($caja->detalles->first()?->concepto ?: $caja->descripcion));
+        $recibosRelacionados = Caja::query()->where('habilitada', true);
+
+        if ($caja->solicitud_radiologica_id !== null) {
+            $recibosRelacionados->where('solicitud_radiologica_id', $caja->solicitud_radiologica_id);
+        } elseif ($caja->tratamiento_realizado_id !== null) {
+            $recibosRelacionados->where('tratamiento_realizado_id', $caja->tratamiento_realizado_id);
+        } else {
+            $recibosRelacionados->whereKey($caja->id);
+        }
+
+        $totalPagado = (float) $recibosRelacionados->sum('cancelado');
+
+        return view('cajas.recibo', [
+            'caja' => $caja,
+            'concepto' => $concepto ?: 'Servicio odontológico',
+            'estudiante' => $historia?->estudiante,
+            'ficha' => $historia?->admision_id,
+            'paciente' => $historia?->paciente,
+            'saldo' => max(0, (float) $caja->costo_total - $totalPagado),
+            'totalPagado' => $totalPagado,
+        ]);
+    }
+
     private function authorizeLookup(): void
     {
         $user = auth()->user() ?? Usuario::find(session('user_id'));
@@ -395,6 +439,17 @@ class CajaController extends Controller
             $user?->canAny(['cajas.ver', 'cajas.crear', 'cajas.gestionar']) || $user?->hasRole('admin'),
             403,
             'No tienes permiso para consultar pacientes de caja.'
+        );
+    }
+
+    private function authorizeReceipt(): void
+    {
+        $user = auth()->user() ?? Usuario::find(session('user_id'));
+
+        abort_unless(
+            $user?->canAny(['cajas.ver', 'cajas.crear', 'cajas.gestionar']) || $user?->hasRole('admin'),
+            403,
+            'No tienes permiso para imprimir recibos de caja.'
         );
     }
 
