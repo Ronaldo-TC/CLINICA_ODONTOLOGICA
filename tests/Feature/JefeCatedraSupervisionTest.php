@@ -27,7 +27,7 @@ class JefeCatedraSupervisionTest extends TestCase
         $case = $this->clinicalCase();
         $outside = $this->clinicalCase();
         $chief = $this->chief($case);
-        $period = Periodo::where('habilitado', true)->orderByDesc('gestion')->orderByDesc('semestre')->firstOrFail();
+        $period = Periodo::where('habilitado', true)->orderByDesc('gestion')->firstOrFail();
         foreach ([$case, $outside] as $data) {
             $data['history']->update(['autorizado' => false, 'periodo_id' => $period->id]);
             $this->requestFor($data);

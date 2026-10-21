@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 100);
             $table->decimal('costo', 10, 2)->default(0);
-            $table->string('porcentaje_pg', 100)->nullable();
             $table->string('descripcion', 100)->default('');
             $table->boolean('precio_asignado')->default(false);
             $table->foreignId('clinica_id')->constrained('clinicas')->cascadeOnDelete()->cascadeOnUpdate();

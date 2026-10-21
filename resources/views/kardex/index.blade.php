@@ -99,7 +99,7 @@
                     <option value="">Todos</option>
                     @foreach ($periodos as $periodo)
                     <option value="{{ $periodo->id }}">
-                        {{ $periodo->nombre }} ({{ $periodo->gestion }}-{{ $periodo->semestre }})
+                        {{ $periodo->nombre }} ({{ $periodo->gestion }})
                     </option>
                     @endforeach
                 </select>

@@ -2,7 +2,10 @@
     'use strict';
 
     const modal = document.getElementById('modalSeguimientoHistoria');
-    if (!modal) return;
+    if (!modal) {
+        console.error('[Historias] No se encontró el modal de seguimiento.');
+        return;
+    }
 
     const dialog = modal.querySelector('[role="dialog"]');
     const title = document.getElementById('modalSeguimientoTitulo');
@@ -110,7 +113,8 @@
     }
 
     document.addEventListener('click', (event) => {
-        const trigger = event.target.closest('[data-historia-seguimiento]');
+        const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+        const trigger = target?.closest('[data-historia-seguimiento]');
         if (!trigger) return;
 
         event.preventDefault();
@@ -119,11 +123,11 @@
         if (!historyId || !section) return;
 
         opener = trigger;
-        current = {historyId, section, fallbackUrl: trigger.href || ''};
+        current = {historyId, section, fallbackUrl: trigger.dataset.seguimientoUrl || trigger.href || ''};
         title.textContent = trigger.dataset.seguimientoTitulo || 'Seguimiento de la historia cl\u00ednica';
         showModal();
         loadCurrent();
-    });
+    }, true);
 
     modal.addEventListener('click', (event) => {
         if (event.target === modal || event.target.closest('[data-seguimiento-close]')) {

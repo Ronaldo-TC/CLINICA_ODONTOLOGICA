@@ -443,7 +443,7 @@ trait HasCrudAjax
         return [
             'registros' => $query->orderByDesc('id')->paginate(15)->withQueryString(),
             'clinicas' => $request->user()->especialidades()->wherePivot('habilitado', true)->orderBy('especialidad')->get(),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(),
+            'periodos' => Periodo::orderByDesc('gestion')->get(),
         ];
     }
 }

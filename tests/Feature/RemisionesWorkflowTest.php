@@ -148,7 +148,52 @@ class RemisionesWorkflowTest extends TestCase
             'paciente_id' => $case['admission']->paciente_id, 'clinica_id' => $case['clinic']->id,
             'periodo_id' => $case['history']->periodo_id, 'estudiante_id' => $case['student']->id,
             'docente_id' => $case['teacher']->id, 'especialidad_estudiante' => $case['clinic']->id,
-            'especialidad_docente' => $case['clinic']->id, 'estado' => 'revision', 'autorizado' => false,
+            'especialidad_docente' => $case['clinic']->id, 'estado' => 'abierta', 'autorizado' => true,
+            'estado_revision' => true,
+        ]);
+    }
+
+    public function test_patient_inbox_opens_assignment_form_in_a_modal(): void
+    {
+        $case = $this->clinicalCase();
+        $referral = $this->pendingReferral($case);
+
+        $this->actingAs($case['teacher'])->get(route('pacientes-remitidos.index'))
+            ->assertOk()
+            ->assertSee('id="modalAsignacionRemision"', false)
+            ->assertSee('data-asignar-estudiante', false)
+            ->assertDontSee('href="'.route('pacientes-remitidos.asignacion', $referral->id).'"', false);
+
+        $response = $this->getJson(route('pacientes-remitidos.asignacion', $referral->id))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('titulo', 'Asignar estudiante');
+
+        $this->assertStringContainsString('id="formAsignacionRemision"', $response->json('html'));
+        $this->assertStringContainsString('Buscar estudiante por CI o nombre', $response->json('html'));
+        $this->assertStringContainsString('data-estudiante-opcion', $response->json('html'));
+        $this->assertStringNotContainsString('<select id="modal-asignacion-estudiante"', $response->json('html'));
+        $this->assertStringContainsString($case['student']->nombre_completo, $response->json('html'));
+        $this->assertStringContainsString('creará y autorizará automáticamente', $response->json('html'));
+    }
+
+    public function test_ajax_assignment_returns_the_authorized_history(): void
+    {
+        $case = $this->clinicalCase();
+        $referral = $this->pendingReferral($case);
+
+        $response = $this->actingAs($case['teacher'])->postJson(route('pacientes-remitidos.asignar', $referral->id), [
+            'estudiante_id' => $case['student']->id,
+        ])->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Asignación registrada. La historia clínica fue creada y autorizada automáticamente.');
+
+        $this->assertDatabaseHas('historias_clinicas', [
+            'id' => $response->json('historia_id'),
+            'remision_id' => $referral->id,
+            'estado' => 'abierta',
+            'autorizado' => true,
+            'estado_revision' => true,
         ]);
     }
 
@@ -191,7 +236,7 @@ class RemisionesWorkflowTest extends TestCase
         $referral = $this->pendingReferral($case);
         $otherPeriod = Periodo::create([
             'nombre' => 'Otro periodo remisiones', 'gestion' => Periodo::max('gestion') + 1,
-            'semestre' => 1, 'fecha_inicio' => '2027-01-01', 'fecha_fin' => '2027-06-30', 'habilitado' => true,
+            'fecha_inicio' => '2027-01-01', 'fecha_fin' => '2027-12-31', 'habilitado' => true,
         ]);
 
         $this->actingAs($case['teacher'])->postJson(route('pacientes-remitidos.asignar', $referral->id), [

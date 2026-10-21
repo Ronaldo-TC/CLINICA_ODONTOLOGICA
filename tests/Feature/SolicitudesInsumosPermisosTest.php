@@ -44,6 +44,16 @@ class SolicitudesInsumosPermisosTest extends TestCase
                 ->assertSee('id="formSolicitudDesignado"', false);
             $this->getJson(route($listRoute))->assertOk()->assertJsonPath('total', 1);
         }
+
+        $this->get(route('estudiante.historias'))
+            ->assertSee('<button type="button"', false)
+            ->assertSee('data-seguimiento-seccion="tratamientos"', false)
+            ->assertSee('data-seguimiento-seccion="archivos"', false)
+            ->assertSee('data-seguimiento-seccion="controles"', false)
+            ->assertSee('data-seguimiento-seccion="recibos"', false)
+            ->assertSee('data-seguimiento-seccion="solicitudes"', false)
+            ->assertDontSee('href="'.route('estudiante.historia', $case['history']->id).'#tratamientos"', false)
+            ->assertDontSee('href="'.route('estudiante.historia', $case['history']->id).'#archivos"', false);
         $requestId = $this->postJson(route('solicitudes-insumos.store'), [
             'historia_clinica_id' => $case['history']->id, 'clinica_id' => $case['clinic']->id,
             'tratamiento_id' => $case['treatment']->id, 'detalles' => [['insumo_id' => $material->id, 'cantidad_solicitada' => 2]],

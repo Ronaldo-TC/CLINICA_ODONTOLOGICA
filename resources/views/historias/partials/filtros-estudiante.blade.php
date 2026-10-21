@@ -19,7 +19,7 @@
         <select id="periodo_id" name="periodo_id" class="form-control">
             <option value="">Todos los periodos</option>
             @foreach($periodos as $periodo)
-                <option value="{{ $periodo->id }}" @selected(request('periodo_id') == $periodo->id)>{{ $periodo->nombre }} · {{ $periodo->gestion }}-{{ $periodo->semestre }}</option>
+                <option value="{{ $periodo->id }}" @selected(request('periodo_id') == $periodo->id)>{{ $periodo->nombre }} · {{ $periodo->gestion }}</option>
             @endforeach
         </select>
     </div>

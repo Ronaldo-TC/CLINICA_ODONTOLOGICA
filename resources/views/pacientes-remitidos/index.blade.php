@@ -90,6 +90,8 @@
         @include('pacientes-remitidos.partials.tabla', ['items' => $items])
     </div>
 </div>
+
+@include('pacientes-remitidos.partials.modal-asignacion')
 @endsection
 
 @push('scripts')
@@ -102,11 +104,155 @@
         const totalLabel = document.getElementById('remitidos-total');
         const btnBuscar = document.getElementById('remitidos-btn-buscar');
         const btnLimpiar = document.getElementById('remitidos-btn-limpiar');
+        const modalAsignacion = document.getElementById('modalAsignacionRemision');
+        const modalAsignacionTitulo = document.getElementById('modalAsignacionRemisionTitulo');
+        const modalAsignacionContenido = document.getElementById('modalAsignacionRemisionContenido');
 
         if (!form || !resultsBox) return;
 
         const endpoint = form.dataset.endpoint;
         let controller = null;
+
+        const cerrarModalAsignacion = () => {
+            modalAsignacion?.classList.remove('open');
+            modalAsignacion?.setAttribute('aria-hidden', 'true');
+        };
+
+        const mostrarErrorAsignacion = (formulario, errores, mensaje) => {
+            formulario.querySelectorAll('[data-error-for]').forEach((elemento) => {
+                elemento.textContent = '';
+            });
+
+            Object.entries(errores || {}).forEach(([campo, mensajes]) => {
+                const elemento = formulario.querySelector(`[data-error-for="${campo}"]`);
+                if (elemento) elemento.textContent = mensajes[0] || '';
+            });
+
+            const alerta = formulario.querySelector('[data-asignacion-error]');
+            if (alerta) {
+                alerta.textContent = mensaje || Object.values(errores || {})[0]?.[0] || 'Revise los datos ingresados.';
+                alerta.hidden = false;
+            }
+        };
+
+        const inicializarBuscadorEstudiante = () => {
+            const buscador = modalAsignacionContenido.querySelector('[data-estudiante-buscador]');
+            const campoBusqueda = buscador?.querySelector('[data-estudiante-busqueda]');
+            const campoId = buscador?.querySelector('[data-estudiante-id]');
+            const resultados = buscador?.querySelector('[data-estudiante-resultados]');
+            const mensajeVacio = buscador?.querySelector('[data-estudiante-vacio]');
+            const opciones = Array.from(buscador?.querySelectorAll('[data-estudiante-opcion]') || []);
+            let indiceActivo = -1;
+
+            if (!buscador || !campoBusqueda || !campoId || !resultados || !mensajeVacio) return;
+
+            const normalizar = (valor) => valor.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLocaleLowerCase();
+            const opcionesVisibles = () => opciones.filter((opcion) => !opcion.hidden);
+            const cerrarResultados = () => {
+                resultados.classList.remove('open');
+                resultados.hidden = true;
+                campoBusqueda.setAttribute('aria-expanded', 'false');
+                indiceActivo = -1;
+                opciones.forEach((opcion) => opcion.classList.remove('active'));
+            };
+            const abrirResultados = () => {
+                resultados.hidden = false;
+                resultados.classList.add('open');
+                campoBusqueda.setAttribute('aria-expanded', 'true');
+            };
+            const filtrar = () => {
+                campoId.value = '';
+                campoBusqueda.setCustomValidity('');
+                const terminos = normalizar(campoBusqueda.value).trim().split(/\s+/).filter(Boolean);
+                let coincidencias = 0;
+
+                opciones.forEach((opcion) => {
+                    const coincide = terminos.length > 0 && terminos.every((termino) =>
+                        normalizar(opcion.dataset.busqueda || '').includes(termino));
+                    opcion.hidden = !coincide;
+                    opcion.classList.remove('active');
+                    if (coincide) coincidencias++;
+                });
+
+                mensajeVacio.textContent = terminos.length === 0
+                    ? 'Escriba el CI o nombre del estudiante.'
+                    : 'No se encontraron estudiantes con ese CI o nombre.';
+                mensajeVacio.hidden = coincidencias > 0;
+                indiceActivo = -1;
+                abrirResultados();
+            };
+            const seleccionar = (opcion) => {
+                campoId.value = opcion.dataset.id;
+                campoBusqueda.value = opcion.dataset.etiqueta;
+                campoBusqueda.setCustomValidity('');
+                cerrarResultados();
+            };
+            const moverActivo = (direccion) => {
+                const visibles = opcionesVisibles();
+                if (visibles.length === 0) return;
+                indiceActivo = (indiceActivo + direccion + visibles.length) % visibles.length;
+                visibles.forEach((opcion) => opcion.classList.remove('active'));
+                visibles[indiceActivo].classList.add('active');
+                visibles[indiceActivo].scrollIntoView({ block: 'nearest' });
+            };
+
+            campoBusqueda.addEventListener('input', filtrar);
+            campoBusqueda.addEventListener('focus', filtrar);
+            campoBusqueda.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    moverActivo(event.key === 'ArrowDown' ? 1 : -1);
+                } else if (event.key === 'Enter') {
+                    const visibles = opcionesVisibles();
+                    if (visibles.length > 0) {
+                        event.preventDefault();
+                        seleccionar(visibles[indiceActivo >= 0 ? indiceActivo : 0]);
+                    }
+                } else if (event.key === 'Escape') {
+                    cerrarResultados();
+                }
+            });
+            opciones.forEach((opcion) => opcion.addEventListener('click', () => seleccionar(opcion)));
+            document.addEventListener('click', (event) => {
+                if (!buscador.contains(event.target)) cerrarResultados();
+            }, { signal: modalAsignacionAbortController.signal });
+        };
+
+        let modalAsignacionAbortController = new AbortController();
+
+        const abrirModalAsignacion = async (boton) => {
+            if (!modalAsignacion || !modalAsignacionContenido) return;
+
+            modalAsignacionTitulo.textContent = `Asignar estudiante · Remisión #${boton.dataset.remision}`;
+            modalAsignacionContenido.innerHTML = '<div class="modal-body"><p style="color:var(--muted);">Cargando datos de la remisión...</p></div>';
+            modalAsignacion.classList.add('open');
+            modalAsignacion.setAttribute('aria-hidden', 'false');
+
+            try {
+                const response = await fetch(boton.dataset.url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo cargar la asignación.');
+                }
+
+                modalAsignacionTitulo.textContent = data.titulo || 'Asignar estudiante';
+                modalAsignacionContenido.innerHTML = data.html;
+                modalAsignacionAbortController.abort();
+                modalAsignacionAbortController = new AbortController();
+                inicializarBuscadorEstudiante();
+                modalAsignacionContenido.querySelector('[autofocus]')?.focus();
+            } catch (error) {
+                modalAsignacionContenido.innerHTML = '<div class="modal-body"><div class="alert alert-danger" data-carga-error></div></div>';
+                modalAsignacionContenido.querySelector('[data-carga-error]').textContent = error.message;
+            }
+        };
 
         // ----------------------------------------------------------
         // Petición AJAX
@@ -201,6 +347,13 @@
 
         // Paginación AJAX (delegación)
         resultsBox.addEventListener('click', (e) => {
+            const botonAsignar = e.target.closest('[data-asignar-estudiante]');
+            if (botonAsignar) {
+                e.preventDefault();
+                abrirModalAsignacion(botonAsignar);
+                return;
+            }
+
             const link = e.target.closest('#remitidos-paginacion a');
             if (!link) return;
             e.preventDefault();
@@ -214,6 +367,64 @@
                 behavior: 'smooth',
                 block: 'start'
             });
+        });
+
+        modalAsignacion?.addEventListener('click', (e) => {
+            if (e.target === modalAsignacion || e.target.closest('[data-asignacion-close]')) {
+                cerrarModalAsignacion();
+            }
+        });
+
+        modalAsignacion?.addEventListener('submit', async (e) => {
+            const formulario = e.target.closest('#formAsignacionRemision');
+            if (!formulario) return;
+            e.preventDefault();
+
+            const estudianteId = formulario.querySelector('[data-estudiante-id]');
+            const estudianteBusqueda = formulario.querySelector('[data-estudiante-busqueda]');
+            if (!estudianteId?.value) {
+                estudianteBusqueda?.setCustomValidity('Busque y seleccione un estudiante antes de continuar.');
+                estudianteBusqueda?.reportValidity();
+                return;
+            }
+
+            const boton = formulario.querySelector('[data-asignacion-submit]');
+            if (boton) boton.disabled = true;
+
+            try {
+                const response = await fetch(formulario.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: new FormData(formulario),
+                });
+                const data = await response.json();
+
+                if (response.status === 422) {
+                    mostrarErrorAsignacion(formulario, data.errors, data.message);
+                    return;
+                }
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo registrar la asignación.');
+                }
+
+                cerrarModalAsignacion();
+                window.mostrarToast?.('success', data.message);
+                const datosFiltros = new FormData(form);
+                await fetchRemitidos(Object.fromEntries(datosFiltros.entries()));
+            } catch (error) {
+                mostrarErrorAsignacion(formulario, {}, error.message);
+            } finally {
+                if (boton) boton.disabled = false;
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalAsignacion?.classList.contains('open')) {
+                cerrarModalAsignacion();
+            }
         });
     })();
 </script>

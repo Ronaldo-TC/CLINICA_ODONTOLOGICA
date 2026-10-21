@@ -142,7 +142,7 @@ class JefaturaClinicasTest extends TestCase
             'remision_id' => $referral->id, 'admision_id' => $case['admission']->id,
             'paciente_id' => $case['admission']->paciente_id, 'clinica_id' => $case['clinic']->id,
             'estudiante_id' => $case['student']->id, 'docente_id' => $case['teacher']->id,
-            'estado' => 'revision', 'autorizado' => false,
+            'estado' => 'abierta', 'autorizado' => true, 'estado_revision' => true,
         ]);
     }
 

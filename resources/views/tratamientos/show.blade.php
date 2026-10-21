@@ -25,7 +25,7 @@
     <div class="card-body">
         <p style="margin-bottom:18px;">{{ $tratamiento->descripcion ?: 'Sin descripción.' }}</p>
         @if ($tratamiento->precio_asignado)
-        <p style="margin-bottom:18px;"><strong>{{ number_format($tratamiento->costo, 2) }} Bs</strong> · PG: {{ $tratamiento->porcentaje_pg ?: '—' }}</p>
+        <p style="margin-bottom:18px;"><strong>{{ number_format($tratamiento->costo, 2) }} Bs</strong></p>
         @else
         <p style="margin-bottom:18px;"><span class="badge badge-warning">Precio pendiente de asignación por Caja</span></p>
         @endif
@@ -33,15 +33,9 @@
         <form method="POST" action="{{ route('tratamientos.precio', $tratamiento) }}">
             @csrf
             @method('PUT')
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="precio-costo">Precio (Bs) <span class="req">*</span></label>
-                    <input class="form-control" id="precio-costo" name="costo" type="number" min="0" max="99999999.99" step="0.01" required value="{{ old('costo', $tratamiento->precio_asignado ? $tratamiento->costo : '') }}">
-                </div>
-                <div class="form-group">
-                    <label for="precio-pg">% PG</label>
-                    <input class="form-control" id="precio-pg" name="porcentaje_pg" maxlength="100" value="{{ old('porcentaje_pg', $tratamiento->porcentaje_pg) }}">
-                </div>
+            <div class="form-group">
+                <label for="precio-costo">Precio (Bs) <span class="req">*</span></label>
+                <input class="form-control" id="precio-costo" name="costo" type="number" min="0" max="99999999.99" step="0.01" required value="{{ old('costo', $tratamiento->precio_asignado ? $tratamiento->costo : '') }}">
             </div>
             <button type="submit" class="btn btn-primary">Guardar precio</button>
         </form>

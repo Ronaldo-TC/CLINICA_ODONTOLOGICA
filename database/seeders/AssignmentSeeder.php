@@ -317,7 +317,6 @@ class AssignmentSeeder extends Seeder
                 $rows[] = [
                     'nombre' => $t['nombre'],
                     'costo' => $t['costo'],
-                    'porcentaje_pg' => null,
                     'descripcion' => '',
                     'clinica_id' => $clinicas[$especialidad],
                     'created_at' => $now,

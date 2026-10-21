@@ -161,8 +161,7 @@ class ReporteController extends Controller
             'catalogo' => self::catalogo(),
             'periodos' => Periodo::query()
                 ->orderByDesc('gestion')
-                ->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+                ->get(['id', 'nombre', 'gestion']),
             'clinicas' => Clinica::query()
                 ->orderBy('especialidad')
                 ->get(['id', 'especialidad', 'modulo']),
@@ -319,31 +318,9 @@ class ReporteController extends Controller
         ]);
     }
 
-    /**
-     * GET /reportes/exportar/imprimible
-     *
-     * Vista limpia (documento HTML autónomo) con todos los gráficos y una
-     * hoja de estilos de impresión. El propio documento invoca window.print()
-     * para que el usuario guarde como PDF desde el navegador (sin dompdf).
-     */
-    public function imprimible(Request $request)
+    public function imprimible(Request $request, ReporteModulo $reporteModulo, ReportePdf $reportePdf): Response
     {
-        $this->authorizeAction('ver');
-
-        $catalogo = self::catalogo();
-        $datos = [];
-
-        foreach (array_keys($catalogo) as $clave) {
-            $datos[$clave] = $this->datos($clave, $request);
-        }
-
-        return view('reportes.partials.imprimible', [
-            'catalogo' => $catalogo,
-            'datos' => $datos,
-            'filtros' => $this->filtros($request),
-            'descripcion' => $this->descripcionFiltros($request),
-            'emitido' => now(),
-        ]);
+        return $this->exportarPdf($request, $reporteModulo, $reportePdf);
     }
 
     public function exportarPdf(Request $request, ReporteModulo $reporteModulo, ReportePdf $reportePdf): Response

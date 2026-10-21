@@ -58,7 +58,7 @@ class HistoriaController extends Controller
         return AccesoClinico::historias(HistoriaClinica::query(), $request->user())->with([
             'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
             'clinica:id,especialidad,modulo',
-            'periodo:id,nombre,gestion,semestre',
+            'periodo:id,nombre,gestion',
             'estudiante:id,nombre_completo',
             'docente:id,nombre_completo',
         ])->withCount('tratamientosRealizados')->orderByDesc('id');
@@ -274,8 +274,8 @@ class HistoriaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -283,8 +283,8 @@ class HistoriaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -450,9 +450,9 @@ class HistoriaController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => $c->especialidad]),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion}-{$p->semestre})"]),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion'])
+                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 

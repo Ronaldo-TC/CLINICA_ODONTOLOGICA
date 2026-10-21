@@ -79,7 +79,6 @@
                 <tr>
                     <th>Nombre</th>
                     <th>Gestión</th>
-                    <th>Semestre</th>
                     <th>Fechas</th>
                     <th>Admisiones</th>
                     <th>Estado</th>
@@ -211,7 +210,7 @@
             } catch (err) {
                 console.error('[Periodos] Error al cargar:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="7">
+                <tr><td colspan="6">
                     <div class="empty-state">
                         <p>Error al cargar periodos.</p>
                     </div>

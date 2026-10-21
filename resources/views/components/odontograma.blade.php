@@ -187,4 +187,6 @@
     </style>
 @endonce
 
-@include('components.partials.odontograma-js')
+@unless($esPdf ?? false)
+    @include('components.partials.odontograma-js')
+@endunless

@@ -10,7 +10,7 @@ import puppeteer from 'puppeteer';
 const chrome = process.env.CHROME_PATH || (process.platform === 'win32'
     ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : puppeteer.executablePath());
 
-test('el sidebar muestra enlaces directos, conserva Seguridad y abre el menú móvil', {
+test('el sidebar y el topbar conservan su navegación y adaptación móvil', {
     skip: !existsSync(chrome), timeout: 30000,
 }, async t => {
     let html = '';
@@ -37,12 +37,12 @@ test('el sidebar muestra enlaces directos, conserva Seguridad y abre el menú m�
             ['type' => 'link', 'label' => 'Pacientes', 'route' => 'pacientes.index', 'icon' => 'users'],
             ['type' => 'link', 'label' => 'Pacientes remitidos', 'route' => 'pacientes-remitidos.index', 'icon' => 'inbox'],
         ];
-        Illuminate\Support\Facades\View::composer('layouts.partials.sidebar', function ($view) use ($menu) {
+        Illuminate\Support\Facades\View::composer(['layouts.partials.sidebar', 'layouts.partials.topbar'], function ($view) use ($menu) {
             $view->with(['sidebarMenu' => $menu, 'sidebarUser' => null]);
         });
         request()->setRouteResolver(fn () => app('router')->getRoutes()->getByName('usuarios.index'));
         preg_match('/<style>(.*?)<\/style>/s', file_get_contents('resources/views/layouts/app.blade.php'), $css);
-        echo Illuminate\Support\Facades\Blade::render('<!doctype html><html><head><meta charset="utf-8">'.$css[0].'</head><body><div class="app">@include("layouts.partials.sidebar")<div id="sidebarBackdrop" class="sidebar-backdrop" hidden></div><main class="main-wrapper"><button type="button" class="topbar-mobile-toggle" data-sidebar-open aria-controls="appSidebar" aria-expanded="true">Menú</button></main></div>@stack("scripts")</body></html>');`;
+        echo Illuminate\Support\Facades\Blade::render('<!doctype html><html><head><meta charset="utf-8">'.$css[0].'</head><body><div class="app">@include("layouts.partials.sidebar")<div id="sidebarBackdrop" class="sidebar-backdrop" hidden></div><div class="main-wrapper">@include("layouts.partials.topbar")<main class="content"><section class="card"><div class="card-header"><h2>Panel de trabajo</h2><p class="card-meta">Contenido de verificación visual.</p></div></section></main></div></div>@stack("scripts")</body></html>');`;
     html = execFileSync('php', ['-r', php, origin], { encoding: 'utf8' });
     const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox'] });
     t.after(async () => {
@@ -58,6 +58,8 @@ test('el sidebar muestra enlaces directos, conserva Seguridad y abre el menú m�
     page.on('pageerror', error => errors.push(error.message));
     await page.setViewport({ width: 1280, height: 850 });
     await page.goto(origin);
+    assert.equal(await page.$eval('.topbar-heading', element => element.textContent.trim()), 'Usuarios');
+    assert.equal(await page.$eval('.topbar-search-trigger', element => element.checkVisibility()), true);
     assert.equal(await page.$eval('#appSidebar', element => element.getBoundingClientRect().width), 260);
     await page.evaluate(() => localStorage.setItem('upea:nav:groups', JSON.stringify({ 'nav-group-seguridad': false })));
     await page.reload();
@@ -103,5 +105,8 @@ test('el sidebar muestra enlaces directos, conserva Seguridad y abre el menú m�
     await page.keyboard.press('Escape');
     assert.equal(await page.$eval('#sidebarBackdrop', element => element.checkVisibility()), false);
     assert.equal(await page.$eval('.main-wrapper', element => element.inert), false);
+    await page.waitForFunction(() => document.getElementById('appSidebar').getBoundingClientRect().right <= 1, { timeout: 2000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    if (process.env.SIDEBAR_SCREENSHOT) await page.screenshot({ path: join(tmpdir(), 'topbar-movil.png') });
     assert.deepEqual(errors, []);
 });

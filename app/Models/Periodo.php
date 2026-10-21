@@ -11,18 +11,16 @@ class Periodo extends Model
     protected $fillable = [
         'nombre',
         'gestion',
-        'semestre',
         'fecha_inicio',
         'fecha_fin',
         'habilitado',
     ];
 
     protected $casts = [
-        'gestion'      => 'integer',
-        'semestre'     => 'integer',
+        'gestion' => 'integer',
         'fecha_inicio' => 'date',
-        'fecha_fin'    => 'date',
-        'habilitado'   => 'boolean',
+        'fecha_fin' => 'date',
+        'habilitado' => 'boolean',
     ];
 
     /* ============================================================
@@ -55,12 +53,13 @@ class Periodo extends Model
 
     public function getNombreCompletoAttribute(): string
     {
-        return "{$this->nombre} ({$this->gestion}-{$this->semestre})";
+        return "{$this->nombre} ({$this->gestion})";
     }
 
     public function getEstaActivoAttribute(): bool
     {
         $hoy = now();
+
         return $this->habilitado
             && $hoy->between($this->fecha_inicio, $this->fecha_fin);
     }

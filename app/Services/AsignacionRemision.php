@@ -26,7 +26,7 @@ class AsignacionRemision
                 ->whereHas('especialidades', fn (Builder $query) => $query->where('clinicas.id', $remision->clinica_id)->where('especialidades.habilitado', true))
                 ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', ['estudiante', 'interno', 'docente', 'jefe-catedra']))
                 ->with('roles')->orderBy('nombre_completo')->get(),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')->get(['id', 'nombre', 'gestion']),
             'docenteActual' => ! $usuario->hasAnyRole(['admin', 'director']) && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null,
         ];
     }
@@ -62,8 +62,9 @@ class AsignacionRemision
                 'clinica_id' => $registro->clinica_id,
                 'especialidad_estudiante' => $registro->clinica_id,
                 'especialidad_docente' => $registro->clinica_id,
-                'estado' => 'revision',
-                'autorizado' => false,
+                'estado' => 'abierta',
+                'autorizado' => true,
+                'estado_revision' => true,
             ]);
             if ($registro->tratamiento_propuesto_id) {
                 $catalogo = $registro->tratamientoPropuesto()->lockForUpdate()->firstOrFail();
@@ -74,9 +75,9 @@ class AsignacionRemision
                     'observacion' => 'Sugerido en Admisión. '.($registro->observacion_propuesta ?? '')]);
             }
             NotificacionService::a($estudianteId, Notificacion::TIPO_REMISION_NUEVA, 'Paciente asignado a su clínica',
-                'Revise la historia #'.$historia->id.' y la propuesta de Admisión.', route('historias.show', $historia->id));
-            NotificacionService::a($docenteId, Notificacion::TIPO_REMISION_NUEVA, 'Historia pendiente de revisión',
-                'Revise la historia #'.$historia->id.' antes de autorizar tratamientos.', route('historias.show', $historia->id));
+                'La historia #'.$historia->id.' fue creada y autorizada automáticamente.', route('historias.show', $historia->id));
+            NotificacionService::a($docenteId, Notificacion::TIPO_REMISION_NUEVA, 'Historia creada y autorizada',
+                'La historia #'.$historia->id.' quedó abierta para la atención clínica.', route('historias.show', $historia->id));
 
             return $historia;
         });

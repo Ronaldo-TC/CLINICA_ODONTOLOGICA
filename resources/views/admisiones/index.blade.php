@@ -1,15 +1,24 @@
 @extends('layouts.app')
 
 @section('title', 'Gestión de Admisiones')
+@section('page-title', 'Admisiones')
+@section('page-subtitle', 'Registro, evaluación inicial y derivación de pacientes')
 
 @section('content')
 
-<div class="dashboard-toolbar">
-    <div class="toolbar-info">
-        <span class="toolbar-dot live"></span>
-        <span id="crud-total-label">{{ $registros->total() }} admisiones registradas</span>
+<div class="admisiones-shell">
+<section class="admisiones-summary" aria-labelledby="admisiones-summary-title">
+    <div class="admisiones-summary-copy">
+        <span class="admisiones-summary-icon" aria-hidden="true">
+            <x-icono nombre="ficha" />
+        </span>
+        <div>
+            <span class="admisiones-eyebrow">Atención inicial</span>
+            <h2 id="admisiones-summary-title">Admisiones de pacientes</h2>
+            <p id="crud-total-label">{{ $registros->total() }} admisiones registradas</p>
+        </div>
     </div>
-    <div class="toolbar-actions">
+    <div class="admisiones-toolbar" aria-label="Acciones de admisiones">
         <x-boton-reporte ruta="admisiones.reporte" />
         <!-- <div class="admision-odontograma-preview">
             <canvas
@@ -31,13 +40,13 @@
             </button>
         </div> -->
         @can('admisiones.crear')
-        <a href="{{ route('admisiones.create') }}" class="btn btn-primary">
+        <a href="{{ route('admisiones.create') }}" class="btn btn-primary admisiones-primary-action">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Nueva Admisión
+            Nueva admisión
         </a>
         @endcan
         @canany(['admisiones.crear', 'admisiones.gestionar'])
@@ -46,7 +55,7 @@
         </a>
         @endcanany
     </div>
-</div>
+</section>
 
 <div class="modal-backdrop" id="modalOdontograma3D" aria-hidden="true">
     <section class="modal modal-lg admision-odontograma-modal" role="dialog" aria-modal="true"
@@ -70,9 +79,12 @@
     </section>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h2>Admisiones de Pacientes</h2>
+<section class="card admisiones-table-card">
+    <div class="card-header admisiones-card-header">
+        <div>
+            <span class="admisiones-eyebrow">Directorio clínico</span>
+            <h2>Registros de admisión</h2>
+        </div>
         <div class="card-header-actions">
             <span class="tabla-status" id="crud-status">
                 <span class="dot"></span>
@@ -81,50 +93,57 @@
         </div>
     </div>
 
-    {{-- Filtros --}}
-    <div class="card-body" style="padding-bottom: 14px;">
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Buscar</label>
-                <input type="text" id="filtro-buscar" class="form-control"
-                    placeholder="Paciente, CI o motivo..."
+    <div class="admisiones-filters" aria-label="Filtros de admisiones">
+        <div class="admisiones-filter-heading">
+            <div>
+                <strong>Filtrar registros</strong>
+                <span>Encuentra una admisión por paciente, gestión o fecha.</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnLimpiarFiltros">
+                Limpiar filtros
+            </button>
+        </div>
+
+        <div class="admisiones-filter-grid">
+            <div class="form-group admisiones-search-field">
+                <label for="filtro-buscar">Buscar paciente</label>
+                <span class="admisiones-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m20 20-4-4" />
+                    </svg>
+                </span>
+                <input type="search" id="filtro-buscar" class="form-control"
+                    placeholder="Nombre, CI o motivo de consulta"
                     autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label>Periodo</label>
+                <label for="filtro-periodo">Periodo académico</label>
                 <select id="filtro-periodo" class="form-control">
                     <option value="">Todos los periodos</option>
                     @foreach ($periodos as $p)
                     <option value="{{ $p->id }}">
-                        {{ $p->nombre }} ({{ $p->gestion }}-{{ $p->semestre }})
+                        {{ $p->nombre }} ({{ $p->gestion }})
                     </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Desde</label>
+                <label for="filtro-desde">Desde</label>
                 <input type="date" id="filtro-desde" class="form-control">
             </div>
 
             <div class="form-group">
-                <label>Hasta</label>
+                <label for="filtro-hasta">Hasta</label>
                 <input type="date" id="filtro-hasta" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                    Limpiar
-                </button>
             </div>
         </div>
     </div>
 
-    {{-- Tabla --}}
-    <div class="table-wrap">
-        <table>
+    <div class="table-wrap admisiones-table-wrap">
+        <table class="admisiones-table">
             <thead>
                 <tr>
                     <th>#</th>
@@ -143,7 +162,8 @@
         </table>
     </div>
 
-    <div id="paginacionWrap">{{ $registros->links() }}</div>
+    <div class="admisiones-pagination" id="paginacionWrap">{{ $registros->links() }}</div>
+</section>
 </div>
 
 
@@ -151,6 +171,318 @@
 
 @push('styles')
 <style>
+    .admisiones-shell {
+        display: grid;
+        gap: 18px;
+    }
+
+    .admisiones-summary {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        overflow: hidden;
+        padding: 22px 24px;
+        border: 1px solid color-mix(in srgb, var(--teal) 20%, var(--line));
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--teal) 12%, transparent), transparent 36%),
+            linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface) 91%, var(--teal)));
+        box-shadow: var(--shadow-card);
+    }
+
+    .admisiones-summary::after {
+        position: absolute;
+        top: -64px;
+        right: -32px;
+        width: 190px;
+        height: 190px;
+        border: 30px solid color-mix(in srgb, var(--teal) 7%, transparent);
+        border-radius: 50%;
+        content: '';
+        pointer-events: none;
+    }
+
+    .admisiones-summary-copy,
+    .admisiones-toolbar {
+        position: relative;
+        z-index: 1;
+    }
+
+    .admisiones-summary-copy {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        min-width: 0;
+    }
+
+    .admisiones-summary-icon {
+        display: grid;
+        flex: 0 0 52px;
+        width: 52px;
+        height: 52px;
+        place-items: center;
+        border-radius: 15px;
+        background: linear-gradient(145deg, var(--teal), var(--teal-dark));
+        color: #fff;
+        box-shadow: 0 10px 22px color-mix(in srgb, var(--teal) 25%, transparent);
+    }
+
+    .admisiones-summary-icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .admisiones-eyebrow {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--teal);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+    .admisiones-summary h2,
+    .admisiones-card-header h2 {
+        margin: 0;
+        color: var(--ink);
+    }
+
+    .admisiones-summary h2 {
+        font-size: clamp(19px, 2vw, 24px);
+    }
+
+    .admisiones-summary p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .admisiones-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .admisiones-table-card {
+        overflow: hidden;
+    }
+
+    .admisiones-card-header {
+        min-height: 70px;
+    }
+
+    .admisiones-filters {
+        padding: 18px 20px 20px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface-soft) 58%, var(--surface));
+    }
+
+    .admisiones-filter-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 15px;
+    }
+
+    .admisiones-filter-heading strong,
+    .admisiones-filter-heading span {
+        display: block;
+    }
+
+    .admisiones-filter-heading strong {
+        color: var(--ink);
+        font-size: 14px;
+    }
+
+    .admisiones-filter-heading span {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .admisiones-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 1.6fr) minmax(180px, 1fr) minmax(145px, .7fr) minmax(145px, .7fr);
+        gap: 12px;
+        align-items: end;
+    }
+
+    .admisiones-filter-grid .form-group {
+        margin: 0;
+    }
+
+    .admisiones-search-field {
+        position: relative;
+    }
+
+    .admisiones-search-field .form-control {
+        padding-left: 39px;
+    }
+
+    .admisiones-input-icon {
+        position: absolute;
+        bottom: 12px;
+        left: 13px;
+        display: grid;
+        width: 17px;
+        height: 17px;
+        place-items: center;
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    .admisiones-input-icon svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .admisiones-table {
+        min-width: 1040px;
+    }
+
+    .admisiones-table th:last-child,
+    .admisiones-table td:last-child {
+        width: 184px;
+    }
+
+    .admisiones-id code {
+        display: inline-flex;
+        min-width: 30px;
+        justify-content: center;
+        padding: 4px 7px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--surface-soft);
+        color: var(--teal-dark);
+        font-weight: 700;
+    }
+
+    .admisiones-patient {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 190px;
+    }
+
+    .admisiones-patient-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 11px;
+    }
+
+    .admisiones-patient-copy {
+        min-width: 0;
+    }
+
+    .admisiones-patient-copy strong,
+    .admisiones-patient-copy small {
+        display: block;
+    }
+
+    .admisiones-patient-copy strong {
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .admisiones-patient-copy small,
+    .admisiones-muted,
+    .admisiones-date,
+    .admisiones-area {
+        color: var(--muted);
+    }
+
+    .admisiones-patient-copy small {
+        margin-top: 3px;
+        font-size: 11px;
+    }
+
+    .admisiones-area {
+        max-width: 190px;
+        line-height: 1.45;
+    }
+
+    .admisiones-row-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .admisiones-action {
+        display: inline-grid;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .admisiones-action:hover,
+    .admisiones-action:focus-visible {
+        border-color: color-mix(in srgb, var(--teal) 45%, var(--line));
+        background: color-mix(in srgb, var(--teal) 9%, var(--surface));
+        color: var(--teal-dark);
+        transform: translateY(-1px);
+    }
+
+    .admisiones-action:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+    }
+
+    .admisiones-action svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .admisiones-action--primary {
+        border-color: color-mix(in srgb, var(--teal) 28%, var(--line));
+        background: color-mix(in srgb, var(--teal) 12%, var(--surface));
+        color: var(--teal-dark);
+    }
+
+    .admisiones-action--danger {
+        border-color: var(--danger-border);
+        color: var(--danger);
+    }
+
+    .admisiones-action--danger:hover,
+    .admisiones-action--danger:focus-visible {
+        border-color: var(--danger-border);
+        background: var(--danger-bg);
+        color: var(--danger);
+    }
+
+    .admisiones-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .admisiones-pagination {
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        background: var(--surface);
+    }
+
     .admision-odontograma-preview {
         position: relative;
         width: 250px;
@@ -253,6 +585,44 @@
     }
 
     @media (max-width: 640px) {
+        .admisiones-summary {
+            align-items: stretch;
+            padding: 18px;
+        }
+
+        .admisiones-summary,
+        .admisiones-filter-heading {
+            flex-direction: column;
+        }
+
+        .admisiones-toolbar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            justify-content: stretch;
+        }
+
+        .admisiones-toolbar .btn {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .admisiones-primary-action {
+            grid-column: 1 / -1;
+            grid-row: 1;
+        }
+
+        .admisiones-filters {
+            padding: 16px;
+        }
+
+        .admisiones-filter-heading .btn {
+            align-self: flex-start;
+        }
+
+        .admisiones-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
         .admision-odontograma-preview {
             width: min(100%, 250px);
         }
@@ -263,6 +633,21 @@
 
         .admision-odontograma-modal-stage {
             height: 58dvh;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 1050px) {
+        .admisiones-summary {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .admisiones-toolbar {
+            justify-content: flex-start;
+        }
+
+        .admisiones-filter-grid {
+            grid-template-columns: 1fr 1fr;
         }
     }
 </style>

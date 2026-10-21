@@ -415,7 +415,6 @@ class DashboardMetrics
         return Periodo::query()
             ->where('habilitado', true)
             ->orderByDesc('gestion')
-            ->orderByDesc('semestre')
             ->value('id');
     }
 
@@ -424,7 +423,6 @@ class DashboardMetrics
         $periodo = Periodo::query()
             ->where('habilitado', true)
             ->orderByDesc('gestion')
-            ->orderByDesc('semestre')
             ->first();
 
         return $periodo ? "vigente: {$periodo->nombre}" : 'sin periodo vigente';

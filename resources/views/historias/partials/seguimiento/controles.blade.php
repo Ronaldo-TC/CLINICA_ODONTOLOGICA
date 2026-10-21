@@ -6,7 +6,7 @@
     <div class="seguimiento-summary__item"><span class="seguimiento-summary__label">Historia</span><span class="seguimiento-summary__value">#{{ $registro->id }}</span></div>
     <div class="seguimiento-summary__item"><span class="seguimiento-summary__label">Cl&iacute;nica</span><span class="seguimiento-summary__value">{{ $registro->clinica?->especialidad }}</span></div>
     <div class="seguimiento-summary__item"><span class="seguimiento-summary__label">Controles</span><span class="seguimiento-summary__value">{{ $esterilizaciones->count() }}</span></div>
-    <div class="seguimiento-summary__item"><span class="seguimiento-summary__label">Periodo</span><span class="seguimiento-summary__value">{{ $registro->periodo?->gestion }}-{{ $registro->periodo?->semestre }}</span></div>
+    <div class="seguimiento-summary__item"><span class="seguimiento-summary__label">Periodo</span><span class="seguimiento-summary__value">{{ $registro->periodo?->gestion }}</span></div>
 </div>
 
 @if($esEstudiante && ! $cerrada && $registro->remision_id)

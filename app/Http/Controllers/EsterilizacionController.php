@@ -45,7 +45,7 @@ class EsterilizacionController extends Controller
         return AccesoClinico::esterilizaciones(Esterilizacion::query(), $request->user())
             ->with([
                 'clinica:id,especialidad,modulo',
-                'periodo:id,nombre,gestion,semestre',
+                'periodo:id,nombre,gestion',
                 'estudiante:id,nombre_completo,habilitado',
                 'usuario:id,nombre_completo',
                 'ultimoCiclo',
@@ -90,8 +90,8 @@ class EsterilizacionController extends Controller
                 ? $request->user()->only(['id', 'nombre_completo']) : null,
             'docentes' => Usuario::where('habilitado', true)->whereHas('roles', fn ($q) => $q->whereIn('name', ['docente', 'jefe-catedra']))->orderBy('nombre_completo')->get(['id', 'nombre_completo']),
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -99,8 +99,8 @@ class EsterilizacionController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
             'estudiantes' => Usuario::where('habilitado', 1)
                 ->whereHas('roles', fn ($q) => $q->whereIn('name', ['estudiante', 'interno']))
                 ->orderBy('nombre_completo')
@@ -512,9 +512,9 @@ class EsterilizacionController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion}-{$p->semestre})"]),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion'])
+                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 }

@@ -11,15 +11,12 @@ return new class extends Migration
         Schema::create('periodos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
-
-
             $table->integer('gestion');
-            $table->integer('semestre');
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
             $table->boolean('habilitado')->default(true);
             $table->timestamps();
-            $table->unique(['gestion', 'semestre']);
+            $table->unique('gestion');
         });
     }
 

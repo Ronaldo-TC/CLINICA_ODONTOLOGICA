@@ -61,7 +61,7 @@
                     <option value="">Todos los periodos</option>
                     @foreach ($periodos as $p)
                     <option value="{{ $p->id }}">
-                        {{ $p->gestion }}-{{ $p->semestre }}
+                        {{ $p->gestion }}
                     </option>
                     @endforeach
                 </select>

@@ -83,7 +83,7 @@
                     <option value="">Todos los periodos</option>
                     @foreach ($periodos as $periodo)
                     <option value="{{ $periodo->id }}" @selected((string) $filtros['periodo_id'] === (string) $periodo->id)>
-                        {{ $periodo->nombre }} · {{ $periodo->gestion }}-{{ $periodo->semestre }}
+                        {{ $periodo->nombre }} · {{ $periodo->gestion }}
                     </option>
                     @endforeach
                 </select>

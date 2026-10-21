@@ -255,6 +255,6 @@
 </style>
 @endPushOnce
 
-@pushOnce('scripts', 'historias-seguimiento')
+@push('scripts')
 <script src="{{ asset('js/historias-seguimiento.js') }}" defer></script>
-@endPushOnce
+@endpush

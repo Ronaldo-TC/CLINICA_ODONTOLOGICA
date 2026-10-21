@@ -62,11 +62,11 @@ class InvestigacionController extends Controller
 
         return view('investigacion.index', [
             'registros' => $registros,
-            'items'     => $registros,   // alias por comodidad (igual que HasCrudAjax)
-            'anios'     => $this->aniosDisponibles(),
-            'clinicas'  => Clinica::query()->orderBy('especialidad')->get(['id', 'modulo', 'especialidad']),
-            'generos'   => $this->generosDisponibles(),
-            'motivos'   => $this->motivosDisponibles(),
+            'items' => $registros,   // alias por comodidad (igual que HasCrudAjax)
+            'anios' => $this->aniosDisponibles(),
+            'clinicas' => Clinica::query()->orderBy('especialidad')->get(['id', 'modulo', 'especialidad']),
+            'generos' => $this->generosDisponibles(),
+            'motivos' => $this->motivosDisponibles(),
         ]);
     }
 
@@ -81,12 +81,12 @@ class InvestigacionController extends Controller
         $registros = $this->paginar($request);
 
         return response()->json([
-            'filas'      => view('investigacion.partials.filas', [
+            'filas' => view('investigacion.partials.filas', [
                 'registros' => $registros,
-                'items'     => $registros,
+                'items' => $registros,
             ])->render(),
             'paginacion' => $registros->links()->toHtml(),
-            'total'      => $registros->total(),
+            'total' => $registros->total(),
         ]);
     }
 
@@ -115,7 +115,7 @@ class InvestigacionController extends Controller
 
         $this->registrarBitacora($request, 'exportacion_dataset', $filas->count());
 
-        $nombre = 'dataset_anonimizado_' . now()->format('Ymd') . '.csv';
+        $nombre = 'dataset_anonimizado_'.now()->format('Ymd').'.csv';
 
         $response = response()->streamDownload(function () use ($filas) {
             $out = fopen('php://output', 'w');
@@ -141,7 +141,7 @@ class InvestigacionController extends Controller
             fclose($out);
         }, $nombre, ['Content-Type' => 'text/csv; charset=UTF-8']);
 
-        $response->headers->set('Content-Disposition', 'attachment; filename=' . $nombre);
+        $response->headers->set('Content-Disposition', 'attachment; filename='.$nombre);
 
         return $response;
     }
@@ -176,7 +176,6 @@ class InvestigacionController extends Controller
                 't.nombre as tratamiento',
                 'pe.nombre as periodo_nombre',
                 'pe.gestion as periodo_gestion',
-                'pe.semestre as periodo_semestre',
                 'hc.estado as estado_historia',
                 'tr.estado as estado_tratamiento',
             ])
@@ -261,14 +260,14 @@ class InvestigacionController extends Controller
     private function anonimizar(object $fila): array
     {
         return [
-            'codigo'       => $this->codigoAnonimo((int) $fila->paciente_ref),
-            'edad'         => $this->edad($fila->fecha_nacimiento),
-            'genero'       => $this->texto($fila->genero, 'No especificado'),
-            'motivo'       => $this->texto($fila->motivo_catalogo ?: $fila->motivo_texto, 'No especificado'),
+            'codigo' => $this->codigoAnonimo((int) $fila->paciente_ref),
+            'edad' => $this->edad($fila->fecha_nacimiento),
+            'genero' => $this->texto($fila->genero, 'No especificado'),
+            'motivo' => $this->texto($fila->motivo_catalogo ?: $fila->motivo_texto, 'No especificado'),
             'especialidad' => $this->texto($fila->especialidad, 'Sin asignar'),
-            'tratamiento'  => $this->texto($fila->tratamiento, 'Sin tratamiento registrado'),
-            'periodo'      => $this->periodo($fila),
-            'estado'       => $this->texto($fila->estado_tratamiento ?: $fila->estado_historia, 'Sin estado'),
+            'tratamiento' => $this->texto($fila->tratamiento, 'Sin tratamiento registrado'),
+            'periodo' => $this->periodo($fila),
+            'estado' => $this->texto($fila->estado_tratamiento ?: $fila->estado_historia, 'Sin estado'),
         ];
     }
 
@@ -278,7 +277,7 @@ class InvestigacionController extends Controller
      */
     private function codigoAnonimo(int $pacienteId): string
     {
-        return substr(hash('sha256', $pacienteId . config('app.key')), 0, 12);
+        return substr(hash('sha256', $pacienteId.config('app.key')), 0, 12);
     }
 
     private function edad($fechaNacimiento): ?int
@@ -301,7 +300,7 @@ class InvestigacionController extends Controller
         }
 
         if ($fila->periodo_gestion !== null) {
-            return trim($fila->periodo_gestion . '-' . ($fila->periodo_semestre ?? ''));
+            return (string) $fila->periodo_gestion;
         }
 
         return 'Sin periodo';
@@ -328,11 +327,11 @@ class InvestigacionController extends Controller
             ->all();
 
         return [
-            'edad'         => $this->estadisticasEdad($edades),
-            'genero'       => $this->distribucion($filas, 'genero'),
+            'edad' => $this->estadisticasEdad($edades),
+            'genero' => $this->distribucion($filas, 'genero'),
             'especialidad' => $this->distribucion($filas, 'especialidad'),
-            'periodo'      => $this->distribucion($filas, 'periodo'),
-            'total'        => $filas->count(),
+            'periodo' => $this->distribucion($filas, 'periodo'),
+            'total' => $filas->count(),
         ];
     }
 
@@ -342,12 +341,12 @@ class InvestigacionController extends Controller
 
         if ($n === 0) {
             return [
-                'n'          => 0,
-                'media'      => null,
-                'mediana'    => null,
-                'moda'       => null,
-                'min'        => null,
-                'max'        => null,
+                'n' => 0,
+                'media' => null,
+                'mediana' => null,
+                'moda' => null,
+                'min' => null,
+                'max' => null,
                 'desviacion' => null,
             ];
         }
@@ -360,9 +359,9 @@ class InvestigacionController extends Controller
             ? (float) $edades[intdiv($n, 2)]
             : ($edades[intdiv($n, 2) - 1] + $edades[intdiv($n, 2)]) / 2;
 
-        $frecuencias   = array_count_values($edades);
+        $frecuencias = array_count_values($edades);
         $maxFrecuencia = max($frecuencias);
-        $modas         = array_keys($frecuencias, $maxFrecuencia);
+        $modas = array_keys($frecuencias, $maxFrecuencia);
         sort($modas);
 
         $varianza = $n > 1
@@ -370,12 +369,12 @@ class InvestigacionController extends Controller
             : 0.0;
 
         return [
-            'n'          => $n,
-            'media'      => round($media, 2),
-            'mediana'    => round($mediana, 2),
-            'moda'       => (int) $modas[0],
-            'min'        => min($edades),
-            'max'        => max($edades),
+            'n' => $n,
+            'media' => round($media, 2),
+            'mediana' => round($mediana, 2),
+            'moda' => (int) $modas[0],
+            'min' => min($edades),
+            'max' => max($edades),
             'desviacion' => round(sqrt($varianza), 2),
         ];
     }
@@ -470,15 +469,15 @@ class InvestigacionController extends Controller
 
             Bitacora::create([
                 'usuario_id' => auth()->id() ?? session('user_id'),
-                'ip'         => $request->ip() ?? '0.0.0.0',
-                'fecha'      => now(),
-                'tipo'       => 'investigacion',
-                'datos'      => json_encode([
-                    'accion'    => $accion,
-                    'filtros'   => $filtros,
+                'ip' => $request->ip() ?? '0.0.0.0',
+                'fecha' => now(),
+                'tipo' => 'investigacion',
+                'datos' => json_encode([
+                    'accion' => $accion,
+                    'filtros' => $filtros,
                     'registros' => $registros,
                 ], JSON_UNESCAPED_UNICODE),
-                'estado'     => 'ok',
+                'estado' => 'ok',
             ]);
         } catch (\Throwable $e) {
             // La bitácora nunca debe interrumpir la consulta del dataset.

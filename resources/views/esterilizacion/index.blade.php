@@ -58,7 +58,7 @@
                 <select id="filtro-periodo" class="form-control">
                     <option value="">Todos</option>
                     @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}">{{ $p->gestion }}-{{ $p->semestre }}</option>
+                    <option value="{{ $p->id }}">{{ $p->gestion }}</option>
                     @endforeach
                 </select>
             </div>

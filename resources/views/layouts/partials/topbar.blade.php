@@ -38,13 +38,8 @@
 
     $currentRoute = request()->route()?->getName() ?? '';
 
-    // ============================================================
     // Breadcrumb automático a partir del menú del usuario
-    // ============================================================
-    // ============================================================
-    // Breadcrumb automático a partir del menú del usuario
-    // Se elige la coincidencia MÁS específica para evitar que un
-    // patrón amplio (insumos.*) gane sobre uno concreto.
+    // Se priorizan las rutas hijas y las coincidencias exactas.
     // ============================================================
     $crumbSection = '';
     $crumbCurrent = '';
@@ -58,40 +53,48 @@
             continue;
         }
 
-        if (! empty($item['exclude']) && request()->routeIs($item['exclude'])) {
-            continue;
-        }
-
+        $itemLabel = (string) ($item['label'] ?? '');
         $pattern = $item['pattern'] ?? null;
         $route = $item['route'] ?? null;
-        $coincidePatron = $pattern && request()->routeIs($pattern);
-        $coincideRuta = is_string($route) && $route !== '' && $route === $currentRoute;
+        $itemExcluded = ! empty($item['exclude']) && request()->routeIs($item['exclude']);
+        $coincidePatron = ! $itemExcluded && $pattern && request()->routeIs($pattern);
+        $coincideRuta = ! $itemExcluded && is_string($route) && $route !== '' && $route === $currentRoute;
+
+        foreach (($item['children'] ?? []) as $child) {
+            $childExcluded = ! empty($child['exclude']) && request()->routeIs($child['exclude']);
+            $childPattern = $child['pattern'] ?? null;
+            $childRoute = $child['route'] ?? null;
+            $childMatches = ! $childExcluded && (
+                ($childPattern && request()->routeIs($childPattern))
+                || ($childRoute === $currentRoute)
+            );
+
+            if ($childMatches) {
+                $puntaje = 200 + ($childRoute === $currentRoute ? 100 : 0)
+                    + substr_count((string) $childPattern, '.') + $indice;
+
+                if ($puntaje <= $mejorPuntaje) {
+                    continue;
+                }
+
+                $mejorPuntaje = $puntaje;
+                $crumbSection = $itemLabel;
+                $crumbCurrent = (string) ($child['label'] ?? '');
+            }
+        }
 
         if (! $coincidePatron && ! $coincideRuta) {
             continue;
         }
 
-        // Puntaje: contar segmentos literales del patrón + prioridad por orden
         $puntaje = ($coincideRuta ? 100 : 0)
             + ($coincidePatron ? substr_count((string) $pattern, '.') : 0)
             + $indice;
 
-        if ($puntaje <= $mejorPuntaje) {
-            continue;
-        }
-
-        $mejorPuntaje = $puntaje;
-        $crumbSection = $crumbSectionLabel;
-        $crumbCurrent = (string) ($item['label'] ?? '');
-
-        foreach (($item['children'] ?? []) as $child) {
-            $childMatches = (($child['pattern'] ?? null) && request()->routeIs($child['pattern']))
-                || (($child['route'] ?? null) === $currentRoute);
-
-            if ($childMatches) {
-                $crumbCurrent = (string) ($child['label'] ?? '');
-                break;
-            }
+        if ($puntaje > $mejorPuntaje) {
+            $mejorPuntaje = $puntaje;
+            $crumbSection = $crumbSectionLabel;
+            $crumbCurrent = $itemLabel;
         }
     }
 

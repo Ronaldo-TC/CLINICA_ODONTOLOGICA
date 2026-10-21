@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  *  - 80 permisos (16 módulos × 5 acciones)
  *  - 14 clínicas (13 especialidades + admisión)
  *  - Motivos de consulta
- *  - Periodo activo 2026-1
+ *  - Periodo anual activo 2026
  */
 class CatalogSeeder extends Seeder
 {
@@ -43,7 +43,7 @@ class CatalogSeeder extends Seeder
         ];
 
         DB::table('roles')->insert(array_map(
-            fn(array $r): array => $r + [
+            fn (array $r): array => $r + [
                 'habilitado' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -55,30 +55,30 @@ class CatalogSeeder extends Seeder
         // 2. PERMISOS (16 módulos × 5 acciones = 80)
         // ═══════════════════════════════════════════════════════
         $modulos = [
-            'usuarios'         => 'Gestión de cuentas',
-            'roles'            => 'Roles y permisos',
-            'pacientes'        => 'Datos de pacientes',
-            'clinicas'         => 'Especialidades',
-            'periodos'         => 'Periodos académicos',
-            'tratamientos'     => 'Catálogo de tratamientos',
-            'admisiones'       => 'Registro inicial',
-            'remisiones'       => 'Derivaciones entre clínicas',
-            'historias'        => 'Historias clínicas',
-            'sesiones'         => 'Avance de tratamientos',
-            'cajas'            => 'Pagos y recibos',
-            'insumos'          => 'Insumos y solicitudes',
+            'usuarios' => 'Gestión de cuentas',
+            'roles' => 'Roles y permisos',
+            'pacientes' => 'Datos de pacientes',
+            'clinicas' => 'Especialidades',
+            'periodos' => 'Periodos académicos',
+            'tratamientos' => 'Catálogo de tratamientos',
+            'admisiones' => 'Registro inicial',
+            'remisiones' => 'Derivaciones entre clínicas',
+            'historias' => 'Historias clínicas',
+            'sesiones' => 'Avance de tratamientos',
+            'cajas' => 'Pagos y recibos',
+            'insumos' => 'Insumos y solicitudes',
             'esterilizaciones' => 'Control de esterilización',
-            'radiologias'      => 'Radiografías',
-            'bitacoras'        => 'Auditoría',
-            'reportes'         => 'Estadísticas y reportes',
-            'investigacion'    => 'Datos anonimizados',
+            'radiologias' => 'Radiografías',
+            'bitacoras' => 'Auditoría',
+            'reportes' => 'Estadísticas y reportes',
+            'investigacion' => 'Datos anonimizados',
         ];
 
         $acciones = [
-            'ver'       => 'Visualizar',
-            'crear'     => 'Crear',
-            'editar'    => 'Editar',
-            'eliminar'  => 'Eliminar/deshabilitar',
+            'ver' => 'Visualizar',
+            'crear' => 'Crear',
+            'editar' => 'Editar',
+            'eliminar' => 'Eliminar/deshabilitar',
             'gestionar' => 'Gestión completa',
         ];
 
@@ -86,11 +86,11 @@ class CatalogSeeder extends Seeder
         foreach ($modulos as $modulo => $descripcionModulo) {
             foreach ($acciones as $accion => $descripcionAccion) {
                 $permisos[] = [
-                    'codigo'      => "{$modulo}.{$accion}",
+                    'codigo' => "{$modulo}.{$accion}",
                     'descripcion' => "{$descripcionAccion} — {$descripcionModulo}",
-                    'modulo'      => $modulo,
-                    'created_at'  => $now,
-                    'updated_at'  => $now,
+                    'modulo' => $modulo,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }
@@ -118,7 +118,7 @@ class CatalogSeeder extends Seeder
         ];
 
         DB::table('clinicas')->insert(array_map(
-            fn(array $c): array => $c + ['created_at' => $now, 'updated_at' => $now],
+            fn (array $c): array => $c + ['created_at' => $now, 'updated_at' => $now],
             $clinicas
         ));
 
@@ -139,7 +139,7 @@ class CatalogSeeder extends Seeder
         ];
 
         DB::table('motivos_consulta')->insert(array_map(
-            fn(array $m): array => $m + [
+            fn (array $m): array => $m + [
                 'habilitado' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -148,17 +148,16 @@ class CatalogSeeder extends Seeder
         ));
 
         // ═══════════════════════════════════════════════════════
-        // 5. PERIODO ACTIVO 2026-1
+        // 5. PERIODO ANUAL ACTIVO 2026
         // ═══════════════════════════════════════════════════════
         DB::table('periodos')->insert([
-            'nombre'       => 'Gestión 2026 - Semestre 1',
-            'gestion'      => 2026,
-            'semestre'     => 1,
+            'nombre' => 'Gestión 2026',
+            'gestion' => 2026,
             'fecha_inicio' => '2026-01-05',
-            'fecha_fin'    => '2026-06-30',
-            'habilitado'   => true,
-            'created_at'   => $now,
-            'updated_at'   => $now,
+            'fecha_fin' => '2026-12-31',
+            'habilitado' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
     }
 }

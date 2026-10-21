@@ -111,7 +111,6 @@ class TratamientoController extends Controller
                     ->ignore($id),
             ],
             'costo' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
-            'porcentaje_pg' => ['nullable', 'string', 'max:100'],
             'descripcion' => ['nullable', 'string', 'max:100'],
             'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
         ];
@@ -136,10 +135,8 @@ class TratamientoController extends Controller
 
     private function normalizarStrings(array $data): array
     {
-        foreach (['porcentaje_pg', 'descripcion'] as $col) {
-            if (array_key_exists($col, $data) && $data[$col] === null) {
-                $data[$col] = '';
-            }
+        if (array_key_exists('descripcion', $data) && $data['descripcion'] === null) {
+            $data['descripcion'] = '';
         }
 
         return $data;
@@ -182,25 +179,50 @@ class TratamientoController extends Controller
 
     private function autorizarPrecio(array $data): void
     {
-        if (isset($data['costo']) || array_key_exists('porcentaje_pg', $data)) {
+        if (isset($data['costo'])) {
             abort_unless(Gate::allows('tratamientos.precios'), 403, 'No tiene permiso para asignar precios.');
         }
     }
 
-    public function show(Tratamiento $tratamiento): View|JsonResponse
+    public function show(Request $request, Tratamiento $tratamiento): View|JsonResponse
     {
         $this->authorizeAction('ver');
-        $tratamiento->load(['clinica', 'insumos' => fn ($query) => $query->orderBy('nombre')]);
+        $tratamiento->load(['clinica', 'insumos' => fn ($query) => $query->orderBy('nombre')])
+            ->loadCount('tratamientosRealizados');
+
+        $insumosDisponibles = Gate::allows('tratamientos.insumos')
+            ? Insumo::query()->where('clinica_id', $tratamiento->clinica_id)->orderBy('nombre')->get()
+            : collect();
 
         if ($this->esAjax()) {
+            $modo = $request->input('modal');
+            if ($modo !== null) {
+                $request->validate(['modal' => ['required', Rule::in(['ver', 'precio', 'insumos'])]]);
+
+                if ($modo === 'precio') {
+                    Gate::authorize('tratamientos.precios');
+                }
+                if ($modo === 'insumos') {
+                    Gate::authorize('tratamientos.insumos');
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'titulo' => match ($modo) {
+                        'precio' => 'Precio del tratamiento',
+                        'insumos' => 'Insumos del tratamiento',
+                        default => 'Detalle del tratamiento',
+                    },
+                    'html' => view('tratamientos.partials.modal-contenido', compact('tratamiento', 'insumosDisponibles', 'modo'))->render(),
+                ]);
+            }
+
             return response()->json(['success' => true, 'registro' => $tratamiento]);
         }
 
         return view('tratamientos.show', [
             'tratamiento' => $tratamiento,
-            'insumosDisponibles' => Gate::allows('tratamientos.insumos')
-                ? Insumo::query()->where('clinica_id', $tratamiento->clinica_id)->orderBy('nombre')->get()
-                : collect(),
+            'insumosDisponibles' => $insumosDisponibles,
         ]);
     }
 
@@ -209,7 +231,6 @@ class TratamientoController extends Controller
         Gate::authorize('tratamientos.precios');
         $data = $request->validate([
             'costo' => ['required', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
-            'porcentaje_pg' => ['nullable', 'string', 'max:100'],
         ]);
         $tratamiento->update([...$data, 'precio_asignado' => true]);
 

@@ -22,7 +22,7 @@
                         <label for="periodo-nombre">Nombre <span class="req">*</span></label>
                         <input type="text" id="periodo-nombre" name="nombre"
                             class="form-control" required maxlength="100"
-                            placeholder="Ej: Gestión 2026 - Semestre 1">
+                            placeholder="Ej: Gestión 2026">
                         <span class="form-error" data-error-for="nombre"></span>
                     </div>
 
@@ -32,16 +32,6 @@
                             class="form-control" required min="2000" max="2100"
                             placeholder="Ej: 2026">
                         <span class="form-error" data-error-for="gestion"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="periodo-semestre">Semestre <span class="req">*</span></label>
-                        <select id="periodo-semestre" name="semestre" class="form-control" required>
-                            <option value="">Seleccione...</option>
-                            <option value="1">1° Semestre</option>
-                            <option value="2">2° Semestre</option>
-                        </select>
-                        <span class="form-error" data-error-for="semestre"></span>
                     </div>
 
                     <div class="form-group">
@@ -133,7 +123,6 @@
 
                 $form.nombre.value = p.nombre ?? '';
                 $form.gestion.value = p.gestion ?? new Date().getFullYear();
-                $form.semestre.value = p.semestre ?? 1;
                 $form.fecha_inicio.value = p.fecha_inicio ?
                     p.fecha_inicio.substring(0, 10) :
                     '';

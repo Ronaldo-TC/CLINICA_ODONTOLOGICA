@@ -99,8 +99,8 @@ class RemisionController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -110,8 +110,8 @@ class RemisionController extends Controller
 
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -177,16 +177,25 @@ class RemisionController extends Controller
         return $this->buildIndexQuery(request())->findOrFail($id);
     }
 
-    public function asignacion(Request $request, int $remision, AsignacionRemision $asignacion): View
+    public function asignacion(Request $request, int $remision, AsignacionRemision $asignacion): View|JsonResponse
     {
         $registro = $this->findOrFail($remision);
+        $datos = $asignacion->datos($registro, $request->user());
 
-        return view($request->routeIs('pacientes-remitidos.*') ? 'pacientes-remitidos.asignar' : 'remisiones.asignar', $asignacion->datos($registro, $request->user()));
+        if ($request->routeIs('pacientes-remitidos.*') && $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'titulo' => 'Asignar estudiante',
+                'html' => view('pacientes-remitidos.partials.modal-asignacion-contenido', $datos)->render(),
+            ]);
+        }
+
+        return view($request->routeIs('pacientes-remitidos.*') ? 'pacientes-remitidos.asignar' : 'remisiones.asignar', $datos);
     }
 
-    public function asignar(AsignarRemisionRequest $request, int $remision, AsignacionRemision $asignacion): RedirectResponse
+    public function asignar(AsignarRemisionRequest $request, int $remision, AsignacionRemision $asignacion): RedirectResponse|JsonResponse
     {
-        $asignacion->asignar(
+        $historia = $asignacion->asignar(
             $this->findOrFail($remision),
             $request->user(),
             $request->integer('estudiante_id'),
@@ -194,7 +203,17 @@ class RemisionController extends Controller
             $request->filled('periodo_id') ? $request->integer('periodo_id') : null,
         );
 
-        return redirect()->route($request->routeIs('pacientes-remitidos.*') ? 'pacientes-remitidos.index' : 'historias.index')->with('success', 'Asignación registrada. El docente debe revisar la historia clínica.');
+        $mensaje = 'Asignación registrada. La historia clínica fue creada y autorizada automáticamente.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'historia_id' => $historia->id,
+            ]);
+        }
+
+        return redirect()->route($request->routeIs('pacientes-remitidos.*') ? 'pacientes-remitidos.index' : 'historias.index')->with('success', $mensaje);
     }
 
     protected function canDestroy(Model $model): array
@@ -248,9 +267,9 @@ class RemisionController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion}-{$p->semestre})"]),
+            'periodos' => Periodo::orderByDesc('gestion')
+                ->get(['id', 'nombre', 'gestion'])
+                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 
@@ -263,8 +282,7 @@ class RemisionController extends Controller
             'items' => $registros,
             'clinicas' => $this->clinicasRemitidos($request),
             'periodos' => Periodo::orderByDesc('gestion')
-                ->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+                ->get(['id', 'nombre', 'gestion']),
         ]);
     }
 

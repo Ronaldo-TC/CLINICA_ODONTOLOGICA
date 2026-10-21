@@ -24,10 +24,6 @@
         @endif
     </td>
 
-    <td>
-        {{ $tratamiento->porcentaje_pg ?: '—' }}
-    </td>
-
     <td><span class="badge badge-info">{{ $tratamiento->insumos_count ?? 0 }}</span></td>
 
     <td>
@@ -38,12 +34,21 @@
 
     <td>
         <div class="actions">
-            <a class="btn btn-sm btn-secondary" href="{{ route('tratamientos.show', $tratamiento) }}"><x-icono nombre="ver" /> Ver</a>
+            <button type="button" class="btn btn-sm btn-secondary" data-action="ver"
+                data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">
+                <x-icono nombre="ver" /> Ver
+            </button>
             @can('tratamientos.precios')
-            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#precio"><x-icono nombre="precio" /> Precio</a>
+            <button type="button" class="btn btn-sm btn-primary" data-action="precio"
+                data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">
+                <x-icono nombre="precio" /> Precio
+            </button>
             @endcan
             @can('tratamientos.insumos')
-            <a class="btn btn-sm btn-primary" href="{{ route('tratamientos.show', $tratamiento) }}#insumos"><x-icono nombre="insumos" /> Insumos</a>
+            <button type="button" class="btn btn-sm btn-primary" data-action="insumos"
+                data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">
+                <x-icono nombre="insumos" /> Insumos
+            </button>
             @endcan
             @canany(['tratamientos.editar', 'tratamientos.gestionar'])
             <button type="button"
@@ -68,7 +73,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="8">
+    <td colspan="7">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -207,7 +207,7 @@ Antes de seguir, sería bueno confirmar con el **Dr. Edwing Mollericona** (Jefe 
 2. **¿Qué reportes son los más urgentes para acreditación?**
 3. **¿Tienen acceso a la API de SHICO o solo la referencia?**
 4. **¿Necesitan firma digital con validez legal o solo captura?**
-5. **¿Cuántos pacientes estiman atender por semestre?** (para dimensionar)
+5. **¿Cuántos pacientes estiman atender por año?** (para dimensionar)
 
 ---
 

@@ -224,8 +224,11 @@
             height: 100dvh;
             overflow-y: auto;
             overflow-x: clip;
-            background: var(--sidebar-bg);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(243, 248, 247, 0.94));
             border-right: 1px solid var(--line);
+            box-shadow: inset -1px 0 0 rgba(24, 37, 45, 0.02), 4px 0 28px rgba(20, 30, 30, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             -webkit-overflow-scrolling: touch;
         }
 
@@ -848,10 +851,13 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            min-height: 64px;
-            padding: 10px 24px;
-            background: var(--topbar-bg);
-            border-bottom: 1px solid var(--line);
+            min-height: 72px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.82);
+            border-bottom: 1px solid rgba(13, 31, 31, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 28px rgba(15, 23, 23, 0.03);
         }
 
         .topbar-mobile-toggle {
@@ -1803,6 +1809,18 @@
             flex: 1;
             overflow-x: hidden;
             width: 100%;
+        }
+
+        .system-footer {
+            flex-shrink: 0;
+            padding: 14px 32px 18px;
+            border-top: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+            text-align: center;
+            user-select: none;
         }
 
         /* ============================================================
@@ -4297,15 +4315,18 @@
         @media (max-width: 480px) {
             .topbar-heading {
                 font-size: 15px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .topbar-sub {
+            .topbar-sub,
+            .topbar-breadcrumb {
                 display: none;
             }
 
-            .topbar-breadcrumb {
-                font-size: 9.5px;
-                letter-spacing: 0.08em;
+            .topbar-context {
+                min-width: 0;
             }
 
             .topbar-search-trigger {
@@ -4316,6 +4337,10 @@
             .topbar-icon-btn {
                 width: 38px;
                 height: 38px;
+            }
+
+            .topbar-actions {
+                gap: 6px;
             }
 
             .nav-palette-field {
@@ -4436,6 +4461,10 @@
         }
 
         @media (max-width: 360px) {
+            .topbar .theme-toggle {
+                display: none;
+            }
+
             .topbar-heading {
                 font-size: 14px;
             }
@@ -4585,6 +4614,21 @@
             --glass-bg: #192421;
             --glass-border: #354a44;
             --glass-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+        }
+
+        :root[data-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, rgba(25, 36, 33, 0.96), rgba(17, 26, 24, 0.96));
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02), 4px 0 28px rgba(0, 0, 0, 0.12);
+        }
+
+        :root[data-theme="dark"] .topbar {
+            background: rgba(25, 36, 33, 0.8);
+            border-bottom-color: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+        }
+
+        :root[data-theme="dark"] .system-footer {
+            background: rgba(17, 26, 24, 0.5);
         }
 
         :root[data-theme="dark"] .sidebar,
@@ -6069,7 +6113,7 @@
                 display: none;
             }
 
-            .app.sidebar-collapsed .sidebar-nav > .nav-item,
+            .app.sidebar-collapsed .sidebar-nav>.nav-item,
             .app.sidebar-collapsed .sidebar-nav .nav-item-toggle {
                 justify-content: center;
                 min-height: 46px;
@@ -6195,7 +6239,12 @@
 
                 @yield('content')
             </main>
+
+            <footer class="system-footer">
+                &copy; {{ date('Y') }} Universidad Pública de El Alto - UTIC | Todos los derechos reservados | Desarrollado por Ronaldo TC
+            </footer>
         </div>
+
     </div>
 
     {{-- ============================================================

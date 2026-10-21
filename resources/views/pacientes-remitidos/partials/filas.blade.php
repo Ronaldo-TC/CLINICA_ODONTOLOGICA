@@ -28,7 +28,13 @@
         <div class="actions">
             @if ($remision->habilitado && $remision->estado === 'pendiente' && ($remision->historias_clinicas_count ?? 0) === 0)
             @canany(['remisiones.asignar', 'remisiones.gestionar'])
-            <a class="btn btn-sm btn-primary" href="{{ route('pacientes-remitidos.asignacion', $remision->id) }}"><x-icono nombre="asignar" /> Asignar estudiante</a>
+            <button type="button"
+                class="btn btn-sm btn-primary"
+                data-asignar-estudiante
+                data-url="{{ route('pacientes-remitidos.asignacion', $remision->id) }}"
+                data-remision="{{ $remision->id }}">
+                <x-icono nombre="asignar" /> Asignar estudiante
+            </button>
             @endcanany
             @endif
             @if ($remision->admision_id)

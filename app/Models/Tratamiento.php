@@ -15,7 +15,6 @@ class Tratamiento extends Model
         'nombre',
         'costo',
         'precio_asignado',
-        'porcentaje_pg',
         'descripcion',
         'clinica_id',
     ];

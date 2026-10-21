@@ -93,6 +93,7 @@ class HistoriasSeguimientoTest extends TestCase
 
         $this->get(route('estudiante.historias'))->assertOk()
             ->assertSee('id="modalSeguimientoHistoria"', false)
+            ->assertSee('js/historias-seguimiento.js', false)
             ->assertSee('data-seguimiento-seccion="tratamientos"', false)
             ->assertSee('data-seguimiento-seccion="recibos"', false)
             ->assertSee('data-seguimiento-seccion="solicitudes"', false)

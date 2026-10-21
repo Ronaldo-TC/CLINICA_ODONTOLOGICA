@@ -23,12 +23,16 @@
     <div class="card-header"><h2>Nueva solicitud de reposición</h2></div>
     <form action="{{ route('insumos.reposiciones-crear') }}" method="POST" data-reposicion-form class="card-body">
         @csrf
+        <p>Solo se pueden solicitar insumos cuyo stock actual este en o por debajo del minimo.</p>
         <div class="form-group"><label for="reposicion-justificacion">Justificación</label><textarea id="reposicion-justificacion" name="observaciones" class="form-control" minlength="10" maxlength="2000" required></textarea></div>
         <div id="reposicion-materiales"></div>
         <template id="reposicion-material-template">
             <div class="form-grid" data-material>
                 <div class="form-group"><label>Insumo y clínica</label><select class="form-control" data-insumo required>
                     <option value="">Seleccione un insumo</option>
+                    @if($insumos->isEmpty())
+                        <option value="" disabled>No hay insumos con stock bajo o igual al minimo</option>
+                    @endif
                     @foreach($insumos as $insumo)
                         <option value="{{ $insumo->id }}">{{ $insumo->nombre }} · {{ $insumo->clinica?->especialidad }} · stock {{ $insumo->cantidad_numerica }} / mínimo {{ $insumo->stock_minimo }}</option>
                     @endforeach

@@ -7,6 +7,7 @@ use App\Models\Insumo;
 use App\Models\InsumoTratamiento;
 use App\Models\Tratamiento;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
@@ -58,7 +59,7 @@ class TratamientosCatalogoTest extends TestCase
         $case['realized']->update(['costo_cobrado' => 100]);
         $this->actingAs($this->clinicalUser('cajas'));
 
-        $this->putJson(route('tratamientos.precio', $case['treatment']), ['costo' => '125.50', 'porcentaje_pg' => '50%', 'nombre' => 'Alterado', 'clinica_id' => 0])->assertOk();
+        $this->putJson(route('tratamientos.precio', $case['treatment']), ['costo' => '125.50', 'nombre' => 'Alterado', 'clinica_id' => 0])->assertOk();
 
         $this->assertDatabaseHas('tratamientos', ['id' => $case['treatment']->id, 'costo' => 125.50, 'precio_asignado' => true, 'nombre' => 'Tratamiento prueba', 'clinica_id' => $case['clinic']->id]);
         $this->assertSame('100.00', $case['realized']->fresh()->costo_cobrado);
@@ -328,6 +329,42 @@ class TratamientosCatalogoTest extends TestCase
 
         $this->actingAs($this->clinicalUser('admin'))->get(route('tratamientos.show', $treatment))->assertOk()
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)->assertDontSee('<script>alert(1)</script>', false);
+    }
+
+    public function test_view_price_and_supplies_actions_open_modal_content(): void
+    {
+        $clinic = $this->clinic();
+        $treatment = $this->treatment($clinic);
+        $material = $this->material($clinic);
+        $treatment->insumos()->attach($material, ['cantidad' => 2]);
+
+        $this->actingAs($this->clinicalUser('admin'))->get(route('tratamientos.index'))
+            ->assertOk()
+            ->assertSee('id="modalConfiguracionTratamiento"', false)
+            ->assertSee('data-action="ver"', false);
+
+        $this->getJson(route('tratamientos.show', ['tratamiento' => $treatment, 'modal' => 'ver']))
+            ->assertOk()
+            ->assertJsonPath('titulo', 'Detalle del tratamiento')
+            ->assertJsonPath('html', fn (string $html): bool => str_contains($html, $treatment->nombre)
+                && str_contains($html, $material->nombre));
+
+        $this->actingAs($this->clinicalUser('cajas'))
+            ->getJson(route('tratamientos.show', ['tratamiento' => $treatment, 'modal' => 'precio']))
+            ->assertOk()
+            ->assertJsonPath('titulo', 'Precio del tratamiento')
+            ->assertJsonPath('html', fn (string $html): bool => str_contains($html, 'data-modo="precio"')
+                && str_contains($html, 'name="costo"')
+                && ! str_contains($html, 'porcentaje_pg'));
+
+        $this->actingAs($this->clinicalUser('insumos'))
+            ->getJson(route('tratamientos.show', ['tratamiento' => $treatment, 'modal' => 'insumos']))
+            ->assertOk()
+            ->assertJsonPath('titulo', 'Insumos del tratamiento')
+            ->assertJsonPath('html', fn (string $html): bool => str_contains($html, 'data-modo="insumos"')
+                && str_contains($html, 'data-insumo-row'));
+
+        $this->assertFalse(Schema::hasColumn('tratamientos', 'porcentaje_pg'));
     }
 
     private function clinic(): Clinica

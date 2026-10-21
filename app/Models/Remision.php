@@ -41,7 +41,7 @@ class Remision extends Model
             'admision:id,paciente_id,periodo_id',
             'tratamientoPropuesto:id,nombre,clinica_id,costo',
             'clinica:id,especialidad,modulo',
-            'periodo:id,nombre,gestion,semestre',
+            'periodo:id,nombre,gestion',
             'docente:id,nombre_completo',
             'estudiante:id,nombre_completo',
         ])->withCount(['historiasClinicas', 'insumosSolicitados']);

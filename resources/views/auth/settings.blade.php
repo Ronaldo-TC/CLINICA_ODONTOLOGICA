@@ -33,18 +33,16 @@
                 <div class="form-group">
                     <label for="new_password">Nueva contraseña</label>
                     <input class="form-control" id="new_password" name="new_password"
-                        type="password" minlength="8" required autocomplete="new-password">
-                    <div id="password-strength" style="margin-top: 6px;"></div>
-                    <small class="form-hint">
-                        Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.
-                    </small>
+                        type="password" minlength="8" required autocomplete="new-password" placeholder="Mínimo 8 caracteres, con mayúsculas, minúsculas y números">
+
+
                     @error('new_password') <span class="form-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="new_password_confirmation">Confirmar nueva contraseña</label>
                     <input class="form-control" id="new_password_confirmation" name="new_password_confirmation"
-                        type="password" minlength="8" required autocomplete="new-password">
+                        type="password" minlength="8" required autocomplete="new-password" placeholder="Mínimo 8 caracteres, con mayúsculas, minúsculas y números">
                 </div>
             </div>
 
@@ -62,21 +60,19 @@
             <h3>Sesiones activas</h3>
             <p class="card-meta">Dispositivos con acceso a tu cuenta.</p>
         </div>
-        @if($sesionesActivas->count() > 1)
-        <form method="POST" action="{{ route('auth.settings.sessions.close-others') }}" style="display: inline;">
+        @if(isset($sesionesActivas) && $sesionesActivas->count() > 1)
+        <form method="POST" action="{{ route('auth.settings.sessions.close-others') }}">
             @csrf
             <button type="submit" class="btn btn-sm btn-danger"
-                onclick="return confirm('¿Cerrar todas las otras sesiones?')">
+                onclick="return confirm('¿Cerrar todas las otras sesiones? Tendrás que volver a iniciar sesión en esos dispositivos.')">
                 Cerrar otras sesiones
             </button>
         </form>
         @endif
     </div>
     <div class="card-body">
-        @if($sesionesActivas->isEmpty())
-        <p class="account-empty">
-            No hay sesiones activas registradas.
-        </p>
+        @if(!isset($sesionesActivas) || $sesionesActivas->isEmpty())
+        <p class="account-empty">No hay sesiones activas registradas.</p>
         @else
         <div class="table-wrap">
             <table>
@@ -90,20 +86,24 @@
                 </thead>
                 <tbody>
                     @foreach($sesionesActivas as $sesion)
-                    <tr>
+                    @php $esActual = $sesion->id === session()->getId(); @endphp
+                    <tr @if($esActual) class="is-current" @endif>
                         <td>
-                            {{ $sesion->ip }}
+                            {{ $sesion->ip ?? 'N/A' }}
+                            @if($esActual)
+                            <span class="badge badge-success">Actual</span>
+                            @endif
+                        </td>
+                        <td title="{{ $sesion->user_agent }}">
+                            {{ \Illuminate\Support\Str::limit($sesion->user_agent ?? 'Desconocido', 60) }}
                         </td>
                         <td>
-                            {{ \Illuminate\Support\Str::limit($sesion->user_agent, 50) }}
+                            {{ $sesion->inicio ? \Carbon\Carbon::parse($sesion->inicio)->format('d/m/Y H:i') : '-' }}
                         </td>
                         <td>
-                            {{ \Carbon\Carbon::parse($sesion->inicio)->format('d/m/Y H:i') }}
-                        </td>
-                        <td>
+                            @if(!$esActual)
                             <form method="POST"
-                                action="{{ route('auth.settings.sessions.close', $sesion->id) }}"
-                                style="display: inline;">
+                                action="{{ route('auth.settings.sessions.close', $sesion->id) }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger"
@@ -111,6 +111,9 @@
                                     Cerrar
                                 </button>
                             </form>
+                            @else
+                            <span class="card-meta">—</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
@@ -130,34 +133,66 @@
         </div>
     </div>
     <div class="card-body">
-        @if($bitacora->isEmpty())
-        <p class="account-empty">
-            No hay actividad registrada.
-        </p>
+        @if(!isset($bitacora) || $bitacora->isEmpty())
+        <p class="account-empty">No hay actividad registrada.</p>
         @else
         <ul class="activity-list">
             @foreach($bitacora as $entrada)
             @php
-            $tipo = $entrada->tipo;
-            if (\Illuminate\Support\Str::contains($tipo, ['LOGIN'])) {
-            $badgeClass = 'badge-success';
-            } elseif (\Illuminate\Support\Str::contains($tipo, ['LOGOUT'])) {
-            $badgeClass = 'badge-warning';
-            } elseif (\Illuminate\Support\Str::contains($tipo, ['FALLIDO', 'BLOQUEADO'])) {
-            $badgeClass = 'badge-danger';
+            $tipoRaw = $entrada->tipo ?? 'info';
+            $tipo = strtoupper($tipoRaw);
+            $datosRaw = $entrada->datos ?? '';
+            $json = json_decode($datosRaw, true);
+            $esJson = json_last_error() === JSON_ERROR_NONE && is_array($json);
+
+            $badgeClass = match(true) {
+            str_contains($tipo, 'LOGIN') => 'badge-success',
+            str_contains($tipo, 'LOGOUT') => 'badge-warning',
+            str_contains($tipo, 'INVESTIG') || str_contains($tipo, 'CONSULTA') => 'badge-info',
+            str_contains($tipo, 'FALLIDO') || str_contains($tipo, 'BLOQUEADO') || str_contains($tipo, 'FAILED') => 'badge-danger',
+            default => 'badge-muted'
+            };
+
+            // Título y detalle bonito
+            $titulo = $tipoRaw;
+            $detalle = '';
+
+            if ($esJson) {
+            if (($json['accion'] ?? '') === 'consulta_dataset') {
+            $titulo = 'Consulta de dataset';
+            $filtros = $json['filtros'] ?? [];
+            $registros = $json['registros'] ?? 0;
+            $detalle = $registros . ' registros encontrados' . (empty($filtros) ? ' • sin filtros' : ' • ' . count($filtros) . ' filtro(s)');
+            } elseif (isset($json['descripcion'])) {
+            $titulo = $json['descripcion'];
+            $usuario = $json['usuario']['nombre'] ?? $json['usuario']['cuenta'] ?? '';
+            $ruta = $json['ruta'] ?? '';
+            $detalle = trim($usuario . ($ruta ? " • $ruta" : '') . " • " . ($json['resultado'] ?? ''));
             } else {
-            $badgeClass = 'badge-muted';
+            $titulo = $json['accion'] ?? $json['tipo'] ?? $tipoRaw;
+            $detalle = ($json['resultado'] ?? $json['descripcion'] ?? '');
+            }
+            } else {
+            $detalle = $datosRaw;
             }
             @endphp
-            <li>
+            <li class="activity-item">
                 <div class="activity-detail">
-                    <span class="badge {{ $badgeClass }}">
-                        {{ $tipo }}
-                    </span>
-                    <span>{{ $entrada->datos }}</span>
+                    <div class="activity-badges">
+                        <span class="badge {{ $badgeClass }}">{{ $titulo }}</span>
+                        @if($esJson && isset($json['codigo_http']))
+                        <span class="badge badge-muted">{{ $json['codigo_http'] }} {{ $json['metodo'] ?? '' }}</span>
+                        @endif
+                    </div>
+                    @if($detalle)
+                    <div class="activity-text">{{ \Illuminate\Support\Str::limit($detalle, 150) }}</div>
+                    @endif
+
+                    {{-- Detalle JSON expandible solo si es investigación --}}
+
                 </div>
                 <span class="activity-time">
-                    {{ \Carbon\Carbon::parse($entrada->fecha)->diffForHumans() }}
+                    {{ $entrada->fecha ? \Carbon\Carbon::parse($entrada->fecha)->diffForHumans() : '' }}
                 </span>
             </li>
             @endforeach
@@ -165,62 +200,69 @@
         @endif
     </div>
 </div>
+@endsection
 
-{{-- Script para medidor de fortaleza de contraseña --}}
+@push('scripts')
 <script>
-    document.getElementById('new_password')?.addEventListener('input', function(e) {
-        const password = e.target.value;
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('new_password');
         const strengthDiv = document.getElementById('password-strength');
+        if (!input || !strengthDiv) return;
 
-        if (!password) {
-            strengthDiv.innerHTML = '';
-            return;
-        }
+        input.addEventListener('input', (e) => {
+            const password = e.target.value;
+            if (!password) {
+                strengthDiv.innerHTML = '';
+                return;
+            }
 
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (/[a-z]/.test(password)) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/\d/.test(password)) strength++;
-        if (/[^a-zA-Z\d]/.test(password)) strength++;
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^a-zA-Z\d]/.test(password)) score++;
 
-        const levels = [{
-                text: 'Muy débil',
-                color: '#dc3545',
-                width: '20%'
-            },
-            {
-                text: 'Débil',
-                color: '#fd7e14',
-                width: '40%'
-            },
-            {
-                text: 'Regular',
-                color: '#ffc107',
-                width: '60%'
-            },
-            {
-                text: 'Fuerte',
-                color: '#28a745',
-                width: '80%'
-            },
-            {
-                text: 'Muy fuerte',
-                color: '#20c997',
-                width: '100%'
-            },
-        ];
+            const levels = [{
+                    text: 'Muy débil',
+                    color: '#dc3545',
+                    width: '20%'
+                },
+                {
+                    text: 'Débil',
+                    color: '#fd7e14',
+                    width: '40%'
+                },
+                {
+                    text: 'Regular',
+                    color: '#ffc107',
+                    width: '60%'
+                },
+                {
+                    text: 'Fuerte',
+                    color: '#28a745',
+                    width: '80%'
+                },
+                {
+                    text: 'Muy fuerte',
+                    color: '#20c997',
+                    width: '100%'
+                },
+            ];
 
-        const level = levels[Math.min(strength, 4)];
+            // score va de 0 a 5, levels de 0 a 4
+            const index = Math.max(0, Math.min(score - 1, 4));
+            const level = levels[index];
 
-        strengthDiv.innerHTML = `
-            <div style="background: var(--surface-soft); border-radius: 4px; height: 6px; overflow: hidden;">
-                <div style="background: ${level.color}; width: ${level.width}; height: 100%; transition: all 0.3s;"></div>
+            strengthDiv.innerHTML = `
+            <div class="strength-bar">
+                <div class="strength-fill" style="background: ${level.color}; width: ${level.width};"></div>
             </div>
-            <span style="color: ${level.color}; font-weight: bold; font-size: 12px; margin-top: 4px; display: inline-block;">
+            <span class="strength-label" style="color: ${level.color};">
                 ${level.text}
             </span>
         `;
+        });
     });
 </script>
-@endsection
+@endpush

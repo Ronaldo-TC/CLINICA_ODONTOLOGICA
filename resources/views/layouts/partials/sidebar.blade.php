@@ -244,63 +244,63 @@ return $entry['href'] !== null || ! empty($entry['children']);
 
     {{-- ================= TARJETA DE USUARIO ================= --}}
     @if ($user)
-        <div class="sidebar-user">
-            <span class="user-avatar-wrap">
-                @if ($avatarUrl)
-                    <img class="avatar avatar-md"
-                        src="{{ $avatarUrl }}"
-                        alt="Foto de {{ $name }}"
-                        loading="lazy"
-                        onerror="this.remove();">
-                @endif
-                <span class="avatar avatar-md" aria-hidden="true">{{ $initials }}</span>
-            </span>
-            <span class="user-info">
-                <span class="user-name" title="{{ $name }}">{{ $name }}</span>
-                <span class="user-role">
-                    <span class="role-dot role-dot--{{ $roleTone }}" aria-hidden="true"></span>
-                    <span title="{{ $roleLabel ?? 'Sin rol asignado' }}">{{ $roleLabel ?? 'Sin rol asignado' }}</span>
-                </span>
-            </span>
-            @if (RouteFacade::has('auth.profile'))
-                <a href="{{ route('auth.profile') }}"
-                    class="user-quick"
-                    title="Ir a mi perfil"
-                    aria-label="Ir a mi perfil">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        {!! $icon('user') !!}
-                    </svg>
-                </a>
+    <div class="sidebar-user">
+        <span class="user-avatar-wrap">
+            @if ($avatarUrl)
+            <img class="avatar avatar-md"
+                src="{{ $avatarUrl }}"
+                alt="Foto de {{ $name }}"
+                loading="lazy"
+                onerror="this.remove();">
             @endif
-        </div>
+            <span class="avatar avatar-md" aria-hidden="true">{{ $initials }}</span>
+        </span>
+        <span class="user-info">
+            <span class="user-name" title="{{ $name }}">{{ $name }}</span>
+            <span class="user-role">
+                <span class="role-dot role-dot--{{ $roleTone }}" aria-hidden="true"></span>
+                <span title="{{ $roleLabel ?? 'Sin rol asignado' }}">{{ $roleLabel ?? 'Sin rol asignado' }}</span>
+            </span>
+        </span>
+        @if (RouteFacade::has('auth.profile'))
+        <a href="{{ route('auth.profile') }}"
+            class="user-quick"
+            title="Ir a mi perfil"
+            aria-label="Ir a mi perfil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                {!! $icon('user') !!}
+            </svg>
+        </a>
+        @endif
+    </div>
     @endif
 
     {{-- ================= FILTRO RÁPIDO ================= --}}
     @if ($searchable > 0)
-        <div class="sidebar-tools">
-            <div class="sidebar-filter">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    {!! $icon('search') !!}
+    <div class="sidebar-tools">
+        <div class="sidebar-filter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                {!! $icon('search') !!}
+            </svg>
+            <input type="search"
+                id="sidebarFilter"
+                placeholder="Buscar un módulo…"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Filtrar opciones del menú"
+                aria-controls="sidebarNav">
+            <button type="button"
+                class="sidebar-filter-clear"
+                data-sidebar-filter-clear
+                hidden
+                aria-label="Limpiar filtro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    {!! $icon('x') !!}
                 </svg>
-                <input type="search"
-                    id="sidebarFilter"
-                    placeholder="Buscar un módulo…"
-                    autocomplete="off"
-                    spellcheck="false"
-                    aria-label="Filtrar opciones del menú"
-                    aria-controls="sidebarNav">
-                <button type="button"
-                    class="sidebar-filter-clear"
-                    data-sidebar-filter-clear
-                    hidden
-                    aria-label="Limpiar filtro">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        {!! $icon('x') !!}
-                    </svg>
-                </button>
-                <kbd class="kbd" aria-hidden="true">/</kbd>
-            </div>
+            </button>
+            <kbd class="kbd" aria-hidden="true">/</kbd>
         </div>
+    </div>
     @endif
 
     {{-- ================= NAVEGACIÓN ================= --}}
@@ -445,7 +445,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
 
     {{-- ================= PIE ================= --}}
     <div class="sidebar-footer">
-        <button type="button"
+        <!-- <button type="button"
             class="sidebar-shortcut"
             data-open-palette
             title="Buscar en el sistema (Ctrl + K)">
@@ -456,7 +456,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
             </span>
             <span class="shortcut-text">Búsqueda global</span>
             <kbd class="kbd">Ctrl</kbd><kbd class="kbd">K</kbd>
-        </button>
+        </button> -->
 
         <form method="POST" action="{{ route('auth.logout') }}" class="sidebar-logout">
             @csrf
@@ -510,7 +510,8 @@ return $entry['href'] !== null || ! empty($entry['children']);
             try {
                 localStorage.setItem(STORAGE_GROUPS, JSON.stringify(state));
             } catch {
-                /* almacenamiento no disponible */ }
+                /* almacenamiento no disponible */
+            }
         };
 
         const setExpanded = (group, expanded) => {
@@ -724,9 +725,9 @@ return $entry['href'] !== null || ! empty($entry['children']);
             }
 
             if (topbarToggle) {
-                const label = isMobile()
-                    ? 'Abrir menú de navegación'
-                    : (shouldCollapse ? 'Expandir menú lateral' : 'Contraer menú lateral');
+                const label = isMobile() ?
+                    'Abrir menú de navegación' :
+                    (shouldCollapse ? 'Expandir menú lateral' : 'Contraer menú lateral');
                 topbarToggle.setAttribute('aria-expanded', isMobile() ? 'false' : (shouldCollapse ? 'false' : 'true'));
                 topbarToggle.setAttribute('aria-label', label);
                 topbarToggle.setAttribute('title', label);

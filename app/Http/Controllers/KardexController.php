@@ -201,8 +201,7 @@ class KardexController extends Controller
             'stats' => $this->metricas(),
             'periodos' => Periodo::query()
                 ->orderByDesc('gestion')
-                ->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+                ->get(['id', 'nombre', 'gestion']),
             'clinicas' => Clinica::query()
                 ->orderBy('especialidad')
                 ->get(['id', 'especialidad', 'modulo']),

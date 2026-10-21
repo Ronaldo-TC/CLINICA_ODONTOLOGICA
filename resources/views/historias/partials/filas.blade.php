@@ -28,7 +28,7 @@
     <td>
         @if ($historia->periodo)
         <span class="badge badge-muted">
-            {{ $historia->periodo->gestion }}-{{ $historia->periodo->semestre }}
+            {{ $historia->periodo->gestion }}
         </span>
         @else
         —

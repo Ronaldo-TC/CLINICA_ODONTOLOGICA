@@ -109,6 +109,40 @@
             .report-paper .odontograma .diente svg { width:34px; }
             .report-paper .odontograma .diente svg.diente-overlay { width:34px; height:62px; }
         }
+        @if($esPdf)
+        body { margin:0; background:#fff; color:#183b38; font-family:"DejaVu Sans", sans-serif; font-size:10px; line-height:1.25; }
+        .report-paper { width:100%; max-width:none; margin:0; padding:0; background:#fff; box-shadow:none; }
+        .report-header { display:table; width:100%; padding-bottom:6px; border-bottom:2px solid #087f79; }
+        .brand { display:table-cell; width:70%; vertical-align:middle; }
+        .brand-mark, .brand > div { display:inline-block; vertical-align:middle; }
+        .brand-mark { margin-right:8px; padding:6px; background:#087f79; color:#fff; }
+        .report-reference { display:table-cell; width:30%; color:#5c706c; text-align:right; vertical-align:middle; }
+        .eyebrow, .muted, .report-field dt, .report-metric span { color:#5c706c; }
+        h1 { margin:8px 0 4px; font-size:17px; }
+        h2 { margin:9px 0 5px; padding-bottom:3px; border-bottom:1px solid #d7e3df; font-size:12px; }
+        h3 { margin:6px 0 3px; font-size:10.5px; }
+        .report-grid, .report-metrics { display:block; width:100%; font-size:0; }
+        .report-field { display:inline-block; width:32%; padding-right:1%; font-size:9.5px; vertical-align:top; }
+        .report-metric { display:inline-block; width:23%; min-width:0; margin:0 1% 5px 0; padding:5px 7px; border:1px solid #d7e3df; background:#f0f6f3; font-size:9px; vertical-align:top; }
+        .report-metric strong { font-size:13px; }
+        .report-note { border-left:3px solid #087f79; background:#f0f6f3; }
+        table { width:100%; margin:5px 0; border-collapse:collapse; font-size:8.5px; line-height:1.2; }
+        thead { display:table-header-group; }
+        tr { page-break-inside:avoid; }
+        th, td { padding:3px 4px; border:1px solid #d7e3df; vertical-align:top; }
+        th { background:#f0f6f3; color:#183b38; }
+        .report-signatures { display:block; width:100%; font-size:0; }
+        .report-signatures > div { display:inline-block; width:47%; margin-right:2%; padding-top:5px; border-top:1px solid #d7e3df; font-size:9px; vertical-align:top; }
+        .odontograma-controles, .odontograma-herramientas, .odontograma-hint { display:none !important; }
+        .odontograma .odontograma-arcada { display:block !important; min-width:0 !important; }
+        .odontograma .odontograma-cuadrante { display:inline-block; width:47%; margin:0 1% 6px 0; padding:4px; border:1px solid #d7e3df; vertical-align:top; }
+        .odontograma .odontograma-piezas { display:table !important; width:100%; }
+        .odontograma .diente { display:table-cell !important; width:auto !important; text-align:center; vertical-align:top; }
+        .odontograma .diente-imagen { width:28px; height:50px; }
+        .odontograma .diente-ilustracion { height:50px; }
+        .odontograma .diente svg { width:28px; height:28px; }
+        .odontograma .diente svg.diente-overlay { width:28px; height:50px; }
+        @endif
     </style>
     @stack('styles')
 </head>
@@ -132,6 +166,7 @@
         @yield('reporte')
         @unless($esPdf)<footer class="report-footer"><span>Clínica Odontológica UPEA · {{ $codigo }}</span><span>Documento de uso interno · Información confidencial</span></footer>@endunless
     </main>
+    @unless($esPdf)
     @stack('scripts')
     <script>
         document.getElementById('imprimir-reporte')?.addEventListener('click', () => window.print());
@@ -146,5 +181,6 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', prepararPdf);
         else prepararPdf();
     </script>
+    @endunless
 </body>
 </html>

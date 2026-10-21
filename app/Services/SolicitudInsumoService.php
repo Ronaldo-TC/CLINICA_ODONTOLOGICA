@@ -421,7 +421,16 @@ class SolicitudInsumoService
         ])->validate();
         $solicitud = DB::transaction(function () use ($actor, $data): InsumoSolicitado {
             $ids = array_column($data['detalles'], 'insumo_id');
-            Insumo::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
+            $insumos = Insumo::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            foreach ($data['detalles'] as $index => $detalle) {
+                $insumo = $insumos->get($detalle['insumo_id']);
+                if (! $insumo) {
+                    $this->invalid("detalles.{$index}.insumo_id", 'El insumo seleccionado ya no esta disponible.');
+                }
+                if ($this->cents((float) $insumo->cantidad_numerica) > $this->cents((float) $insumo->stock_minimo)) {
+                    $this->invalid("detalles.{$index}.insumo_id", 'Solo se pueden solicitar insumos con stock bajo o igual al minimo.');
+                }
+            }
             if (InsumoSolicitado::where('tipo_solicitud', 'reposicion')->whereIn('estado', ['pendiente', 'autorizado', 'aprobado', 'parcial'])
                 ->whereHas('detalles', fn ($query) => $query->whereIn('insumo_id', $ids))->exists()) {
                 $this->invalid('detalles', 'Ya existe una reposición abierta para uno de los insumos seleccionados.');

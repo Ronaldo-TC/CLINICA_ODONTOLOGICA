@@ -7,8 +7,6 @@ use App\Models\Clinica;
 use App\Models\HistoriaClinica;
 use App\Models\Remision;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Spatie\LaravelPdf\Facades\Pdf;
-use Spatie\LaravelPdf\PdfBuilder;
 use Tests\CreatesClinicalCase;
 use Tests\TestCase;
 
@@ -197,22 +195,19 @@ class AdmisionInicialTest extends TestCase
 
     public function test_el_pdf_de_ficha_incluye_la_evaluacion_y_excluye_otras_admisiones_del_paciente(): void
     {
-        Pdf::fake();
         $caso = $this->clinicalCase();
         $caso['admission']->update(['talla_mts' => 1.65, 'firma' => self::FIRMA, 'bm' => 'Observación única de esta ficha', 'asimetria_facial' => false]);
         Admision::create(['paciente_id' => $caso['admission']->paciente_id, 'gpe' => 'Bueno', 'motivo_consulta' => 'Otra admisión que no debe incluirse']);
-        $this->actingAs($this->clinicalUser('admin'))->get(route('admisiones.ficha-pdf', ['admision' => $caso['admission']->id, 'formato' => 'pdf']))->assertOk();
-        Pdf::assertRespondedWithPdf(function (PdfBuilder $pdf) use ($caso): bool {
-            $html = $pdf->getHtml();
-            $this->assertStringContainsString('1.65 m', $html);
-            $this->assertStringContainsString('Observación única de esta ficha', $html);
-            $this->assertStringContainsString(self::FIRMA, $html);
-            $this->assertStringNotContainsString('Otra admisión que no debe incluirse', $html);
-            $this->assertStringNotContainsString('Historias clínicas y evolución de tratamientos', $html);
-            $this->assertCount(1, $pdf->viewData['admisiones']);
+        $this->actingAs($this->clinicalUser('admin'))->get(route('admisiones.ficha-pdf', ['admision' => $caso['admission']->id]))
+            ->assertOk()->assertViewHas('admisiones', fn ($admisiones): bool => $admisiones->count() === 1)
+            ->assertSee('1.65 m')->assertSee('Observación única de esta ficha')
+            ->assertSee(self::FIRMA, false)->assertDontSee('Otra admisión que no debe incluirse')
+            ->assertDontSee('Historias clínicas y evolución de tratamientos');
 
-            return $pdf->isDownload() && str_starts_with($pdf->downloadName, 'ficha-'.$caso['admission']->id.'-');
-        });
+        $respuesta = $this->get(route('admisiones.ficha-pdf', ['admision' => $caso['admission']->id, 'formato' => 'pdf']))
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeaderContains('Content-Disposition', 'attachment; filename="ficha-'.$caso['admission']->id.'-');
+        $this->assertStringStartsWith('%PDF-', $respuesta->getContent());
     }
 
     public function test_la_ficha_pdf_exige_autenticacion_y_permiso(): void
@@ -268,12 +263,8 @@ class AdmisionInicialTest extends TestCase
         $this->get(route('dashboard'))->assertOk()->assertViewHas('tarjetas', fn (array $tarjetas): bool => collect($tarjetas)->firstWhere('label', 'Admisiones registradas')['value'] === '1');
     }
 
-    public function test_chrome_genera_la_ficha_pdf_con_evaluacion_firma_y_odontograma_mixto(): void
+    public function test_dompdf_genera_la_ficha_pdf_con_evaluacion_firma_y_odontograma_mixto(): void
     {
-        $chrome = config('laravel-pdf.browsershot.chrome_path');
-        if (! $chrome || ! is_file($chrome) || ! is_file(base_path('node_modules/puppeteer/package.json'))) {
-            $this->markTestSkipped('La integración PDF requiere Chrome y Puppeteer instalados.');
-        }
         $caso = $this->clinicalCase();
         $caso['admission']->update(['gpe' => 'Bueno', 'talla_mts' => 1.65, 'firma' => self::FIRMA, 'odontograma_denticion' => 'mixto', 'odontograma_pintado' => json_encode(['55' => ['o' => 'caries'], '16' => ['marcas' => [['estado' => 'corona', 'color' => 'azul']]]])]);
         $respuesta = $this->actingAs($this->clinicalUser('admin'))->get(route('admisiones.ficha-pdf', ['admision' => $caso['admission']->id, 'formato' => 'pdf']));

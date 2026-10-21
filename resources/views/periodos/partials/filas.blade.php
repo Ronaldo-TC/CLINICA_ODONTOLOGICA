@@ -9,10 +9,6 @@
     </td>
 
     <td>
-        <span class="badge badge-muted">{{ $periodo->semestre }}°</span>
-    </td>
-
-    <td>
         <small>
             {{ $periodo->fecha_inicio?->format('d/m/Y') }}
             —
@@ -59,7 +55,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="7">
+    <td colspan="6">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

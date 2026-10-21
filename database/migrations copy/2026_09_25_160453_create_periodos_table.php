@@ -12,12 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 100);
             $table->integer('gestion');
-            $table->integer('semestre');
             $table->integer('fecha_inicio');
             $table->integer('fecha_fin');
             $table->boolean('habilitado')->default(true);
             $table->timestamps();
-            $table->unique(['gestion', 'semestre']);
+            $table->unique('gestion');
         });
     }
 

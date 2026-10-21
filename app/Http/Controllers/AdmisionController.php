@@ -60,7 +60,7 @@ class AdmisionController extends Controller
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(),
             'tratamientosPropuestos' => Tratamiento::orderBy('nombre')->get(['id', 'nombre', 'clinica_id']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(),
+            'periodos' => Periodo::orderByDesc('gestion')->get(),
             'motivos' => MotivoConsulta::where('habilitado', true)->orderBy('nombre')->get(),
             'camposAutocompletar' => self::CAMPOS_AUTOCOMPLETAR,
         ];
@@ -121,7 +121,7 @@ class AdmisionController extends Controller
         return AccesoClinico::admisiones(Admision::query(), $request->user())
             ->with([
                 'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
-                'periodo:id,nombre,gestion,semestre',
+                'periodo:id,nombre,gestion',
                 'motivoConsulta:id,nombre',
                 'estudiante:id,nombre_completo',
                 'responsable:id,nombre_completo',
@@ -168,8 +168,7 @@ class AdmisionController extends Controller
     {
         return [
             'periodos' => Periodo::orderByDesc('gestion')
-                ->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre']),
+                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -177,7 +176,7 @@ class AdmisionController extends Controller
     {
         return [
             'pacientes' => Paciente::orderBy('nombre')->get(['id', 'ci', 'nombre', 'apellido_paterno', 'apellido_materno']),
-            'periodos' => Periodo::orderByDesc('gestion')->orderByDesc('semestre')->get(['id', 'nombre', 'gestion', 'semestre']),
+            'periodos' => Periodo::orderByDesc('gestion')->get(['id', 'nombre', 'gestion']),
             'motivos' => MotivoConsulta::where('habilitado', 1)->orderBy('nombre')->get(['id', 'nombre']),
             'estudiantes' => Usuario::where('habilitado', 1)
                 ->whereHas('roles', fn ($q) => $q->whereIn('name', ['estudiante', 'interno']))
@@ -696,11 +695,10 @@ class AdmisionController extends Controller
 
         return response()->json([
             'periodos' => Periodo::orderByDesc('gestion')
-                ->orderByDesc('semestre')
-                ->get(['id', 'nombre', 'gestion', 'semestre'])
+                ->get(['id', 'nombre', 'gestion'])
                 ->map(fn ($p) => [
                     'id' => $p->id,
-                    'texto' => "{$p->nombre} ({$p->gestion}-{$p->semestre})",
+                    'texto' => "{$p->nombre} ({$p->gestion})",
                 ]),
 
             'motivos' => MotivoConsulta::where('habilitado', 1)

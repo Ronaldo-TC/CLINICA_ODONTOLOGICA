@@ -66,7 +66,6 @@ class InvestigacionTest extends TestCase
         $periodo = Periodo::create([
             'nombre' => 'Periodo Test Investigacion',
             'gestion' => 2099,
-            'semestre' => 1,
             'fecha_inicio' => now()->subMonth()->toDateString(),
             'fecha_fin' => now()->addMonth()->toDateString(),
             'habilitado' => true,

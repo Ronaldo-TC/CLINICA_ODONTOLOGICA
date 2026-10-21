@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-header"><h2>{{ $registro->paciente?->nombre_completo }}</h2></div>
     <div class="card-body">
-        <p>Clínica: {{ $registro->clinica?->especialidad }} · Periodo: {{ $registro->periodo?->gestion }}-{{ $registro->periodo?->semestre }}</p>
+        <p>Clínica: {{ $registro->clinica?->especialidad }} · Periodo: {{ $registro->periodo?->gestion }}</p>
         <p>Estudiante: {{ $registro->estudiante?->nombre_completo }} · Docente: {{ $registro->docente?->nombre_completo }}</p>
         <div class="actions">
             <a class="btn btn-secondary" href="#tratamientos">Tratamientos</a>

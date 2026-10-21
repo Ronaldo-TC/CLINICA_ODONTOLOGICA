@@ -553,10 +553,7 @@ Route::middleware(['auth.session'])->group(function () {
             Route::get('/pagos-por-tipo', 'pagosPorTipo')->name('pagos-por-tipo');
             Route::get('/ingresos-por-mes', 'ingresosPorMes')->name('ingresos-por-mes');
 
-            /* ---- Exportaciones ----
-               CSV:  GET /reportes/exportar/csv         (?reporte=<clave> para uno solo)
-               PDF:  GET /reportes/exportar/imprimible  (vista con window.print())
-            */
+            /* ---- Exportaciones CSV y PDF con DOMPDF ---- */
             Route::get('/exportar/csv', 'exportarCsv')->name('exportar.csv');
             Route::get('/exportar/pdf', 'exportarPdf')->name('exportar.pdf');
             Route::get('/exportar/imprimible', 'imprimible')->name('exportar.imprimible');

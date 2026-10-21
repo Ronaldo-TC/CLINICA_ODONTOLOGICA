@@ -26,7 +26,7 @@
         </div>
 
         <div class="alert alert-info mb-20">
-            Al asignar al estudiante se creará la historia clínica de esta especialidad, pendiente de revisión docente.
+            Al asignar al estudiante se creará y autorizará automáticamente la historia clínica de esta especialidad.
         </div>
 
         @if ($errors->any())
@@ -195,7 +195,7 @@
             {{-- ---------- Acciones ---------- --}}
             <div class="actions actions--full">
                 <button type="submit" class="btn btn-primary">
-                    Asignar y crear historia
+                    Asignar, crear y autorizar historia
                 </button>
                 <a class="btn btn-secondary"
                     href="{{ route('pacientes-remitidos.index') }}">

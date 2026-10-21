@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Reportes;
 
+use App\Http\Controllers\ReporteController;
 use App\Models\Usuario;
 use App\Support\MenuBuilder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -84,9 +85,9 @@ class ReportesTest extends TestCase
         $respuesta = $this->actingAs($this->admin())->get(route('reportes.index'));
         $respuesta->assertOk();
 
-        foreach (array_keys(\App\Http\Controllers\ReporteController::catalogo()) as $clave) {
-            $respuesta->assertSee('data-reporte="' . $clave . '"', false);
-            $respuesta->assertSee('id="chart-' . $clave . '"', false);
+        foreach (array_keys(ReporteController::catalogo()) as $clave) {
+            $respuesta->assertSee('data-reporte="'.$clave.'"', false);
+            $respuesta->assertSee('id="chart-'.$clave.'"', false);
         }
     }
 
@@ -104,7 +105,7 @@ class ReportesTest extends TestCase
             $respuesta->assertOk();
             $respuesta->assertJsonStructure(['labels', 'valores', 'total']);
 
-            $labels  = $respuesta->json('labels');
+            $labels = $respuesta->json('labels');
             $valores = $respuesta->json('valores');
 
             $this->assertIsArray($labels, "`labels` no es un arreglo en {$nombre}");
@@ -123,8 +124,8 @@ class ReportesTest extends TestCase
         $admin = $this->admin();
 
         $query = [
-            'desde'      => '2000-01-01',
-            'hasta'      => '2100-12-31',
+            'desde' => '2000-01-01',
+            'hasta' => '2100-12-31',
             'periodo_id' => 1,
             'clinica_id' => 1,
         ];
@@ -142,8 +143,8 @@ class ReportesTest extends TestCase
         $admin = $this->admin();
 
         $query = [
-            'desde'      => 'no-es-una-fecha',
-            'hasta'      => '99/99/9999',
+            'desde' => 'no-es-una-fecha',
+            'hasta' => '99/99/9999',
             'periodo_id' => 'abc',
             'clinica_id' => '-5',
         ];
@@ -195,16 +196,13 @@ class ReportesTest extends TestCase
         $this->assertStringNotContainsString('# Ingresos por mes', $contenido);
     }
 
-    public function test_la_vista_imprimible_incluye_los_graficos_y_la_impresion(): void
+    public function test_la_ruta_imprimible_usa_dompdf(): void
     {
         $respuesta = $this->actingAs($this->admin())->get(route('reportes.exportar.imprimible'));
 
-        $respuesta->assertOk();
-
-        $respuesta->assertSee('chart.umd.min.js', false);
-        $respuesta->assertSee('window.print()', false);
-        $respuesta->assertSee('@media print', false);
-        $respuesta->assertSee('data-reporte="ingresos-por-mes"', false);
+        $respuesta->assertOk()->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeaderContains('Content-Disposition', 'estadisticas-clinica-');
+        $this->assertStringStartsWith('%PDF-', $respuesta->getContent());
     }
 
     /* ============================================================

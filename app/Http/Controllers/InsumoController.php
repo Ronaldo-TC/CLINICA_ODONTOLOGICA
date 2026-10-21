@@ -50,7 +50,10 @@ class InsumoController extends Controller
     {
         return view('insumos.reposiciones', [
             'registros' => $this->consultaReposiciones($request)->paginate(15)->withQueryString(),
-            'insumos' => Insumo::with('clinica')->orderBy('nombre')->get(),
+            'insumos' => Insumo::with('clinica')
+                ->whereColumn('cantidad_numerica', '<=', 'stock_minimo')
+                ->orderBy('nombre')
+                ->get(),
         ]);
     }
 

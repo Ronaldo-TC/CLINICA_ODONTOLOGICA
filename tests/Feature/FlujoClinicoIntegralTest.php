@@ -118,13 +118,22 @@ class FlujoClinicoIntegralTest extends TestCase
             'clinica_id' => $case['clinic']->id,
             'insumo_tratamiento_id' => $type->id,
             'cantidad' => 'cajas',
-            'cantidad_numerica' => 2,
+            'cantidad_numerica' => 3,
             'stock_minimo' => 3,
             'costo_unitario' => 20,
         ]);
         $warehouse = $this->clinicalUser('insumos');
         $chief = $this->clinicalUser('jefatura-clinicas');
         $director = $this->clinicalUser('director');
+        $inStockSupply = Insumo::create([
+            'nombre' => 'Material con stock suficiente',
+            'clinica_id' => $case['clinic']->id,
+            'insumo_tratamiento_id' => $type->id,
+            'cantidad' => 'cajas',
+            'cantidad_numerica' => 5,
+            'stock_minimo' => 3,
+            'costo_unitario' => 20,
+        ]);
         $payload = [
             'observaciones' => 'ReposiciÃ³n preventiva por alcanzar el stock mÃ­nimo.',
             'detalles' => [[
@@ -132,6 +141,26 @@ class FlujoClinicoIntegralTest extends TestCase
                 'cantidad_solicitada' => 5,
             ]],
         ];
+
+        $this->actingAs($warehouse)
+            ->get(route('insumos.reposiciones'))
+            ->assertSee('Guantes de reposiciÃ³n')
+            ->assertDontSee($inStockSupply->nombre);
+
+        $this->postJson(route('insumos.reposiciones-crear'), [
+            'observaciones' => 'Reposicion con stock por encima del minimo.',
+            'detalles' => [[
+                'insumo_id' => $inStockSupply->id,
+                'cantidad_solicitada' => 5,
+            ]],
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('detalles.0.insumo_id')
+            ->assertJsonFragment(['Solo se pueden solicitar insumos con stock bajo o igual al minimo.']);
+        $this->assertDatabaseMissing('insumos_solicitados', [
+            'usuario_id' => $warehouse->id,
+            'tipo_solicitud' => 'reposicion',
+            'observaciones' => 'Reposicion con stock por encima del minimo.',
+        ]);
 
         $this->actingAs($director)->postJson(route('insumos.reposiciones-crear'), $payload)->assertForbidden();
         $response = $this->actingAs($warehouse)->postJson(route('insumos.reposiciones-crear'), $payload)->assertCreated();
@@ -142,7 +171,7 @@ class FlujoClinicoIntegralTest extends TestCase
             ->assertUnprocessable();
         $this->actingAs($chief)->postJson(route('insumos.reposiciones-revisar', $request), ['accion' => 'jefatura'])
             ->assertOk();
-        $this->assertSame('2.00', $supply->fresh()->cantidad_numerica);
+        $this->assertSame('3.00', $supply->fresh()->cantidad_numerica);
 
         $this->actingAs($director)->postJson(route('insumos.reposiciones-revisar', $request), ['accion' => 'director'])
             ->assertOk();
@@ -152,20 +181,20 @@ class FlujoClinicoIntegralTest extends TestCase
             'jefatura_aprobado_por' => $chief->id,
             'aprobado_por' => $director->id,
         ]);
-        $this->assertSame('2.00', $supply->fresh()->cantidad_numerica);
+        $this->assertSame('3.00', $supply->fresh()->cantidad_numerica);
 
         $this->actingAs($warehouse)->postJson(route('insumos.reposiciones-revisar', $request), [
             'accion' => 'recibir',
             'detalles' => [['detalle_id' => $detail->id, 'cantidad_entregada' => 3]],
         ])->assertOk();
-        $this->assertSame('5.00', $supply->fresh()->cantidad_numerica);
+        $this->assertSame('6.00', $supply->fresh()->cantidad_numerica);
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $request->id, 'estado' => 'parcial']);
 
         $this->postJson(route('insumos.reposiciones-revisar', $request), [
             'accion' => 'recibir',
             'detalles' => [['detalle_id' => $detail->id, 'cantidad_entregada' => 2]],
         ])->assertOk();
-        $this->assertSame('7.00', $supply->fresh()->cantidad_numerica);
+        $this->assertSame('8.00', $supply->fresh()->cantidad_numerica);
         $this->assertDatabaseHas('insumos_solicitados', [
             'id' => $request->id,
             'estado' => 'recibido',

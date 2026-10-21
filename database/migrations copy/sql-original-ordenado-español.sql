@@ -253,7 +253,6 @@ CREATE TABLE public.tratamientos (
     id                  integer      NOT NULL,
     nombre              varchar(100) NOT NULL,
     costo               numeric(10,2) DEFAULT 0,
-    porcentaje_pg       varchar(100),
     descripcion         varchar(100) DEFAULT '',
     clinica_id          integer      NOT NULL,
     fecha_actualizacion integer      DEFAULT date_part('epoch', now()) NOT NULL

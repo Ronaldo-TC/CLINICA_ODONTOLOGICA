@@ -71,7 +71,6 @@
                     <th>Clínica</th>
                     <th>Descripción</th>
                     <th>Costo</th>
-                    <th>PG</th>
                     <th>Insumos</th>
                     <th>Realizados</th>
                     <th>Acciones</th>
@@ -87,6 +86,7 @@
 </div>
 
 @include('tratamientos.partials.modal')
+@include('tratamientos.partials.modal-configuracion')
 
 @endsection
 
@@ -101,6 +101,7 @@
             tabla: @json(route('tratamientos.tabla')),
             store: @json(route('tratamientos.store')),
             datos: (id) => `/tratamientos/${id}/datos`,
+            show: (id, modo) => `/tratamientos/${id}?modal=${encodeURIComponent(modo)}`,
             update: (id) => `/tratamientos/${id}`,
             destroy: (id) => `/tratamientos/${id}`,
         };
@@ -110,6 +111,9 @@
         const $status = document.getElementById('crud-status');
         const $statusText = document.getElementById('crud-status-text');
         const $totalLabel = document.getElementById('crud-total-label');
+        const $modalConfiguracion = document.getElementById('modalConfiguracionTratamiento');
+        const $modalConfiguracionTitulo = document.getElementById('modalConfiguracionTratamientoTitulo');
+        const $modalConfiguracionContenido = document.getElementById('modalConfiguracionTratamientoContenido');
 
         const $filtroBuscar = document.getElementById('filtro-buscar');
         const $filtroClinica = document.getElementById('filtro-clinica');
@@ -198,7 +202,7 @@
             } catch (err) {
                 console.error('[Tratamientos] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="8">
+                <tr><td colspan="7">
                     <div class="empty-state"><p>Error al cargar tratamientos.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');
@@ -243,6 +247,11 @@
             const nombre = actionBtn.dataset.nombre || 'este tratamiento';
 
             switch (action) {
+                case 'ver':
+                case 'precio':
+                case 'insumos':
+                    abrirConfiguracion(id, action, nombre);
+                    break;
                 case 'editar':
                     abrirEdicion(id);
                     break;
@@ -274,6 +283,148 @@
                 setStatus('idle');
             }
         }
+
+        async function abrirConfiguracion(id, modo, nombre) {
+            $modalConfiguracionTitulo.textContent = nombre || 'Tratamiento';
+            $modalConfiguracionContenido.innerHTML = `
+                <div class="modal-body">
+                    <p style="color:var(--muted);">Cargando tratamiento...</p>
+                </div>`;
+            $modalConfiguracion.classList.add('open');
+            $modalConfiguracion.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+
+            try {
+                const res = await fetch(URLS.show(id, modo), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo cargar el tratamiento.');
+                }
+
+                $modalConfiguracionTitulo.textContent = data.titulo || nombre || 'Tratamiento';
+                $modalConfiguracionContenido.innerHTML = data.html || '';
+                setTimeout(() => $modalConfiguracionContenido.querySelector('input:not([type="hidden"])')?.focus(), 100);
+            } catch (err) {
+                console.error('[Tratamientos] Error de configuración:', err);
+                $modalConfiguracionContenido.innerHTML = `
+                    <div class="modal-body">
+                        <div class="alert alert-danger">${escaparHtml(err.message || 'No se pudo cargar el tratamiento.')}</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-tratamiento-config-close>Cerrar</button>
+                    </div>`;
+            }
+        }
+
+        function cerrarConfiguracion() {
+            $modalConfiguracion.classList.remove('open');
+            $modalConfiguracion.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+        }
+
+        function escaparHtml(value) {
+            const element = document.createElement('div');
+            element.textContent = value;
+            return element.innerHTML;
+        }
+
+        function payloadConfiguracion($form) {
+            if ($form.dataset.modo === 'precio') {
+                return { costo: $form.elements.costo.value };
+            }
+
+            const insumos = Array.from($form.querySelectorAll('[data-insumo-row]'))
+                .filter(($row) => $row.querySelector('[data-insumo-check]').checked)
+                .map(($row) => ({
+                    insumo_id: Number($row.querySelector('[data-insumo-check]').value),
+                    cantidad: $row.querySelector('[data-insumo-cantidad]').value,
+                }));
+
+            return { insumos };
+        }
+
+        function mostrarErroresConfiguracion($form, errors) {
+            $form.querySelectorAll('[data-error-for]').forEach(($error) => $error.textContent = '');
+            Object.entries(errors).forEach(([field, messages]) => {
+                const $error = $form.querySelector(`[data-error-for="${field}"]`);
+                if ($error) $error.textContent = Array.isArray(messages) ? messages[0] : messages;
+            });
+
+            const firstMessage = Object.values(errors).flat()[0] || 'Revise los datos ingresados.';
+            const $alert = $form.querySelector('[data-configuracion-error]');
+            if ($alert) {
+                $alert.textContent = firstMessage;
+                $alert.style.display = 'block';
+            }
+        }
+
+        $modalConfiguracion?.addEventListener('change', (event) => {
+            const $check = event.target.closest('[data-insumo-check]');
+            if (!$check) return;
+            $check.closest('[data-insumo-row]').querySelector('[data-insumo-cantidad]').disabled = !$check.checked;
+        });
+
+        $modalConfiguracion?.addEventListener('submit', async (event) => {
+            const $form = event.target.closest('[data-tratamiento-config-form]');
+            if (!$form) return;
+            event.preventDefault();
+
+            const $submit = $form.querySelector('[data-configuracion-submit]');
+            const $alert = $form.querySelector('[data-configuracion-error]');
+            if ($alert) $alert.style.display = 'none';
+            $submit.disabled = true;
+
+            try {
+                const res = await fetch($form.action, {
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payloadConfiguracion($form)),
+                });
+                const data = await res.json();
+
+                if (res.status === 422) {
+                    mostrarErroresConfiguracion($form, data.errors || {});
+                    return;
+                }
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo guardar la configuración.');
+                }
+
+                cerrarConfiguracion();
+                toast('success', data.message || 'Configuración actualizada.');
+                cargarTabla(1);
+            } catch (err) {
+                console.error('[Tratamientos] Error al guardar configuración:', err);
+                mostrarErroresConfiguracion($form, { general: [err.message || 'No se pudo guardar la configuración.'] });
+            } finally {
+                $submit.disabled = false;
+            }
+        });
+
+        $modalConfiguracion?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-tratamiento-config-close]') || event.target === $modalConfiguracion) {
+                cerrarConfiguracion();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && $modalConfiguracion?.classList.contains('open')) {
+                cerrarConfiguracion();
+            }
+        });
 
         async function eliminar(id, nombre) {
             if (!await window.confirmarEliminacion(nombre)) return;
