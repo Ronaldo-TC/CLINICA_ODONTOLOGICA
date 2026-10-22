@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="{{ asset('images/login/logo.png') }}">
     <title>{{ $titulo }} · {{ $codigo }} · Clínica Odontológica UPEA</title>
+    @php
+        $logoClinica = $esPdf
+            ? 'data:image/png;base64,'.base64_encode(file_get_contents(public_path('images/login/logo.png')))
+            : asset('images/login/logo.png');
+    @endphp
     <style>
         :root { --ink:#183b38; --muted:#5c706c; --teal:#087f79; --line:#d7e3df; --soft:#f0f6f3; }
         * { box-sizing:border-box; }
@@ -16,7 +22,8 @@
         .report-paper { max-width:{{ ($horizontal ?? false) ? '1120' : '880' }}px; margin:0 auto 24px; padding:24px; background:white; box-shadow:0 8px 32px #183b3810; }
         .report-header { display:flex; justify-content:space-between; gap:14px; padding-bottom:10px; border-bottom:2px solid var(--teal); }
         .brand { display:flex; gap:9px; align-items:center; }
-        .brand-mark { background:var(--teal); color:white; padding:9px; font-weight:700; border-radius:4px; }
+        .brand-mark { display:inline-flex; width:52px; height:52px; align-items:center; justify-content:center; overflow:hidden; padding:2px; border-radius:8px; background:#fff; }
+        .brand-mark img { display:block; width:100%; height:100%; object-fit:contain; }
         .brand p, .report-header p { margin:2px 0; }
         .eyebrow { text-transform:uppercase; font-size:10px; letter-spacing:1.2px; color:var(--muted); }
         .report-reference { text-align:right; font-size:11px; color:var(--muted); }
@@ -59,7 +66,7 @@
         .diente.es-ausente .diente-ausente { display:block; }
         .odontograma-hint { display:none; }
         @media(max-width:720px) { .report-paper { padding:20px; } .report-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .report-header { flex-wrap:wrap; } .report-reference { text-align:left; } }
-        @page { size:A4 {{ ($horizontal ?? false) ? 'landscape' : 'portrait' }}; margin:7mm 7mm 10mm; }
+        @page { size:{{ ($tamanoPapel ?? 'a4') === 'oficio' ? (($horizontal ?? false) ? '330mm 216mm' : '216mm 330mm') : 'A4 '.(($horizontal ?? false) ? 'landscape' : 'portrait') }}; margin:7mm 7mm 10mm; }
         @media print {
             body { background:white; font-size:10.5px; line-height:1.25; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
             .report-actions, .odontograma-controles { display:none !important; }
@@ -115,7 +122,7 @@
         .report-header { display:table; width:100%; padding-bottom:6px; border-bottom:2px solid #087f79; }
         .brand { display:table-cell; width:70%; vertical-align:middle; }
         .brand-mark, .brand > div { display:inline-block; vertical-align:middle; }
-        .brand-mark { margin-right:8px; padding:6px; background:#087f79; color:#fff; }
+        .brand-mark { width:46px; height:46px; margin-right:8px; padding:2px; background:#fff; }
         .report-reference { display:table-cell; width:30%; color:#5c706c; text-align:right; vertical-align:middle; }
         .eyebrow, .muted, .report-field dt, .report-metric span { color:#5c706c; }
         h1 { margin:8px 0 4px; font-size:17px; }
@@ -146,7 +153,7 @@
     </style>
     @stack('styles')
 </head>
-<body>
+<body class="{{ ($tamanoPapel ?? 'a4') === 'oficio' ? 'paper-oficio' : 'paper-a4' }}">
     @unless($esPdf)
     <nav class="report-actions" aria-label="Acciones del reporte">
         <a href="{{ $volver }}">Volver al módulo</a>
@@ -157,7 +164,7 @@
     <main class="report-paper">
         <header class="report-header">
             <div class="brand">
-                <div class="brand-mark">UPEA</div>
+                <div class="brand-mark"><img src="{{ $logoClinica }}" alt=""></div>
                 <div><p class="eyebrow">Universidad Pública de El Alto</p><strong>Clínica Odontológica</strong><p class="muted">Atención y seguimiento clínico</p></div>
             </div>
             <div class="report-reference"><strong>{{ $codigo }}</strong><p>Emitido: {{ $emitidoEn->format('d/m/Y H:i') }}</p><p>Por: {{ $emitidoPor }}</p></div>
@@ -168,6 +175,7 @@
     </main>
     @unless($esPdf)
     @stack('scripts')
+    @endunless
     <script>
         document.getElementById('imprimir-reporte')?.addEventListener('click', () => window.print());
         const prepararPdf = async () => {
@@ -181,6 +189,5 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', prepararPdf);
         else prepararPdf();
     </script>
-    @endunless
 </body>
 </html>

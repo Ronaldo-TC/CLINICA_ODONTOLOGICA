@@ -41,6 +41,10 @@ class AuthController extends Controller
                 'nombre_usuario' => 'required|string|max:50',
                 'contrasena' => 'required|string',
                 'device_name' => 'nullable|string|max:100',
+            ], [
+                'nombre_usuario.required' => 'Ingresa tu usuario institucional.',
+                'nombre_usuario.max' => 'El usuario no puede superar los 50 caracteres.',
+                'contrasena.required' => 'Ingresa tu contraseña.',
             ]);
 
             // 2. Buscar usuario

@@ -196,7 +196,7 @@ class ReportesTest extends TestCase
         $this->assertStringNotContainsString('# Ingresos por mes', $contenido);
     }
 
-    public function test_la_ruta_imprimible_usa_dompdf(): void
+    public function test_la_ruta_imprimible_usa_laravel_pdf(): void
     {
         $respuesta = $this->actingAs($this->admin())->get(route('reportes.exportar.imprimible'));
 

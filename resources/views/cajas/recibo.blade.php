@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="{{ asset('images/login/logo.png') }}">
     <title>Recibo #{{ $caja->recibo }} · Clínica Odontológica UPEA</title>
     <style>
         :root { color-scheme:light; --ink:#173d39; --muted:#61736f; --line:#d7e4e0; --soft:#f2f7f5; --brand:#087f79; --danger:#b42318; }
@@ -15,7 +16,8 @@
         .receipt { position:relative; width:min(100% - 24px, 148mm); min-height:190mm; margin:0 auto 24px; padding:14mm 12mm 11mm; overflow:hidden; background:#fff; box-shadow:0 12px 36px rgb(22 59 55 / 12%); }
         .receipt-header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding-bottom:14px; border-bottom:2px solid var(--brand); }
         .brand { display:flex; align-items:center; gap:10px; }
-        .brand-mark { display:grid; width:46px; height:46px; place-items:center; border-radius:10px; background:var(--brand); color:#fff; font-weight:800; letter-spacing:.5px; }
+        .brand-mark { display:grid; width:52px; height:52px; place-items:center; overflow:hidden; padding:2px; border-radius:10px; background:#fff; }
+        .brand-mark img { display:block; width:100%; height:100%; object-fit:contain; }
         .brand p, .reference p { margin:0; }
         .brand-name { font-size:16px; font-weight:800; }
         .muted { color:var(--muted); }
@@ -67,7 +69,7 @@
 
         <header class="receipt-header">
             <div class="brand">
-                <div class="brand-mark">UPEA</div>
+                <div class="brand-mark"><img src="{{ asset('images/login/logo.png') }}" alt=""></div>
                 <div>
                     <p class="muted">Universidad Pública de El Alto</p>
                     <p class="brand-name">Clínica Odontológica</p>

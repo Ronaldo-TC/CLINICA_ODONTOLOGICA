@@ -1,0 +1,896 @@
+﻿id;ci;nombre_usuario;nombre_completo;descripcion;tipo;habilitado;permitir_login;multilogin;contrasena;ip;ultimo_login;sesion;sesion_extra;ultimo_logout;ip_permitida;info;updated_at
+0;8;admin;Rolando Soliz;Director de Carrera;admin;1;1;1;8_2026;186.121.198.5;25/08/2025 14:30;;;25/08/2025 14:32;NULL;;25/08/2025 14:32
+1;9191671;Analia;analia mamani ibañez;Encargada de Clínica de Admición;admission;1;1;1;9191671_2026;187.102.201.156;25/02/2025 18:16;pcrb1ne0l2psgufibsuu5gcsps;pcrb1ne0l2psgufibsuu5gcsps;26/11/2024 18:39;;;25/02/2025 18:16
+2;9170502;maria;maria cruz hilari;Responsable Admision;admission;1;1;1;9170502_2026;181.115.188.66;09/05/2024 20:44;25avrdooqps4esn4uivqkt6et1;25avrdooqps4esn4uivqkt6et1;19/04/2024 17:36;;;09/05/2024 20:44
+3;2684177;Efrain;franz efrain huayhua cruz;Encargado de cajas;box;1;1;1;2684177_2026;192.168.8.120;21/10/2026 17:40;m8m6qjcj3j70nnddauoihms14j;m8m6qjcj3j70nnddauoihms14j;12/10/2026 17:56;;;21/10/2026 17:40
+4;4957624;Ruben;ruben copeticona;Encargado de insumos 1;supplies;1;1;1;4957624_2026;189.28.95.242;30/04/2024 22:13;;;30/04/2024 22:13;;;30/04/2024 22:13
+5;6019502;Hebber;hebber fernando barrera cáceres;Encargado de Esterilización;sterilization;1;1;1;6019502_2026;NULL;NULL;;;NULL;;;22/04/2024 15:20
+6;8561246;jose;jose maldonado;;box;1;1;1;8561246_2026;10.0.8.6;07/07/2025 22:55;qc2491oifuj0tjc5ok0e42ekhh;qc2491oifuj0tjc5ok0e42ekhh;01/12/2023 13:20;NULL;;07/07/2025 22:55
+7;8561247;dario;dario bautista toco;;student;1;1;1;8561247_2026;NULL;NULL;;;NULL;NULL;;22/04/2024 15:22
+8;8561248;ruben;ruben salvatierra coca;;sterilization;1;1;1;8561248_2026;181.115.172.93;NULL;;;06/11/2023 20:20;NULL;;22/04/2024 15:22
+9;0;admision2;tablet admision 2;;admission;1;1;1;0_2026;181.115.188.66;06/05/2024 18:57;g5ml41sfuj07u23hdh031teed2;g5ml41sfuj07u23hdh031teed2;NULL;NULL;;06/05/2024 18:57
+10;0;elias;elias yucra mamani;;supplies;1;1;1;0_2026;187.102.202.2;27/11/2024 19:39;hoegaln1lkvi2pgmt5dogoe8ea;hoegaln1lkvi2pgmt5dogoe8ea;13/08/2024 13:19;NULL;;27/11/2024 19:39
+11;0;elio;elio chiri yucra;;demo;1;1;1;0_2026;181.115.188.66;NULL;;;22/04/2024 12:10;NULL;;22/04/2024 15:22
+12;;;;;admission;1;1;1;_2026;181.115.172.95;NULL;;;06/11/2023 20:26;0;;22/04/2024 15:22
+13;4957624;Rubén;ruben copeticona callisaya;Encargado de insumos 1;admission;1;1;1;4957624_2026;NULL;NULL;;;NULL;;;22/04/2024 15:06
+14;10076290;10076290;achu choquetarqui mary jhoselin;;student;1;1;1;10076290_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+15;12732535;12732535;achu sonco cristhian;;student;1;1;1;12732535_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+16;9214527;9214527;aguilar chauca jose elias;;student;1;1;1;9214527_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+17;4274303;4274303;aguilar vino jose felipe;;student;1;1;1;4274303_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+18;9248884;9248884;ajno ramos candida maribel;;student;1;1;1;9248884_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+19;10099204;10099204;alanoca quispe susana;;student;1;1;1;10099204_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+20;9128510;9128510;alarcon flores daniel jacob;;student;1;1;1;9128510_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+21;9963424;9963424;alcon conde hugo manuel;;student;1;1;1;9963424_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+22;9066677;9066677;aleluya zambrana reynaldo;;student;1;1;1;9066677_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+23;9928164;9928164;ali perez diego hernan;;student;1;1;1;9928164_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+24;9148111;9148111;ali quispe elsa;;student;1;1;1;9148111_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+25;13500143;13500143;aliaga salcedo cesar vladimir;;student;1;1;1;13500143_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+26;9910738;9910738;altamirano condori rosy;;student;1;1;1;9910738_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+27;9158399;9158399;alvarado choque evelin;;student;1;1;1;9158399_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+28;9066520;9066520;alvarado huanca saray;;student;1;1;1;9066520_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+29;6738430;6738430;alvarado rivas monica;;student;1;1;1;6738430_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+30;4943033;4943033;alvarado tola edwin;;student;1;1;1;4943033_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+31;9981801;9981801;alvarez ticona mariana;;student;1;1;1;9981801_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+32;7088624;7088624;amaru flores jose;;student;1;1;1;7088624_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+33;13631897;13631897;ancari paye claudia mariola;;student;1;1;1;13631897_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+34;10084949;10084949;apanqui mollo vladimir;;student;1;1;1;10084949_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+35;8363311;8363311;apaza cadena daniel omar;;student;1;1;1;8363311_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+36;13960662;13960662;apaza chura sandra;;student;1;1;1;13960662_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+37;2523586;2523586;apaza gutierrez mario;;student;1;1;1;2523586_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+38;11062646;11062646;apaza limachi aida;;student;1;1;1;11062646_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+39;10081399;10081399;apaza mamani luis;;student;1;1;1;10081399_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+40;8375526;8375526;apaza mendoza rosalin;;student;1;1;1;8375526_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+41;6850691;6850691;arias jacinto rosaila;;student;1;1;1;6850691_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+42;15602042;15602042;arocutipa cama lizeth nayely;;student;1;1;1;15602042_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+43;9935323;9935323;aruni gutierrez lizet maribel;;student;1;1;1;9935323_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+44;9923071;9923071;aruni santos abimael sebastian;;student;1;1;1;9923071_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+45;13444327;13444327;aruquipa cutile mariela jhoselin;;student;1;1;1;13444327_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+46;9235355;9235355;aruquipa esquivel rosario;;student;1;1;1;9235355_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+47;8283954;8283954;aruquipa limachi hector maguiver;;student;1;1;1;8283954_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+48;12575493;12575493;aruquipa mamani pamela;;student;1;1;1;12575493_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+49;11070910;11070910;aruquipa mamani weymar ruben;;student;1;1;1;11070910_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+50;9906595;9906595;atahuachi oyardo leidy;;student;1;1;1;9906595_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+51;9926377;9926377;avendaÑo jaliri aleida veronica;;student;1;1;1;9926377_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+52;9229956;9229956;bautista mamani rebeca;;student;1;1;1;9229956_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+53;10093769;10093769;benavidez valero jhaneth;;student;1;1;1;10093769_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+54;12540820;12540820;benito espinoza cesar elias;;student;1;1;1;12540820_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+55;4249276;4249276;berna almaraz wilfredo gabriel;;student;1;1;1;4249276_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+56;6826565;6826565;blanco choque nelson;;student;1;1;1;6826565_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+57;12763660;12763660;botello ticona deyna myriam;;student;1;1;1;12763660_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+58;4842002;4842002;bustillos rueda jose luis;;student;1;1;1;4842002_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+59;14244668;14244668;cabezas quispe adett hamilkar;;student;1;1;1;14244668_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+60;9943725;9943725;cachi mullisaca jessica lucero;;student;1;1;1;9943725_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+61;8342309;8342309;cadena quispe marisol;;student;1;1;1;8342309_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+62;7080242;7080242;cahuana quispe milton nelson;;student;1;1;1;7080242_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+63;8303733;8303733;cala ticona evelyn;;student;1;1;1;8303733_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+64;12991279;12991279;calamani huaqui daniel;;student;1;1;1;12991279_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+65;4943292;4943292;calcinas chuquimia boris americo;;student;1;1;1;4943292_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+66;10065284;10065284;calderon flores guadalupe;;student;1;1;1;10065284_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+67;9165881;9165881;calle callisaya naydeline adriana;;student;1;1;1;9165881_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+68;6009067;6009067;calle chambi rene;;student;1;1;1;6009067_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+69;10014847;10014847;calle coyo angel alberto;;student;1;1;1;10014847_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+70;7044568;7044568;calle labra alison;;student;1;1;1;7044568_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+71;9254029;9254029;calle mamani luis hector;;student;1;1;1;9254029_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+72;14378705;14378705;calle mamani sonia;;student;1;1;1;14378705_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+73;6992540;6992540;callisaya choque raul angel;;student;1;1;1;6992540_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+74;9941143;9941143;callisaya viadez hugo;;student;1;1;1;9941143_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+75;8429672;8429672;callizaya callisaya marisol;;student;1;1;1;8429672_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+76;10076847;10076847;callizaya condori daniel;;student;1;1;1;10076847_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+77;12607261;12607261;canaza quispe esther;;student;1;1;1;12607261_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+78;14069015;14069015;candia mamani ledin edson;;student;1;1;1;14069015_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+79;9188223;9188223;carata bravo linda magnely;;student;1;1;1;9188223_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+80;7055958;7055958;careaga miranda yanela;;student;1;1;1;7055958_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+81;10069261;10069261;carita calderon jhovanna;;student;1;1;1;10069261_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+82;9909730;9909730;carita clemente roxana;;student;1;1;1;9909730_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+83;9916213;9916213;castaÑeta quispe angela beatriz;;student;1;1;1;9916213_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+84;9950203;9950203;castillo mamani jhessica maribel;;student;1;1;1;9950203_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+85;6751477;6751477;castro lopez amalia modesta;;student;1;1;1;6751477_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+86;10082448;10082448;castro paxi lisbeth;;student;1;1;1;10082448_2026;187.102.201.17;07/05/2024 13:47;;;07/05/2024 13:48;;;07/05/2024 13:48
+87;13407000;13407000;catari paraya neyda vannesa;;student;1;1;1;13407000_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+88;14154470;14154470;chachaqui mamani jhonny;;student;1;1;1;14154470_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+89;9910840;9910840;chachaqui plata jhessica salome;;student;1;1;1;9910840_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+90;13310585;13310585;challco ascencio eliana;;student;1;1;1;13310585_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+91;8407971;8407971;chambi mamani jhon adiel;;student;1;1;1;8407971_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+92;13086236;13086236;chambi mamani nilda;;student;1;1;1;13086236_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+93;7011304;7011304;chambilla tancara mariel angela;;student;1;1;1;7011304_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+94;11088488;11088488;charca mamani carmen rosa;;student;1;1;1;11088488_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+95;6116227;6116227;chavez flores franz jesus;;student;1;1;1;6116227_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+96;12424274;12424274;chavez paco leydi;;student;1;1;1;12424274_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+97;7089125;7089125;chinahuanca condori willy;;student;1;1;1;7089125_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+98;10074909;10074909;chinche ramirez katherine ariadna;;student;1;1;1;10074909_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+99;9085889;9085889;chipana chipana abraham;;student;1;1;1;9085889_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+100;9076629;9076629;chiquipa limachi lucy;;student;1;1;1;9076629_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+101;11101859;11101859;chira nina yesica;;student;1;1;1;11101859_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+102;9181937;9181937;choque alejo mabel liz;;student;1;1;1;9181937_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+103;9131953-1O;9131953-1O;choque alejo yosali lis;;student;1;1;1;9131953-1O_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+104;10093710;10093710;choque apaza ariel cristian;;student;1;1;1;10093710_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+105;7015050;7015050;choque apaza william jimmy;;student;1;1;1;7015050_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+106;9919913;9919913;choque baltazar jorge eduardo;;student;1;1;1;9919913_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+107;9232218;9232218;choque calle roly gabriel;;student;1;1;1;9232218_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+108;9909744;9909744;choque calle wendy mireya;;student;1;1;1;9909744_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+109;8344671;8344671;choque conde guadalupe alisson;;student;1;1;1;8344671_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+110;6916618;6916618;choque huallpa roly;;student;1;1;1;6916618_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+111;8400981;8400981;choque huaranca caren elizabeth;;student;1;1;1;8400981_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+112;9948428;9948428;choque mamani daniel;;student;1;1;1;9948428_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+113;9230264;9230264;choque plata lizeth yamilca;;student;1;1;1;9230264_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+114;13796765;13796765;choque ramos jhudith nayeli;;student;1;1;1;13796765_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+115;10098840;10098840;choque tapia carla yhessica;;student;1;1;1;10098840_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+116;13790352;13790352;choque tapia german rodrigo;;student;1;1;1;13790352_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+117;8281222;8281222;choque villazante jhobana;;student;1;1;1;8281222_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+118;10075989;10075989;choquehuanca coaquira santos;;student;1;1;1;10075989_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+119;11060847;11060847;choquehuanca tarqui leydi letsi;;student;1;1;1;11060847_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+120;9914345;9914345;choquevillca condori rosse mary;;student;1;1;1;9914345_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+121;7075053;7075053;chura machaca ximena;;student;1;1;1;7075053_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+122;9926025;9926025;chura roque wilmer;;student;1;1;1;9926025_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+123;10029212;10029212;churata chura jorge luis;;student;1;1;1;10029212_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+124;14292595;14292595;coca canaviri noelia emmyli;;student;1;1;1;14292595_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+125;8383467;8383467;colque siÑani bryan elio;;student;1;1;1;8383467_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+126;14167595;14167595;combata alaca sergio;;student;1;1;1;14167595_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+127;9976434;9976434;condori atahuichi mariana;;student;1;1;1;9976434_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+128;9194562;9194562;condori churatupa aracely marisol;;student;1;1;1;9194562_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+129;8268141;8268141;condori condori michelle karol;;student;1;1;1;8268141_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+130;13115504;13115504;condori flores ivan;;student;1;1;1;13115504_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+131;13118747;13118747;condori huanca juan carlos;;student;1;1;1;13118747_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+132;7099856;7099856;condori mamani dayana luz;;student;1;1;1;7099856_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+133;10093420;10093420;condori mamani gabriela;;student;1;1;1;10093420_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+134;9918079;9918079;condori nina noemi monica;;student;1;1;1;9918079_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+135;6990508;6990508;condori paredes hugo richard;;student;1;1;1;6990508_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+136;8283977;8283977;condori quispe noemi dalcy;;student;1;1;1;8283977_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+137;9256457;9256457;condori rios mabel;;student;1;1;1;9256457_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+138;9947094;9947094;cordero quispe pamela;;student;1;1;1;9947094_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+139;12635889;12635889;coriza hernani michel caterine;;student;1;1;1;12635889_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+140;9212883;9212883;coro ticona pamela;;student;1;1;1;9212883_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+141;13275741;13275741;coromi yauli efrain;;student;1;1;1;13275741_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+142;14737641;14737641;coromi yauli hugo;;student;1;1;1;14737641_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+143;6844313;6844313;cortez bautista jhovana melany;;student;1;1;1;6844313_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+144;13298810;13298810;cortez tapia jose reynaldo;;student;1;1;1;13298810_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+145;6075993;6075993;cruz lecoÑa helen maria;;student;1;1;1;6075993_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+146;8324723;8324723;cuentas perez gabriel;;student;1;1;1;8324723_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+147;9131361;9131361;cusi mollisaca jhanela belen;;student;1;1;1;9131361_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+148;9171513;9171513;cusi muÑoz deysi vanessa;;student;1;1;1;9171513_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+149;9212431;9212431;cusiquispe liqui gabriela;;student;1;1;1;9212431_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+150;8392751;8392751;cussi chura bertha;;student;1;1;1;8392751_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+151;4987385;4987385;dominguez molina roy jesus;;student;1;1;1;4987385_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+152;9971564;9971564;encinas gonzales michel;;student;1;1;1;9971564_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+153;9128648;9128648;escobar mita mayra;;student;1;1;1;9128648_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+154;8387035;8387035;espinoza quispe roger;;student;1;1;1;8387035_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+155;9100547;9100547;esquibel quispe luz madai;;student;1;1;1;9100547_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+156;8389219;8389219;esquivel quispe silvia;;student;1;1;1;8389219_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+157;9920196;9920196;estaca flores jhoselyn karina;;student;1;1;1;9920196_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+158;7064885;7064885;fascio mamani jhoselin juana;;student;1;1;1;7064885_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+159;10082813;10082813;fernandez beque selina;;student;1;1;1;10082813_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+160;4953687;4953687;fernandez choque joaquin beimar;;student;1;1;1;4953687_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+161;14067995;14067995;fernandez choque luz micaela;;student;1;1;1;14067995_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+162;8383907;8383907;flores apaza martha maribel;;student;1;1;1;8383907_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+163;9121490;9121490;flores figueredo joel;;student;1;1;1;9121490_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+164;9153556;9153556;flores flores alexander franz;;student;1;1;1;9153556_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+165;8294866;8294866;flores gutierrez emi elia;;student;1;1;1;8294866_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+166;9941229;9941229;flores mamani aidee erika;;student;1;1;1;9941229_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+167;7090813;7090813;flores mamani ever jorge;;student;1;1;1;7090813_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+168;9232826;9232826;flores ururi nayhely;;student;1;1;1;9232826_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+169;9864421;9864421;flores yucra cristian felix;;student;1;1;1;9864421_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+170;4795388;4795388;garro sulcata maria liz;;student;1;1;1;4795388_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+171;9163028;9163028;gavincha clares jhoselin;;student;1;1;1;9163028_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+172;9065148;9065148;gironda ticona luz dayana;;student;1;1;1;9065148_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+173;10062509;10062509;gomez arias adriana ivonne;;student;1;1;1;10062509_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+174;9901050;9901050;gomez aruquipa ruth maria;;student;1;1;1;9901050_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+175;9952907;9952907;gomez chambi sdenka dayana;;student;1;1;1;9952907_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+176;11060654;11060654;gomez huanca lizeth guisela;;student;1;1;1;11060654_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+177;9136314;9136314;gomez laura lily pastora;;student;1;1;1;9136314_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+178;14050010;14050010;guarachi nina luis david;;student;1;1;1;14050010_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+179;11087962;11087962;guisbert monrroy masiel valeria;;student;1;1;1;11087962_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+180;9896364;9896364;gutierrez mamani rosa linda;;student;1;1;1;9896364_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+181;8376736;8376736;gutierrez quispe jhanet brigida;;student;1;1;1;8376736_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+182;12832837;12832837;gutierrez rojas esmeralda;;student;1;1;1;12832837_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+183;11074518;11074518;herrera yanique marco alejandro;;student;1;1;1;11074518_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+184;9969904;9969904;hidalgo poma veronica marisol;;student;1;1;1;9969904_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+185;9133106;9133106;hilari quispe loida;;student;1;1;1;9133106_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+186;8293317;8293317;hilario mamani jenry;;student;1;1;1;8293317_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+187;9205038;9205038;huallpa catari jose luis;;student;1;1;1;9205038_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+188;6013886;6013886;huanca alavi grover;;student;1;1;1;6013886_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+189;7036587;7036587;huanca castro erika;;student;1;1;1;7036587_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+190;8348840;8348840;huanca choque nelva guisela;;student;1;1;1;8348840_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+191;12699883;12699883;huanca condori blanca;;student;1;1;1;12699883_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+192;9156623;9156623;huanca flores chaim jhoselin;;student;1;1;1;9156623_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+193;12798842;12798842;huanca mamani alvaro;;student;1;1;1;12798842_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+194;9916707;9916707;huanca mamani jhon marcial;;student;1;1;1;9916707_2026;189.28.84.26;07/05/2024 13:01;sd0lfvgm33etjp9r8u6nm2eraq;sd0lfvgm33etjp9r8u6nm2eraq;NULL;;;07/05/2024 13:01
+195;6845848;6845848;huanca mamani jose bernal;;student;1;1;1;6845848_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+196;8398254;8398254;huanca palli gabriel sergio;;student;1;1;1;8398254_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+197;4367568;4367568;huanca quispe jhovana;;student;1;1;1;4367568_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+198;4870068;4870068;huanca sega mariela;;student;1;1;1;4870068_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+199;9249415;9249415;huanca ticona ronald marcelo;;student;1;1;1;9249415_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+200;9138438;9138438;huanca valencia ruth;;student;1;1;1;9138438_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+201;6901527;6901527;huanca yujra marlene;;student;1;1;1;6901527_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+202;9132585;9132585;huayhua morales jesica anahi;;student;1;1;1;9132585_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+203;8420919;8420919;huayhua quispe jhonny;;student;1;1;1;8420919_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+204;6893551;6893551;humerez cordero hennry;;student;1;1;1;6893551_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+205;7074354;7074354;jurado quisbert jhony;;student;1;1;1;7074354_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+206;13313701;13313701;kanqui parapo tomasa angela;;student;1;1;1;13313701_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+207;9206722;9206722;kapa villca daniela;;student;1;1;1;9206722_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+208;11544659;11544659;larico pucho jonatan;;student;1;1;1;11544659_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+209;4884201;4884201;laura apaza lourdes julia;;student;1;1;1;4884201_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+210;7080358;7080358;laura chasqui elio;;student;1;1;1;7080358_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+211;7030408;7030408;laura colque delicia esther;;student;1;1;1;7030408_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+212;10069685;10069685;laura ticona benita;;student;1;1;1;10069685_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+213;6064820;6064820;layme gomez mario german;;student;1;1;1;6064820_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+214;10076469;10076469;layme quelali ricardo;;student;1;1;1;10076469_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+215;6902524;6902524;lazo rodriguez lidia;;student;1;1;1;6902524_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+216;6799445;6799445;lima huanca pedro;;student;1;1;1;6799445_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+217;7083108;7083108;limachi apaza teresa;;student;1;1;1;7083108_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+218;10901101;10901101;limachi callisaya beymar german;;student;1;1;1;10901101_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+219;10028616;10028616;limachi chacon gimena silvia;;student;1;1;1;10028616_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+220;9935756;9935756;limachi choque eddy jonathan;;student;1;1;1;9935756_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+221;13986153;13986153;lizarazu zarate yobana carina;;student;1;1;1;13986153_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+222;7003919;7003919;llusco acarapi lidia;;student;1;1;1;7003919_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+223;13317903;13317903;llusco villca kelly valery;;student;1;1;1;13317903_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+224;11080931;11080931;lopez cama gretsel;;student;1;1;1;11080931_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+225;14451270;14451270;lovera apaza cindy leia;;student;1;1;1;14451270_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+226;9170237;9170237;luna garcia yosef henry;;student;1;1;1;9170237_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+227;12576838;12576838;luna zarate fabiana;;student;1;1;1;12576838_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+228;8284769;8284769;machaca torrez veronica;;student;1;1;1;8284769_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+229;6031014;6031014;magne flores paola jenny;;student;1;1;1;6031014_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+230;14486395;14486395;mamani alvarez cristian yamil;;student;1;1;1;14486395_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+231;10062621;10062621;mamani apaza alex daniels;;student;1;1;1;10062621_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+232;9129208;9129208;mamani aymuro teodora;;student;1;1;1;9129208_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+233;9208030;9208030;mamani calle lidia angelica;;student;1;1;1;9208030_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+234;9134540;9134540;mamani chavez jhannet;;student;1;1;1;9134540_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+235;13150547;13150547;mamani chiquipa paola;;student;1;1;1;13150547_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+236;10071426;10071426;mamani choque katerin heydi;;student;1;1;1;10071426_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+237;6946864;6946864;mamani choquehuanca eugenia alicia;;student;1;1;1;6946864_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+238;8266184;8266184;mamani chura juan carlos;;student;1;1;1;8266184_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+239;10024812;10024812;mamani condori franz;;student;1;1;1;10024812_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+240;9162621;9162621;mamani cortez wendy nayeli;;student;1;1;1;9162621_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+241;10035835;10035835;mamani huanca joel;;student;1;1;1;10035835_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+242;14069994;14069994;mamani huaycho zaida;;student;1;1;1;14069994_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+243;11064414;11064414;mamani larico jessica;;student;1;1;1;11064414_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+244;8337025;8337025;mamani laura fabiola;;student;1;1;1;8337025_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+245;9967505;9967505;mamani leon lizeth jhenny;;student;1;1;1;9967505_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+246;11063696;11063696;mamani limachi lesly yecenia;;student;1;1;1;11063696_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+247;13847785;13847785;mamani lopez ericka emily;;student;1;1;1;13847785_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+248;7050242;7050242;mamani luque ruddy gustavo;;student;1;1;1;7050242_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+249;9128405;9128405;mamani mamani judith celia;;student;1;1;1;9128405_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+250;7071808;7071808;mamani mamani margarita;;student;1;1;1;7071808_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+251;11083948;11083948;mamani mamani melisa;;student;1;1;1;11083948_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+252;9258258;9258258;mamani mamani vladimir;;student;1;1;1;9258258_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+253;5480105;5480105;mamani pacco sonia jovana;;student;1;1;1;5480105_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+254;6800551;6800551;mamani poma emmanuel;;student;1;1;1;6800551_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+255;9227982;9227982;mamani poma leydi abigail;;student;1;1;1;9227982_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+256;9148269;9148269;mamani quino yolanda;;student;1;1;1;9148269_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+257;9975361;9975361;mamani quisbert carla daniela;;student;1;1;1;9975361_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+258;8418995;8418995;mamani quispe gladis;;student;1;1;1;8418995_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+259;11083993;11083993;mamani quispe maribel;;student;1;1;1;11083993_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+260;9995905;9995905;mamani rojas gissela leisly;;student;1;1;1;9995905_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+261;9963072;9963072;mamani santalla richard cristhian;;student;1;1;1;9963072_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+262;4986916;4986916;mamani uscuricona edgar;;student;1;1;1;4986916_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+263;9243615;9243615;mamani valdez lency diana;;student;1;1;1;9243615_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+264;9968860;9968860;mamani villalba rosa;;student;1;1;1;9968860_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+265;10008851;10008851;mamani yahuasi monica virginia;;student;1;1;1;10008851_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+266;11076387;11076387;manchego castro virginia;;student;1;1;1;11076387_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+267;13086128;13086128;maquera alejo lilian;;student;1;1;1;13086128_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+268;9906783;9906783;marca leon maria eva;;student;1;1;1;9906783_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+269;8448348;8448348;marquez barriga juan pablo;;student;1;1;1;8448348_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+270;6783476;6783476;marquez mayta liceth magaly;;student;1;1;1;6783476_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+271;6786045;6786045;martinez alanis diego;;student;1;1;1;6786045_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+272;6973199;6973199;martinez yave jhovana lizeth;;student;1;1;1;6973199_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+273;10062652;10062652;mayta mamani fidel grover;;student;1;1;1;10062652_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+274;9174232;9174232;mendoza apaza marco antonio;;student;1;1;1;9174232_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+275;12509837;12509837;mendoza atahuachi erika;;student;1;1;1;12509837_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+276;8333649;8333649;mendoza quenta sucy magali;;student;1;1;1;8333649_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+277;10093626;10093626;merlo sarco jose luis;;student;1;1;1;10093626_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+278;8419003;8419003;moya ino jenny;;student;1;1;1;8419003_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+279;8322897;8322897;muÑoz ticona paola;;student;1;1;1;8322897_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+280;6985961;6985961;muÑoz ticona patricia;;student;1;1;1;6985961_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+281;9936111;9936111;nina apaza carla madelen;;student;1;1;1;9936111_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+282;9926892;9926892;nina apaza cristian jhon;;student;1;1;1;9926892_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+283;11070579;11070579;nina condori jenny lizeth;;student;1;1;1;11070579_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+284;6909598;6909598;nina mayta paulina;;student;1;1;1;6909598_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+285;7043964;7043964;nina yujra celia benita;;student;1;1;1;7043964_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+286;13153085;13153085;ojeda mamani veronica;;student;1;1;1;13153085_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+287;7032639;7032639;onostre quispe jhonathan luis;;student;1;1;1;7032639_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+288;9240098;9240098;pacheco arteaga rossio;;student;1;1;1;9240098_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+289;9148244;9148244;pacheco mamani ana cristina;;student;1;1;1;9148244_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+290;10921157;10921157;paco huanca susana wendy;;student;1;1;1;10921157_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+291;11100324;11100324;paco salgado jhasmin;;student;1;1;1;11100324_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+292;10103324;10103324;palle vargas leydi;;student;1;1;1;10103324_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+293;4816798;4816798;paredes nina yola;;student;1;1;1;4816798_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+294;4948188;4948188;pariguana leon willy gonzalo;;student;1;1;1;4948188_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+295;9156970;9156970;patana romero carlos adrian;;student;1;1;1;9156970_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+296;8386685;8386685;patzi chambi elmer jesus;;student;1;1;1;8386685_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+297;10029435;10029435;paxi loza mary luz;;student;1;1;1;10029435_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+298;9210938;9210938;perez yujra ivette;;student;1;1;1;9210938_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+299;6054498;6054498;piza paz claudia adriana;;student;1;1;1;6054498_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+300;10028306;10028306;poma mamani david;;student;1;1;1;10028306_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+301;8643370;8643370;portillo calle angello giuseppe;;student;1;1;1;8643370_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+302;13283672;13283672;puÑa huanca jessica;;student;1;1;1;13283672_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+303;10919991;10919991;puÑo surco blanca nieves;;student;1;1;1;10919991_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+304;10905409;10905409;quea huanca jhonatan;;student;1;1;1;10905409_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+305;4804782;4804782;quenta quispe rubÉn carlos;;student;1;1;1;4804782_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+306;9259712;9259712;quinteros choque jhessica yheraldin;;student;1;1;1;9259712_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+307;12450700;12450700;quiÑonez rosales luis gonzalo;;student;1;1;1;12450700_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+308;11088838;11088838;quisbert argollo jhim;;student;1;1;1;11088838_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+309;8331160;8331160;quisbert mamani rosario belinda;;student;1;1;1;8331160_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+310;9949018;9949018;quispe ajahuanca jimena;;student;1;1;1;9949018_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+311;9167130;9167130;quispe alcon luzmila;;student;1;1;1;9167130_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+312;7059912;7059912;quispe apaza juan carlos;;student;1;1;1;7059912_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+313;9243918;9243918;quispe argollo lourdes rebeca;;student;1;1;1;9243918_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+314;13056586;13056586;quispe calderon cynthia;;student;1;1;1;13056586_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+315;13118051;13118051;quispe carlo annette daniela alison;;student;1;1;1;13118051_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+316;9910882;9910882;quispe condori katy fabiola;;student;1;1;1;9910882_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+317;10099150;10099150;quispe condori ximena;;student;1;1;1;10099150_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+318;8392620;8392620;quispe huayhua luz erika;;student;1;1;1;8392620_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+319;6036537;6036537;quispe huayta silvia maribel;;student;1;1;1;6036537_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+320;6922980;6922980;quispe machaca flor yessica;;student;1;1;1;6922980_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+321;7070447;7070447;quispe mamani elvira;;student;1;1;1;7070447_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+322;9147978;9147978;quispe mamani jhaneth;;student;1;1;1;9147978_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+323;6977389;6977389;quispe nina bladimir;;student;1;1;1;6977389_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+324;9224022;9224022;quispe nina diego oscar;;student;1;1;1;9224022_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+325;9248823;9248823;quispe quino henry;;student;1;1;1;9248823_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+326;7076497;7076497;quispe quispe elvis;;student;1;1;1;7076497_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+327;13494175;13494175;quispe quispe german juan;;student;1;1;1;13494175_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+328;6869695;6869695;quispe ramos ines agustina;;student;1;1;1;6869695_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+329;7081006;7081006;quispe rojas marisol;;student;1;1;1;7081006_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+330;9254938;9254938;quispe ticona jose luis;;student;1;1;1;9254938_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+331;11064302;11064302;quispe tintaya gisela abigail;;student;1;1;1;11064302_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+332;9969996;9969996;quispecahuana apaza nelly;;student;1;1;1;9969996_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+333;9971587;9971587;ramirez mamani maria esther;;student;1;1;1;9971587_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+334;8360139;8360139;ramirez salinas tatiana delmi;;student;1;1;1;8360139_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+335;11542095;11542095;ramos canaviri kevin sraynner;;student;1;1;1;11542095_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+336;10925174;10925174;ramos choque wilfredo;;student;1;1;1;10925174_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+337;8368381;8368381;ramos luna ericka pamela;;student;1;1;1;8368381_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+338;13297157;13297157;ramos peÑa amelia;;student;1;1;1;13297157_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+339;6072374;6072374;ramos quispe elia;;student;1;1;1;6072374_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+340;9929398;9929398;ramos ramos alex;;student;1;1;1;9929398_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+341;12453284;12453284;ramos sarmiento aide jhenny;;student;1;1;1;12453284_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+342;13298394;13298394;ramos yupanqui giovanni;;student;1;1;1;13298394_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+343;7024035;7024035;requez mendez maria nela;;student;1;1;1;7024035_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+344;7041935;7041935;rocha gonzales esteban alejandro;;student;1;1;1;7041935_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+345;8316643;8316643;rodriguez huanca ronald;;student;1;1;1;8316643_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+346;9066573;9066573;rodriguez huarachi magda;;student;1;1;1;9066573_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+347;6966177;6966177;rojas calsina rosa iris;;student;1;1;1;6966177_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+348;7018335;7018335;rojas palle emma;;student;1;1;1;7018335_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+349;9966540;9966540;rojas quispe magaly lizeth;;student;1;1;1;9966540_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+350;4794661;4794661;rojas quispe ovidio;;student;1;1;1;4794661_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+351;14738413;14738413;roman tiÑini joel julian;;student;1;1;1;14738413_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+352;12641003;12641003;salaz mamani maribel;;student;1;1;1;12641003_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+353;9922423;9922423;salgado mamani judith;;student;1;1;1;9922423_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+354;6075176;6075176;salomon huanca eliseo;;student;1;1;1;6075176_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+355;9906193;9906193;salvador marca regina;;student;1;1;1;9906193_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+356;13406962;13406962;samo aruquipa josue;;student;1;1;1;13406962_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+357;10031094;10031094;samo chipana carlos gustavo;;student;1;1;1;10031094_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+358;7007129;7007129;samo chipana rocio angela;;student;1;1;1;7007129_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+359;10092296;10092296;sanchez cachi mary carla;;student;1;1;1;10092296_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+360;12513916;12513916;sangalli alarcon rosendo;;student;1;1;1;12513916_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+361;11087861;11087861;santander pereira ana gabriela;;student;1;1;1;11087861_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+362;10900807;10900807;sarzuri alejo silvia;;student;1;1;1;10900807_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+363;7096884;7096884;sea callisaya flor maria de los angeles;;student;1;1;1;7096884_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+364;7092728;7092728;sequita quispe jhonatan;;student;1;1;1;7092728_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+365;9876892;9876892;siÑani laguna yaneth;;student;1;1;1;9876892_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+366;12451805;12451805;sirpa huanca rober joel;;student;1;1;1;12451805_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+367;3396666;3396666;soliz marin limberg javier;;student;1;1;1;3396666_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+368;9950206;9950206;soto huacatiti yhoselin liliana;;student;1;1;1;9950206_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+369;12989321;12989321;susaÑo sarzuri gisela;;student;1;1;1;12989321_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+370;9244223;9244223;suzaÑo colque milagros florencia;;student;1;1;1;9244223_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+371;6199182;6199182;tancara condori yola;;student;1;1;1;6199182_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+372;14186094;14186094;tapia calle kevin ademar;;student;1;1;1;14186094_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+373;6931611;6931611;taraniapo pacha rubert dario;;student;1;1;1;6931611_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+374;13680297;13680297;tarqui alanoca soraya;;student;1;1;1;13680297_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+375;7092509;7092509;tarqui limachi cesar;;student;1;1;1;7092509_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+376;6928319;6928319;tarqui mamani angel;;student;1;1;1;6928319_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+377;9998335;9998335;tarquino paucara nelly jacqueline;;student;1;1;1;9998335_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+378;10084344;10084344;ticona coaquira maritza;;student;1;1;1;10084344_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+379;14486539;14486539;ticona zuÑiga jenny alejandra;;student;1;1;1;14486539_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+380;9077374;9077374;tinco mendoza yovanna;;student;1;1;1;9077374_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+381;9923356;9923356;tinta tinta carla viviana;;student;1;1;1;9923356_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+382;9125823;9125823;tintaya pari faviola;;student;1;1;1;9125823_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+383;6075168;6075168;tintaya pari jeanneth;;student;1;1;1;6075168_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+384;10084919;10084919;tito otoya sabino;;student;1;1;1;10084919_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+385;E-11646186;E-11646186;tito rojas delia celinda;;student;1;1;1;E-11646186_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+386;9092192;9092192;tola santos rolando;;student;1;1;1;9092192_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+387;8436747;8436747;toledo tambo ivett cecilia;;student;1;1;1;8436747_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+388;9243633;9243633;troche sirpa joaquin adhemar;;student;1;1;1;9243633_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+389;7035250;7035250;ulo condori rodrigo david;;student;1;1;1;7035250_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+390;12453533;12453533;uruÑa fernandez evangelina;;student;1;1;1;12453533_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+391;6065391;6065391;uscamayta guachalla ruben;;student;1;1;1;6065391_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+392;6894119;6894119;usnayo garcia zulma blanca;;student;1;1;1;6894119_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+393;13022008;13022008;valdez aruquipa elizabeth laura;;student;1;1;1;13022008_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+394;9941772;9941772;valdez aruquipa miriam;;student;1;1;1;9941772_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+395;13493839;13493839;valencia choque andy gabriel;;student;1;1;1;13493839_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+396;8367544;8367544;valencia limachi roxana;;student;1;1;1;8367544_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+397;6802227;6802227;valencia yana cristhian rolando;;student;1;1;1;6802227_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+398;13814006;13814006;vargas calle beatriz soledad;;student;1;1;1;13814006_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+399;10068471;10068471;vargas patti marisol;;student;1;1;1;10068471_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+400;10087166;10087166;vargas quispe jhoel rodrigo;;student;1;1;1;10087166_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+401;9907922;9907922;vasquez quispe yenny;;student;1;1;1;9907922_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+402;12514126;12514126;viadez chura luis angel;;student;1;1;1;12514126_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+403;7317193;7317193;villca barreto isabel;;student;1;1;1;7317193_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+404;13086411;13086411;villca mamani jhener agustin;;student;1;1;1;13086411_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+405;9905533;9905533;villegas herrera leticia;;student;1;1;1;9905533_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+406;10086428;10086428;waqui rojas claudia maria;;student;1;1;1;10086428_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+407;9099671;9099671;waylluco choque yessica;;student;1;1;1;9099671_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+408;7378699;7378699;yampara cruz miriam;;student;1;1;1;7378699_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+409;7026167;7026167;yana saca nelson cirilo;;student;1;1;1;7026167_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+410;9932344;9932344;yanarico carlo cristian leocario;;student;1;1;1;9932344_2026;189.28.87.104;07/05/2024 13:01;;;07/05/2024 13:21;;;07/05/2024 13:21
+411;13148568;13148568;yanarico huanca miguel angel;;student;1;1;1;13148568_2026;187.102.201.17;07/05/2024 13:37;;;07/05/2024 13:46;;;07/05/2024 13:46
+412;4818671;4818671;yanqui laura carlos;;student;1;1;1;4818671_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+413;8344800;8344800;yucra condori lizeth mayra;;student;1;1;1;8344800_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+414;10070393;10070393;yujra condarco gabriela;;student;1;1;1;10070393_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+415;10080986;10080986;yujra lima susi gabriela;;student;1;1;1;10080986_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+416;14948238;14948238;yujra paco paola magali;;student;1;1;1;14948238_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+417;8296681;8296681;yumani gutierrez jesus eduardo;;student;1;1;1;8296681_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+418;7099326;7099326;zapata kuno rudy;;student;1;1;1;7099326_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+419;9920728;9920728;zarate condori brayan;;student;1;1;1;9920728_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+420;8403818;8403818;zerna mamani mariela carmen;;student;1;1;1;8403818_2026;NULL;NULL;;;NULL;;;23/04/2024 18:21
+421;8432048;8432048;aleluya soledad erika;;student;1;1;1;8432048_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+422;13606054;13606054;aduviri machaca edith genesis;;student;1;1;1;13606054_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+423;6967778;6967778;alanoca apaza deysi elva;;student;1;1;1;6967778_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+424;9230775;9230775;alanoca huanca veronica;;student;1;1;1;9230775_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+425;6005108;6005108;alanoca mendoza sandra;;student;1;1;1;6005108_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+426;14620447;14620447;alvarado saca jose maykol;;student;1;1;1;14620447_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+427;6049606;6049606;alvarez baldes grover;;student;1;1;1;6049606_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+428;10517459-1J;10517459-1J;alvarez cochi sidney mabel;;student;1;1;1;10517459-1J_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+429;8415561;8415561;alvarez mamani yesenia;;student;1;1;1;8415561_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+430;7003662;7003662;angulo condori reynaldo;;student;1;1;1;7003662_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+431;13644424;13644424;angulo laura maria isabel;;student;1;1;1;13644424_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+432;8447933;8447933;apaza blanco freddy;;student;1;1;1;8447933_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+433;9145714;9145714;apaza guanca dorys;;student;1;1;1;9145714_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+434;13443714;13443714;apaza janco carla;;student;1;1;1;13443714_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+435;7055857;7055857;apaza jimenez lizbeth;;student;1;1;1;7055857_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+436;13212294;13212294;apaza larico nayeli;;student;1;1;1;13212294_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+437;14227368;14227368;apaza paton magda fanny;;student;1;1;1;14227368_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+438;13639516;13639516;apaza quispe maria eugenia;;student;1;1;1;13639516_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+439;9254446;9254446;apaza tapia blanca;;student;1;1;1;9254446_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+440;13737146;13737146;apaza tola paola gabriela;;student;1;1;1;13737146_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+441;9250201;9250201;arratia alejo alvaro ricardo;;student;1;1;1;9250201_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+442;10025990;10025990;aruni merlo ericka luz;;student;1;1;1;10025990_2026;187.102.201.17;13/05/2024 15:24;6ur7euf2u7jji8tppn4qt6j7f9;6ur7euf2u7jji8tppn4qt6j7f9;NULL;;;13/05/2024 15:24
+443;14961485;14961485;aruquipa callisaya judith;;student;1;1;1;14961485_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+444;9972485;9972485;aruquipa ticona cristhian;;student;1;1;1;9972485_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+445;6893456;6893456;avendaÑo fernandez clara chantal;;student;1;1;1;6893456_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+446;6946936;6946936;averanga aliaga barinia katerine;;student;1;1;1;6946936_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+447;6166513;6166513;barrionuevo rivera cesar raul;;student;1;1;1;6166513_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+448;8329013;8329013;bautista bautista roberto antonio;;student;1;1;1;8329013_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+449;9125097;9125097;bautista oropeza lizeth;;student;1;1;1;9125097_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+450;10096485;10096485;benitez zuleta eva britney;;student;1;1;1;10096485_2026;187.102.201.156;14/08/2024 15:02;fl3oq8202ga68blmfcck8aajcr;fl3oq8202ga68blmfcck8aajcr;NULL;;;14/08/2024 15:02
+451;10095002;10095002;benitez zuleta nicole valery;;student;1;1;1;10095002_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+452;10902187;10902187;blanco acero neyza jheimy;;student;1;1;1;10902187_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+453;7079208;7079208;borras mamani grizelda;;student;1;1;1;7079208_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+454;12763661;12763661;botello ticona dayne karla;;student;1;1;1;12763661_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+455;10096674;10096674;bustencio rojas yesica;;student;1;1;1;10096674_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+456;6117045;6117045;cabrera mamani marcelo;;student;1;1;1;6117045_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+457;9224728;9224728;cachi condarco flavio edilberto;;student;1;1;1;9224728_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+458;7053549;7053549;cahuaya choque jacquelinne ayde;;student;1;1;1;7053549_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+459;8375069;8375069;calamani quispe pablo;;student;1;1;1;8375069_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+460;7029314;7029314;calcina condori limber;;student;1;1;1;7029314_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+461;10094171;10094171;calla calamani nely;;student;1;1;1;10094171_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+462;8298123;8298123;calle ticona laura cristal;;student;1;1;1;8298123_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+463;7095028;7095028;callisaya zabaleta lizbeth;;student;1;1;1;7095028_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+464;4740296;4740296;canzaya soria ayrton samuel;;student;1;1;1;4740296_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+465;13792279;13792279;caparicona condori gabriela;;student;1;1;1;13792279_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+466;12891640;12891640;carhuani espino rivaldo;;student;1;1;1;12891640_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+467;11547109;11547109;castaya apaza eddy milton;;student;1;1;1;11547109_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+468;12831387;12831387;castro espinoza shicely shirley;;student;1;1;1;12831387_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+469;9259281;9259281;catacora apaza marcial;;student;1;1;1;9259281_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+470;9213210;9213210;catacora herrera gabriela dori;;student;1;1;1;9213210_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+471;6001970;6001970;catari mamani miguel angel;;student;1;1;1;6001970_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+472;10081186;10081186;chacalluca laura magaly roxana;;student;1;1;1;10081186_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+473;9131498;9131498;chalco ochoa adriana;;student;1;1;1;9131498_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+474;9232332;9232332;chambi callisaya lizeth;;student;1;1;1;9232332_2026;181.114.121.34;13/08/2024 17:13;0kl621g85vibbfft03b0j3n9ur;0kl621g85vibbfft03b0j3n9ur;NULL;;;13/08/2024 17:13
+475;9148876;9148876;chambi chino jhonny;;student;1;1;1;9148876_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+476;10097332;10097332;chambi cochi lourdes;;student;1;1;1;10097332_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+477;12896746;12896746;chambi espinoza polet;;student;1;1;1;12896746_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+478;11079597;11079597;chambi lopez huascar gonzalo;;student;1;1;1;11079597_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+479;6878666;6878666;chambi mamani reyna marcia;;student;1;1;1;6878666_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+480;8350020;8350020;chambi perez yesika pamela;;student;1;1;1;8350020_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+481;10094209;10094209;chambilla luna alvaro;;student;1;1;1;10094209_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+482;9944592;9944592;chapi ramos naila;;student;1;1;1;9944592_2026;131.0.196.104;18/08/2024 20:06;gaitauh12ot6chck6iq8toda0b;gaitauh12ot6chck6iq8toda0b;NULL;;;18/08/2024 20:06
+483;11068527;11068527;charico atto mery loyda;;student;1;1;1;11068527_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+484;9169217;9169217;chavez chambi lizeth;;student;1;1;1;9169217_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+485;8375982;8375982;chino luque eva guadalupe;;student;1;1;1;8375982_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+486;7081612;7081612;choque aroba olga;;student;1;1;1;7081612_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+487;6096313;6096313;choque aruquipa vianca isabel;;student;1;1;1;6096313_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+488;5123784;5123784;choque canaviri yovana;;student;1;1;1;5123784_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+489;7008382;7008382;choque choquehuanca eusebio;;student;1;1;1;7008382_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+490;12636551;12636551;choque santalla sara yaquelin;;student;1;1;1;12636551_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+491;6763285;6763285;choque ticona magaly hilda;;student;1;1;1;6763285_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+492;14737811;14737811;chura quispe marina;;student;1;1;1;14737811_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+493;8354101;8354101;claros monzon lissette dayana;;student;1;1;1;8354101_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+494;12703464;12703464;coaquira gutierrez alicia;;student;1;1;1;12703464_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+495;9965777;9965777;coaquira parisaca pedro luis;;student;1;1;1;9965777_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+496;7074724;7074724;coarite mamani luis elvis;;student;1;1;1;7074724_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+497;E-11264744;E-11264744;coila huaricallo susan lidia;;student;1;1;1;E-11264744_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+498;9101529;9101529;conde choque reyna lizeth;;student;1;1;1;9101529_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+499;12732770;12732770;condo soto marizol;;student;1;1;1;12732770_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+500;5477040;5477040;condori atahuichi wendy fanny;;student;1;1;1;5477040_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+501;9126354;9126354;condori cayllagua maria eugenia;;student;1;1;1;9126354_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+502;14800547;14800547;condori guachalla gabriela abigail;;student;1;1;1;14800547_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+503;9954918;9954918;condori mamani sandra;;student;1;1;1;9954918_2026;181.115.130.20;27/08/2024 16:35;7h3pthimvfruc5o7o1fcg4iv4d;7h3pthimvfruc5o7o1fcg4iv4d;NULL;;;27/08/2024 16:35
+504;4372357;4372357;condori ramos edwin rene;;student;1;1;1;4372357_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+505;9230788;9230788;condori tinta jhesica;;student;1;1;1;9230788_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+506;9259889;9259889;corimayta condori ana jovita;;student;1;1;1;9259889_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+507;12955592;12955592;coronel limachi nayely;;student;1;1;1;12955592_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+508;10070345;10070345;correa mollo vanessa jeaneth;;student;1;1;1;10070345_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+509;6880101;6880101;cosme huallpa cledy juana;;student;1;1;1;6880101_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+510;9227115;9227115;crespo mamani andrea rosa;;student;1;1;1;9227115_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+511;6913761;6913761;cruz jimenez elian;;student;1;1;1;6913761_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+512;8401272;8401272;cruz suca lidia;;student;1;1;1;8401272_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+513;10093816;10093816;cuba quispe elma magaly;;student;1;1;1;10093816_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+514;6742171;6742171;cusi muÑoz grissel anahi;;student;1;1;1;6742171_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+515;8296050;8296050;fernandez mamani jose carlos;;student;1;1;1;8296050_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+516;9167067;9167067;flores alanoca reina;;student;1;1;1;9167067_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+517;8323488;8323488;flores almaraz felix daniel;;student;1;1;1;8323488_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+518;11546530;11546530;flores cadena milenka;;student;1;1;1;11546530_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+519;7032412;7032412;flores choquehuanca raquel;;student;1;1;1;7032412_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+520;6844104;6844104;flores ticona ramiro;;student;1;1;1;6844104_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+521;12701727;12701727;garcia gamarra ismael eleazar;;student;1;1;1;12701727_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+522;6902245;6902245;guaygua lazo grover;;student;1;1;1;6902245_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+523;7033358;7033358;gutierrez cruz limber;;student;1;1;1;7033358_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+524;6994561;6994561;gutierrez cussi erika;;student;1;1;1;6994561_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+525;10009559;10009559;gutierrez suxo rita josefina;;student;1;1;1;10009559_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+526;8283093;8283093;huanca alavi david;;student;1;1;1;8283093_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+527;10067510;10067510;huanca blanco claudia;;student;1;1;1;10067510_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+528;6855721;6855721;huanca choque iver roly;;student;1;1;1;6855721_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+529;8393496;8393496;huanca juchani clara soledad;;student;1;1;1;8393496_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+530;9932719;9932719;huanca machaca marlene;;student;1;1;1;9932719_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+531;9890258;9890258;huanca macias henry;;student;1;1;1;9890258_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+532;7002922;7002922;huanca quiroz claudia maria;;student;1;1;1;7002922_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+533;9880507;9880507;huanca quispe cesar alberto;;student;1;1;1;9880507_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+534;9163366;9163366;huanca quispe princela;;student;1;1;1;9163366_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+535;10071963;10071963;huarca tallacahua angelina;;student;1;1;1;10071963_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+536;6129392;6129392;huayhua cruz elvira;;student;1;1;1;6129392_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+537;9942284;9942284;huchani mamani richar;;student;1;1;1;9942284_2026;161.56.29.66;09/05/2024 19:22;;;09/05/2024 19:52;;;09/05/2024 19:52
+538;12452176;12452176;ignacio chambi rudy lesmir;;student;1;1;1;12452176_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+539;3452539;3452539;jimenez camacho felix johny;;student;1;1;1;3452539_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+540;7075158;7075158;jucumani chira ana maria;;student;1;1;1;7075158_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+541;10085259;10085259;kama tito mauricio;;student;1;1;1;10085259_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+542;9949378;9949378;kosi heredia yudit elayza;;student;1;1;1;9949378_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+543;11544728;11544728;larico pucho ivan;;student;1;1;1;11544728_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+544;9125264;9125264;larico uchurinca ana paola;;student;1;1;1;9125264_2026;189.28.86.164;14/06/2024 15:00;7i1l7deqtfmh2pmid5kg7mclip;7i1l7deqtfmh2pmid5kg7mclip;NULL;;;14/06/2024 15:00
+545;8368376;8368376;laruta fabio vladimir;;student;1;1;1;8368376_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+546;9062468;9062468;laurel laura hilmar;;student;1;1;1;9062468_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+547;6163103;6163103;limachi marquez ever miguel;;student;1;1;1;6163103_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+548;4972395;4972395;llusco higorre ramiro;;student;1;1;1;4972395_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+549;9972950;9972950;llusco mujica jazmin zulema;;student;1;1;1;9972950_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+550;3322191;3322191;lopez apaza torifin;;student;1;1;1;3322191_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+551;9215440;9215440;loza choquehuanca alexandra;;student;1;1;1;9215440_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+552;10038239;10038239;loza moya erland;;student;1;1;1;10038239_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+553;9242158;9242158;lucana mamani fabiola;;student;1;1;1;9242158_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+554;8292362;8292362;luque huanca maria elena;;student;1;1;1;8292362_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+555;9968524;9968524;luque tola nelly;;student;1;1;1;9968524_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+556;10079226;10079226;machaca cordero maria del carmen;;student;1;1;1;10079226_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+557;9976167;9976167;machaca cori freddy;;student;1;1;1;9976167_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+558;7058485;7058485;machaca machaca beatriz miki;;student;1;1;1;7058485_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+559;14050351;14050351;machaca mollo santos miguel;;student;1;1;1;14050351_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+560;9195254;9195254;mamani apaza amador;;student;1;1;1;9195254_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+561;9872883;9872883;mamani aruquipa wilma;;student;1;1;1;9872883_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+562;7002948;7002948;mamani calle roxana;;student;1;1;1;7002948_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+563;14156000;14156000;mamani casas daniel kevin;;student;1;1;1;14156000_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+564;9941534;9941534;mamani chura tania;;student;1;1;1;9941534_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+565;6957745;6957745;mamani colquehuanca javier;;student;1;1;1;6957745_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+566;7075178;7075178;mamani condori cesar;;student;1;1;1;7075178_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+567;9938897;9938897;mamani condori dania;;student;1;1;1;9938897_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+568;6851423;6851423;mamani condori juan luis;;student;1;1;1;6851423_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+569;9890409;9890409;mamani condori raquel;;student;1;1;1;9890409_2026;200.87.155.44;16/08/2024 2:25;e22lbo9nfedgk7orr9tfvsso4f;e22lbo9nfedgk7orr9tfvsso4f;NULL;;;16/08/2024 2:25
+570;9069192;9069192;mamani guarachi jenny betty;;student;1;1;1;9069192_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+571;9209630;9209630;mamani gutierrez cristian;;student;1;1;1;9209630_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+572;11542134;11542134;mamani huanca aida lizeth;;student;1;1;1;11542134_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+573;7075162;7075162;mamani mamani lizeth tania;;student;1;1;1;7075162_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+574;11064374;11064374;mamani mamani maria estefanny;;student;1;1;1;11064374_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+575;9932858;9932858;mamani mamani richar;;student;1;1;1;9932858_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+576;9165181;9165181;mamani mamani saile isabel;;student;1;1;1;9165181_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+577;7099418;7099418;mamani mayta pamela damar;;student;1;1;1;7099418_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+578;7099383;7099383;mamani mayta tania wara;;student;1;1;1;7099383_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+579;9234804;9234804;mamani mollo sandra;;student;1;1;1;9234804_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+580;13213244;13213244;mamani morga jaqueline naiva;;student;1;1;1;13213244_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+581;9221078;9221078;mamani pacheco ever yhury;;student;1;1;1;9221078_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+582;9082416;9082416;mamani quispe cristian samuel;;student;1;1;1;9082416_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+583;8339493;8339493;mamani siÑani ruth feliza;;student;1;1;1;8339493_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+584;10070575;10070575;mamani tellez judith jhenny;;student;1;1;1;10070575_2026;177.222.61.210;21/08/2024 2:10;m36e0j91c8tm0q5rh32qpiffbr;m36e0j91c8tm0q5rh32qpiffbr;NULL;;;21/08/2024 2:10
+585;7063377;7063377;mamani ticona maria elena;;student;1;1;1;7063377_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+586;6822066;6822066;mamani tola julia magaly;;student;1;1;1;6822066_2026;190.129.166.253;14/08/2024 23:00;q218ti9sdhshmafgit7blnt459;q218ti9sdhshmafgit7blnt459;NULL;;;14/08/2024 23:00
+587;11540599;11540599;maquera mendoza deysi;;student;1;1;1;11540599_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+588;12736885;12736885;marquez yujra leandro mauricio;;student;1;1;1;12736885_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+589;7030579;7030579;maydana choquetarqui yuliza;;student;1;1;1;7030579_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+590;13494279;13494279;maynaza luna ramiro;;student;1;1;1;13494279_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+591;9921405;9921405;mejia condori luis fernando;;student;1;1;1;9921405_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+592;9905816;9905816;mena aquise lizeth nancy;;student;1;1;1;9905816_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+593;10081548;10081548;mendoza apaza isabel lorena;;student;1;1;1;10081548_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+594;13276613;13276613;mendoza limachi katherine;;student;1;1;1;13276613_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+595;13696953;13696953;mendoza nina ana veronica;;student;1;1;1;13696953_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+596;10022265;10022265;mendoza riveros mary luz;;student;1;1;1;10022265_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+597;6640272;6640272;michel guzman natalia valeria;;student;1;1;1;6640272_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+598;9249375;9249375;miranda paco shirley sandra;;student;1;1;1;9249375_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+599;10074750;10074750;misme condori gladys;;student;1;1;1;10074750_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+600;7074811;7074811;morales chambilla jhilka sharel;;student;1;1;1;7074811_2026;181.114.121.117;11/03/2025 18:32;1lvt5689bsarvnamimk5qbplnt;1lvt5689bsarvnamimk5qbplnt;12/08/2024 21:56;;;11/03/2025 18:32
+601;9163972;9163972;morales flores melisa angela;;student;1;1;1;9163972_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+602;11087703;11087703;morales mamani luis franklin;;student;1;1;1;11087703_2026;187.102.201.17;07/05/2024 13:53;;;07/05/2024 13:55;;;07/05/2024 13:55
+603;6903701;6903701;nina cerda aldair;;student;1;1;1;6903701_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+604;4915872;4915872;nina condori luis;;student;1;1;1;4915872_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+605;7010026;7010026;pacheco limachi niliyam cristina;;student;1;1;1;7010026_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+606;8348858;8348858;paco fuentes jimena;;student;1;1;1;8348858_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+607;14450114;14450114;paja avila jessica gisela;;student;1;1;1;14450114_2026;189.28.88.169;03/09/2024 12:35;dobq5kt2safqq6kb6k0qqaeh1n;dobq5kt2safqq6kb6k0qqaeh1n;NULL;;;03/09/2024 12:35
+608;6045594;6045594;paniagua perez jhonattan paulo;;student;1;1;1;6045594_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+609;7096235;7096235;paucara choquetarqui ana maria;;student;1;1;1;7096235_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+610;8409251;8409251;peÑasco silva lourdes;;student;1;1;1;8409251_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+611;9092304;9092304;piza terceros betzabe lia;;student;1;1;1;9092304_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+612;8387037;8387037;plata blanco omar alex;;student;1;1;1;8387037_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+613;13443786;13443786;portillo espinoza erika;;student;1;1;1;13443786_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+614;12451739;12451739;pucho mamani denilson brayan;;student;1;1;1;12451739_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+615;8325063;8325063;pusarico huanca lizeth;;student;1;1;1;8325063_2026;181.115.171.60;13/08/2024 22:17;evtc7tnqgh7q3j1pr122tov2qj;evtc7tnqgh7q3j1pr122tov2qj;NULL;;;13/08/2024 22:17
+616;9865239;9865239;quea poma rosmery;;student;1;1;1;9865239_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+617;9120612;9120612;quelca quelca fernando grover;;student;1;1;1;9120612_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+618;6172771;6172771;quenallata acuÑa celio roger;;student;1;1;1;6172771_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+619;12452706;12452706;quintanilla mamani rodrigo israel;;student;1;1;1;12452706_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+620;9915694;9915694;quiroga tenorio borys ronaldo;;student;1;1;1;9915694_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+621;9115810;9115810;quisbert perez karen amparo;;student;1;1;1;9115810_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+622;14705811;14705811;quisbert ticona leonel lizandro;;student;1;1;1;14705811_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+623;14450513;14450513;quispe ali yeci;;student;1;1;1;14450513_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+624;6006420;6006420;quispe amaru katherin;;student;1;1;1;6006420_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+625;6925776;6925776;quispe callizaya fabiana;;student;1;1;1;6925776_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+626;6923034;6923034;quispe chura cleydi melania;;student;1;1;1;6923034_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+627;9187718;9187718;quispe jove victor hugo;;student;1;1;1;9187718_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+628;6914463;6914463;quispe kama samuel;;student;1;1;1;6914463_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+629;10069692;10069692;quispe larico erika;;student;1;1;1;10069692_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+630;8284185;8284185;quispe limachi reina;;student;1;1;1;8284185_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+631;9231180;9231180;quispe mamani franklin;;student;1;1;1;9231180_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+632;13215534;13215534;quispe mamani maribel;;student;1;1;1;13215534_2026;187.102.201.156;14/08/2024 18:49;ierp90nt7irvpdhbfkrdsmbjc9;ierp90nt7irvpdhbfkrdsmbjc9;14/08/2024 18:48;;;14/08/2024 18:49
+633;14793517;14793517;quispe quispe sonia mayra;;student;1;1;1;14793517_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+634;6983786;6983786;quispe ramirez basilio;;student;1;1;1;6983786_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+635;7074626;7074626;quispe ramos israel;;student;1;1;1;7074626_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+636;9203332;9203332;quispe ramos nely ana;;student;1;1;1;9203332_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+637;6887568;6887568;quispe zenteno eric;;student;1;1;1;6887568_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+638;9886114;9886114;ramirez jihuacuti richard;;student;1;1;1;9886114_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+639;10072276;10072276;ramos carrillo rut wara;;student;1;1;1;10072276_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+640;6848723;6848723;ramos diaz gary jhunnyor;;student;1;1;1;6848723_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+641;9892380;9892380;ramos espinal raquel ivis;;student;1;1;1;9892380_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+642;12894674;12894674;ramos ramos maria ines;;student;1;1;1;12894674_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+643;8398883;8398883;rappo carit john luis;;student;1;1;1;8398883_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+644;7050937;7050937;rivas jalire jose david;;student;1;1;1;7050937_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+645;8232857;8232857;rocha chura giovana ingrid;;student;1;1;1;8232857_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+646;9076615;9076615;rodriguez apaza daniel;;student;1;1;1;9076615_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+647;7056275;7056275;rodriguez nogales betel;;student;1;1;1;7056275_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+648;9936267;9936267;rodriguez paco mayra camila;;student;1;1;1;9936267_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+649;10305553;10305553;rojas montero mayerlyn;;student;1;1;1;10305553_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+650;10064517;10064517;rojas saucedo jose antonio;;student;1;1;1;10064517_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+651;12392258;12392258;romero fernandez gilmar gonzalo;;student;1;1;1;12392258_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+652;9900912;9900912;saca canaviri vania;;student;1;1;1;9900912_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+653;8282769;8282769;sajama patty jhamara;;student;1;1;1;8282769_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+654;12640331;12640331;samo marin soledad;;student;1;1;1;12640331_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+655;13299277;13299277;sanchez cruz marisol;;student;1;1;1;13299277_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+656;9971412;9971412;santa maria gomez abigail;;student;1;1;1;9971412_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+657;9076855;9076855;silvestre villca diego daniel;;student;1;1;1;9076855_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+658;7051926;7051926;sinka esteban aleyda heidi;;student;1;1;1;7051926_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+659;13149829;13149829;siÑani quispe paola;;student;1;1;1;13149829_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+660;9147387;9147387;suca corina maribel;;student;1;1;1;9147387_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+661;9211694;9211694;tancara choquetarqui carolina;;student;1;1;1;9211694_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+662;14186093;14186093;tapia calle critsman roniel;;student;1;1;1;14186093_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+663;6869752;6869752;tapia vila nelson edwin;;student;1;1;1;6869752_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+664;14936907;14936907;taquila amachi brayan walter;;student;1;1;1;14936907_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+665;6865805;6865805;taquila luque alizon magaly;;student;1;1;1;6865805_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+666;11079650;11079650;tarqui mamani mary;;student;1;1;1;11079650_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+667;10065048;10065048;tarqui vargas grisel ivet;;student;1;1;1;10065048_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+668;7038039;7038039;ticona choquehuanca helen;;student;1;1;1;7038039_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+669;9201931;9201931;ticona martinez rosaicela;;student;1;1;1;9201931_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+670;10028940;10028940;ticona yanarico john deybid;;student;1;1;1;10028940_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+671;6096012;6096012;tinta huacanique german;;student;1;1;1;6096012_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+672;9923398;9923398;tinta tinta yesica maria;;student;1;1;1;9923398_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+673;9120190;9120190;tintaya pari veronica;;student;1;1;1;9120190_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+674;9935649;9935649;tito poma anahi;;student;1;1;1;9935649_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+675;7065794;7065794;tola guarachi cristian;;student;1;1;1;7065794_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+676;14617466;14617466;tola llusco deysi pamela;;student;1;1;1;14617466_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+677;11064396;11064396;tonconi choquetarqui jhoselin;;student;1;1;1;11064396_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+678;9076621;9076621;uruchi amaru viviana;;student;1;1;1;9076621_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+679;14124829;14124829;uruÑa rios heidy;;student;1;1;1;14124829_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+680;6732774;6732774;vargas fernandez alvaro rodrigo;;student;1;1;1;6732774_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+681;9919749;9919749;vargas osco benita;;student;1;1;1;9919749_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+682;13569759;13569759;vega kama jose luis;;student;1;1;1;13569759_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+683;9252022;9252022;ventura gutierrez cesar victor;;student;1;1;1;9252022_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+684;9241536;9241536;yana alvarez gaby;;student;1;1;1;9241536_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+685;9911094;9911094;yana hilari carlos andres;;student;1;1;1;9911094_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+686;8269106-1Q;8269106-1Q;yana machaca manuel;;student;1;1;1;8269106-1Q_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+687;9082022;9082022;yanapa aguilar marleny;;student;1;1;1;9082022_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+688;14945900;14945900;yujra loza elba;;student;1;1;1;14945900_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+689;4316598;4316598;yujra mazarro willma;;student;1;1;1;4316598_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+690;13733127;13733127;yujra pillco ilsen;;student;1;1;1;13733127_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+691;9963963;9963963;yupanqui condori claudia;;student;1;1;1;9963963_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+692;9194777;9194777;zuleta chipana nancy victoria;;student;1;1;1;9194777_2026;NULL;NULL;;;NULL;;;23/04/2024 18:22
+693;9155864;9155864;arias jessica karen;;student;1;1;1;9155864_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+694;13313390;13313390;alvarado terrazas silvia;;student;1;1;1;13313390_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+695;8286507;8286507;apaza asturillo olga;;student;1;1;1;8286507_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+696;8419691;8419691;apaza mamani rosaicela;;student;1;1;1;8419691_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+697;7088591;7088591;apaza perez erick brandon;;student;1;1;1;7088591_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+698;10077270;10077270;apaza quispe israel;;student;1;1;1;10077270_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+699;10032914;10032914;arias flores daniela;;student;1;1;1;10032914_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+700;6100410;6100410;aspi choque filomena;;student;1;1;1;6100410_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+701;10006564;10006564;blanco cruz almendra almira;;student;1;1;1;10006564_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+702;8395588;8395588;cachi ergueta nolia bromilia;;student;1;1;1;8395588_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+703;8344979;8344979;cahuaya condori alan rudy;;student;1;1;1;8344979_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+704;9249055;9249055;calle choque jhodina;;student;1;1;1;9249055_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+705;11072100;11072100;callisaya callisaya jhimmy;;student;1;1;1;11072100_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+706;9229348;9229348;callisaya condori gloria;;student;1;1;1;9229348_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+707;8331059;8331059;callizaya quispe silvia;;student;1;1;1;8331059_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+708;10929534;10929534;canaviri alejo luz esther;;student;1;1;1;10929534_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+709;14068909;14068909;candia mamani nayeli vania;;student;1;1;1;14068909_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+710;4275413;4275413;carrasco marquez mario fernando;;student;1;1;1;4275413_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+711;8339728;8339728;carvajal zenteno juan carlos;;student;1;1;1;8339728_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+712;7325986;7325986;castro lima maremi teresa;;student;1;1;1;7325986_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+713;8320275;8320275;castro peÑarrieta michele;;student;1;1;1;8320275_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+714;7074536;7074536;cazas luque tania teresa;;student;1;1;1;7074536_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+715;4761986;4761986;cerezo gonzales angelica;;student;1;1;1;4761986_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+716;9243121;9243121;chambi sacaca laura janeth;;student;1;1;1;9243121_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+717;8442743;8442743;chamiso huaycho maria renee;;student;1;1;1;8442743_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+718;9238467;9238467;chinahuanca pocoaca maria jose;;student;1;1;1;9238467_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+719;6139064;6139064;choque alejo mary luz;;student;1;1;1;6139064_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+720;10093709;10093709;choque apaza jhoselyn;;student;1;1;1;10093709_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+721;12958021;12958021;choque condori samuel;;student;1;1;1;12958021_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+722;9965268;9965268;choque gutierrez cinthya;;student;1;1;1;9965268_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+723;6905825;6905825;chuquimia blanco rossio del pilar;;student;1;1;1;6905825_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+724;7002269;7002269;chuquimia ortiz marisol;;student;1;1;1;7002269_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+725;12545480;12545480;chuquimia otoya katherine grisha;;student;1;1;1;12545480_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+726;7074725;7074725;coarite mamani rosy shelly;;student;1;1;1;7074725_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+727;9219560;9219560;colque plata jheraldy yosselin;;student;1;1;1;9219560_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+728;8324795;8324795;conde mamani gabriela;;student;1;1;1;8324795_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+729;14401794;14401794;condori huanca yulisa;;student;1;1;1;14401794_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+730;9074705;9074705;condori jalja cinthia;;student;1;1;1;9074705_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+731;6956129;6956129;condori quispe miriam rosmery;;student;1;1;1;6956129_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+732;9920118;9920118;cuba pillco eliana gladys;;student;1;1;1;9920118_2026;161.138.67.49;08/05/2024 0:09;5t6sflqo5avfiagogja5k79jpl;5t6sflqo5avfiagogja5k79jpl;NULL;;;08/05/2024 0:09
+733;9963814;9963814;cuchuta medrano jenny;;student;1;1;1;9963814_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+734;13959838;13959838;cutile rondano betsabe daniela;;student;1;1;1;13959838_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+735;13788304;13788304;espino cantuta jacqueline;;student;1;1;1;13788304_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+736;7412281;7412281;fernandez canaviri lucy;;student;1;1;1;7412281_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+737;6972509;6972509;fernandez yujra vicente ariel;;student;1;1;1;6972509_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+738;9156812;9156812;flores chavez ronaldo boris;;student;1;1;1;9156812_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+739;6855430;6855430;florian callisaya jhony marcelo;;student;1;1;1;6855430_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+740;4764514;4764514;gavincha quenta marco antonio;;student;1;1;1;4764514_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+741;9917081;9917081;guarachi alegria corina;;student;1;1;1;9917081_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+742;13925193;13925193;huallpa choque lizbeth liliana;;student;1;1;1;13925193_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+743;10923536;10923536;huanca palma esther;;student;1;1;1;10923536_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+744;10076078;10076078;huarachi quispe ingrit yesenia;;student;1;1;1;10076078_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+745;14485585;14485585;huaranca mamani maria elena;;student;1;1;1;14485585_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+746;8372689;8372689;huarayo flores jhacqueline paola;;student;1;1;1;8372689_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+747;12640360;12640360;huchahuanca mamani pascual;;student;1;1;1;12640360_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+748;12796556;12796556;llojlla chura juan carlos;;student;1;1;1;12796556_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+749;9249504;9249504;lopez choque lizeth liliana;;student;1;1;1;9249504_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+750;6753194;6753194;luna mejia evelyn narda;;student;1;1;1;6753194_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+751;9911244;9911244;mamani aliaga ruth maricel;;student;1;1;1;9911244_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+752;9072763;9072763;mamani apana karen jimena;;student;1;1;1;9072763_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+753;9913515;9913515;mamani cachi gisela;;student;1;1;1;9913515_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+754;7028407;7028407;mamani canua ericka;;student;1;1;1;7028407_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+755;9942784;9942784;mamani huanca lilian maxima;;student;1;1;1;9942784_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+756;4813303;4813303;mamani mamani bertha asunta;;student;1;1;1;4813303_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+757;8293352;8293352;mamani mendoza santos alberto;;student;1;1;1;8293352_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+758;7072413;7072413;mamani mendoza victor hendrich;;student;1;1;1;7072413_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+759;7042634;7042634;mamani quispe janeth;;student;1;1;1;7042634_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+760;10085524;10085524;mamani tenorio ana camila;;student;1;1;1;10085524_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+761;7063169;7063169;mamani ticona alejandro;;student;1;1;1;7063169_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+762;10077369;10077369;mamani ticona gladys;;student;1;1;1;10077369_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+763;7002428;7002428;mamani zambrana hernan;;student;1;1;1;7002428_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+764;8440547;8440547;mancilla flores jorge ronaldo;;student;1;1;1;8440547_2026;187.102.201.17;03/06/2024 13:26;;;03/06/2024 13:27;;;03/06/2024 13:27
+765;4910237;4910237;marca torrez pamela jocelyne;;student;1;1;1;4910237_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+766;9958538;9958538;mayta callizaya miguel angel;;student;1;1;1;9958538_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+767;6934239;6934239;miranda quispe veronica ruth;;student;1;1;1;6934239_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+768;9938522;9938522;mita limachi mishel kimberly;;student;1;1;1;9938522_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+769;9930185;9930185;mollinedo fernandez daniela;;student;1;1;1;9930185_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+770;7002758;7002758;monasterios espinal elias david;;student;1;1;1;7002758_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+771;13404111;13404111;moreli gutierrez haidel;;student;1;1;1;13404111_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+772;12571938;12571938;nacho flores joel juan;;student;1;1;1;12571938_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+773;9190314;9190314;nina cuellar neyda;;student;1;1;1;9190314_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+774;9084366;9084366;ortiz tudela romina melody;;student;1;1;1;9084366_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+775;8332798;8332798;paredes vargas mariel carolayn;;student;1;1;1;8332798_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+776;12482352;12482352;plata choque erika;;student;1;1;1;12482352_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+777;11068233;11068233;poma uscamayta ruth;;student;1;1;1;11068233_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+778;9144178;9144178;puÑa flores erika jimena;;student;1;1;1;9144178_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+779;12892303;12892303;quispe calle justo;;student;1;1;1;12892303_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+780;9145741;9145741;quispe caparicona rolando;;student;1;1;1;9145741_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+781;8405580;8405580;quispe chura wilfredo;;student;1;1;1;8405580_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+782;9253942;9253942;quispe humerez jose antonio;;student;1;1;1;9253942_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+783;12640538;12640538;quispe machaca janeth;;student;1;1;1;12640538_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+784;14620455;14620455;quispe quispe ivan roger;;student;1;1;1;14620455_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+785;9227724;9227724;quispe quispe wilma luisa;;student;1;1;1;9227724_2026;186.121.230.155;13/08/2024 14:39;;;13/08/2024 14:39;;;13/08/2024 14:39
+786;9222602;9222602;quispe velasquez maite lisbeth;;student;1;1;1;9222602_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+787;6842466;6842466;ramos colque maria elena;;student;1;1;1;6842466_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+788;13314382;13314382;rivas ortega jhesica;;student;1;1;1;13314382_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+789;9943056;9943056;salinas condori amalia;;student;1;1;1;9943056_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+790;6753219;6753219;salvatierra bernal monica;;student;1;1;1;6753219_2026;177.222.63.155;13/10/2024 8:49;;;13/10/2024 8:51;;;13/10/2024 8:51
+791;9911270;9911270;sanca vargas magali lilian;;student;1;1;1;9911270_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+792;9189848;9189848;sangalli fernandez yesenia;;student;1;1;1;9189848_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+793;9177872;9177872;sejje titirico olga;;student;1;1;1;9177872_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+794;5475865;5475865;sirpa sanchez bety virginia;;student;1;1;1;5475865_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+795;12635927;12635927;sullcani torrejon erika;;student;1;1;1;12635927_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+796;6998757;6998757;suntura quispe jose luis;;student;1;1;1;6998757_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+797;9926336;9926336;tancara ramos lourdes maritza;;student;1;1;1;9926336_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+798;9086043;9086043;tangara aduviri luis carlos;;student;1;1;1;9086043_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+799;9117052;9117052;tarifa gutierrez shamila katte alejandra;;student;1;1;1;9117052_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+800;3380281-1R;3380281-1R;torrez andrade martin diego;;student;1;1;1;3380281-1R_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+801;9900540;9900540;velarde titirico jose daniel;;student;1;1;1;9900540_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+802;9928422;9928422;villazante contreras nicol juliana;;student;1;1;1;9928422_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+803;8385745;8385745;yanahuaya palluca judith bertha;;student;1;1;1;8385745_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+804;10095144;10095144;yauli mamani ivan;;student;1;1;1;10095144_2026;186.121.230.42;09/05/2024 18:49;;;09/05/2024 19:21;;;09/05/2024 19:21
+805;13960116;13960116;yujra gutierrez wendy;;student;1;1;1;13960116_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+806;10067521;10067521;yujra quispe esther;;student;1;1;1;10067521_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+807;9243323;9243323;yujra quispe ruddy rolando;;student;1;1;1;9243323_2026;NULL;NULL;;;NULL;;;23/04/2024 18:23
+808;4976879;Apaza;apaza rocha aurelia doris;Responsable de Clínica de Admisíon;teacher;1;1;1;4976879_2026;187.102.201.17;07/05/2024 19:14;;;07/05/2024 19:14;;;07/05/2024 19:14
+809;3719030;Bustamante;bustamante camino juan carlos;Responsable de Clínica de Admisíon;teacher;1;1;1;3719030_2026;NULL;NULL;;;NULL;;;06/05/2024 15:18
+810;4750803;Mendoza;mendoza quispe ruben wilson;Responsable de Clínica de Admisíon;teacher;1;1;1;4750803_2026;NULL;NULL;;;NULL;;;06/05/2024 15:20
+811;4905136;Ines;ponce armaly inés amelia;Responsable de Clínica de Admisíon;teacher;1;1;1;4905136_2026;186.121.230.155;13/08/2024 14:44;;;13/08/2024 14:44;;;13/08/2024 14:44
+812;4977851;Romero;romero siñani lourdes;Responsable de Clínica de Admisíon;teacher;1;1;1;4977851_2026;NULL;NULL;;;NULL;;;06/05/2024 15:27
+813;3536013;Soto;soto gonzales luis fernando;Responsable de Clínica de Admisíon;teacher;1;1;1;3536013_2026;200.105.188.64;06/05/2024 20:24;;;06/05/2024 20:24;;;06/05/2024 20:24
+814;3403454;Quispe;quispe morales oscar reynaldo;Responsable de Clínica de Admisíon;teacher;1;1;1;3403454_2026;NULL;NULL;;;NULL;;;14/06/2024 15:37
+815;0;admision1;tablet 1 admision;;admission;1;1;1;0_2026;181.115.188.66;09/05/2024 20:42;25avrdooqps4esn4uivqkt6et1;25avrdooqps4esn4uivqkt6et1;NULL;;;09/05/2024 20:42
+816;2695326;Max;flores ramirez max antony;Docente Periodoncia;teacher;1;1;1;2695326_2026;187.102.201.156;13/08/2024 13:09;;;13/08/2024 13:12;;;13/08/2024 13:12
+817;4339851;Nelson;gemio suxo nelson;Docente Periodoncia;teacher;1;1;1;4339851_2026;200.105.221.123;14/06/2024 20:07;g6q8mrj3uslf654rv9a0m8u31h;g6q8mrj3uslf654rv9a0m8u31h;NULL;;;14/06/2024 20:07
+818;3391221;Edwing;mollericona marin edwing max;Docente Periodoncia;teacher;1;1;1;3391221_2026;189.28.85.173;13/08/2024 14:08;r4o5f1d9vsvs8lc7nrn28kpsa5;r4o5f1d9vsvs8lc7nrn28kpsa5;13/08/2024 13:08;;;13/08/2024 14:08
+819;3109758;Rolando;soliz arias rolando nestor;Docente Periodoncia;teacher;1;1;1;3109758_2026;NULL;NULL;;;NULL;;;13/05/2024 15:09
+820;4755026;Marcelo;pinto bravo ruben marcelo;Docente de Cirugía;teacher;1;1;1;4755026_2026;187.102.201.156;14/08/2024 18:49;ierp90nt7irvpdhbfkrdsmbjc9;ierp90nt7irvpdhbfkrdsmbjc9;01/07/2024 18:22;;;14/08/2024 18:49
+821;2442395;Johnny ;chambi###;Docente Cirugía;teacher;1;1;1;2442395_2026;NULL;NULL;;;NULL;;;13/06/2024 1:07
+822;4774310;Leocadio;quispe huanca leocadio claudio;Docente Cirugía;teacher;1;1;1;4774310_2026;187.102.201.156;19/08/2024 19:51;305e1ap2f8i7prvecqcoarg271;305e1ap2f8i7prvecqcoarg271;01/07/2024 18:46;;;19/08/2024 19:51
+823;4876916;Efrain.;gutierrez laura efrain;Docente Cirugía;teacher;0;1;1;4876916_2026;NULL;NULL;;;NULL;;;06/06/2024 20:17
+824;4747516;Diego;paredes mamani oscar diego;Docente Endodoncia;teacher;1;1;1;4747516_2026;187.102.201.155;17/06/2024 15:47;6gfidni2bods9eo9uev3oc08uc;6gfidni2bods9eo9uev3oc08uc;17/06/2024 14:01;;;17/06/2024 15:47
+825;3499092;Carla;luna vargas carla mikaela;Docente Endodoncia;teacher;1;1;1;3499092_2026;187.102.201.155;20/06/2024 15:36;;;20/06/2024 15:37;;;20/06/2024 15:37
+826;4779653;Miguel;silva morales miguel angel;Docente Endodoncia;teacher;1;1;1;4779653_2026;200.105.221.123;14/06/2024 20:02;;;14/06/2024 20:03;;;14/06/2024 20:03
+827;6826701;Ariel;alanoca limachi ariel alcid;Docente Odontopediatría;teacher;1;1;1;6826701_2026;187.102.201.155;19/06/2024 20:43;vnlv7krmldjg09l886oos0mhnf;6invlf1q482usduubqgjld9luo;17/06/2024 20:41;;;19/06/2024 20:43
+828;4951665;Lily;escobar herrera lily hilda;Docente Odontopediatría;teacher;1;1;1;4951665_2026;187.102.201.155;25/06/2024 18:20;c870mcf1dcltch5verigh41jns;v4b2ftur08lsgrs4866m281gcc;24/06/2024 21:51;;;25/06/2024 18:20
+829;5942306;Silvia;copa ramos silvia esther;Docente Odontopediatría;teacher;1;1;1;5942306_2026;200.105.221.123;14/06/2024 19:59;;;14/06/2024 20:00;;;14/06/2024 20:00
+830;2624840;Rudy;illanes mejia ramiro rudy;Docente Operatoria;teacher;1;1;1;2624840_2026;161.138.97.202;25/06/2024 13:47;d66ji49uuaosmesdqmve405tpb;d66ji49uuaosmesdqmve405tpb;05/06/2024 14:17;;;13/08/2024 14:33
+831;4771981;David;jemio ochoa ramiro david;Docente Operatoria;teacher;1;1;1;4771981_2026;187.102.201.155;20/06/2024 13:26;vnlv7krmldjg09l886oos0mhnf;vnlv7krmldjg09l886oos0mhnf;20/05/2024 14:59;;;20/06/2024 13:26
+832;6093696;Maritza;prieto rodriguez maritza eugenia;Docente Operatoria;teacher;1;1;1;6093696_2026;187.102.201.155;20/06/2024 14:10;rm10um40fpmmnhihijkhtrt7u6;rm10um40fpmmnhihijkhtrt7u6;14/06/2024 20:01;;;20/06/2024 14:10
+833;4935056;Freddy;pereira chavez freddy luis;Docente Prostodoncia fija;teacher;1;1;1;4935056_2026;187.102.201.155;15/07/2024 18:42;;;15/07/2024 18:48;;;15/07/2024 18:48
+834;5940363;Daniel;buenaverez vasquez daniel franklin;Docente Prostodoncia fija;teacher;1;1;1;5940363_2026;NULL;NULL;;;NULL;;;13/05/2024 19:41
+835;6817227;Alison;sullcata gutierrez alison roxana;Docente Prostodoncia fija;teacher;1;1;1;6817227_2026;187.102.201.155;15/07/2024 19:18;;;15/07/2024 19:18;;;15/07/2024 19:18
+836;3367293;Tatiana;guarayo melgar tatiana meliza;Docente Prostodoncia removible;teacher;1;1;1;3367293_2026;187.102.201.156;15/08/2024 18:50;4v1jjp0eej21bio84jfg9so96q;4v1jjp0eej21bio84jfg9so96q;14/06/2024 20:41;;;15/08/2024 18:50
+837;4842130;Carlos;flores canaviri juan carlos;Docente Prostodoncia removible;teacher;1;1;1;4842130_2026;187.102.201.156;13/08/2024 18:56;otjar5rcrh1kctu323rf3fchch;otjar5rcrh1kctu323rf3fchch;13/08/2024 18:55;;;13/08/2024 18:56
+838;4947376;Aleida;titan leon aleida raquel;Docente Prostodoncia removible;teacher;1;1;1;4947376_2026;187.102.201.156;13/08/2024 18:23;;;13/08/2024 18:27;;;13/08/2024 18:27
+839;4990425;Fidel;quisbert vasquez fidel;Docente Prostodoncia removible;teacher;1;1;1;4990425_2026;186.121.230.155;13/08/2024 14:40;;;13/08/2024 14:43;;;13/08/2024 14:43
+840;4273490;Juan;fernandez ordoÑez juan david;Docente integral;teacher;1;1;1;4273490_2026;187.102.201.155;13/06/2024 14:31;;;13/06/2024 14:32;;;13/06/2024 14:32
+841;2701757;Rafael;soza rodriguez rafael pablo;Docente Integral;teacher;1;1;1;2701757_2026;NULL;NULL;;;NULL;;;13/05/2024 20:03
+842;4327836;Brayan;Burke Cusicanqui Juan Brayan;Docente integral;teacher;1;1;1;4327836_2026;187.102.201.155;14/06/2024 13:07;;;14/06/2024 13:07;;;14/06/2024 13:07
+843;4763898;Alberto;ramirez paredes alberto;Docente Integral;teacher;1;1;1;4763898_2026;200.105.221.123;14/06/2024 19:10;g6q8mrj3uslf654rv9a0m8u31h;g6q8mrj3uslf654rv9a0m8u31h;11/06/2024 14:24;;;14/06/2024 19:10
+844;3431597;Mariel;herrera peÑaloza mariel emily;Docente integral;teacher;1;1;1;3431597_2026;NULL;NULL;;;NULL;;;13/05/2024 20:09
+845;4257200;Raul;gutierrez machicado raul david;Docente Integral;teacher;1;1;1;4257200_2026;NULL;NULL;;;NULL;;;13/05/2024 20:10
+846;6062385;Enrique;verastegui flores enrique fabian;Docente integral;teacher;1;1;1;6062385_2026;NULL;NULL;;;NULL;;;13/05/2024 20:12
+847;4962568;Maritza.;mayta jimenez maritza;Docente P Hospitalaria;teacher;1;1;1;4962568_2026;NULL;NULL;;;NULL;;;13/05/2024 20:16
+848;6062214;Jhonny;valencia tola jhonny;Docente P Hospitalaria;teacher;1;1;1;6062214_2026;NULL;NULL;;;NULL;;;13/05/2024 20:17
+849;8390281;Yordina;arias verlarde yordina;Responsable de Clínica de Admisíon;student;1;1;1;8390281_2026;NULL;NULL;;;NULL;;;17/05/2024 15:08
+850;6028920;Catyam;choque cruz catyam melisa;Responsable de Clínica de Admisíon;student;1;1;1;6028920_2026;187.102.201.17;17/05/2024 15:17;5ee5hbrqt2k8vk5idkm26pif2k;5ee5hbrqt2k8vk5idkm26pif2k;NULL;;;17/05/2024 15:17
+851;8333872;Grecia;apaza mamani grecia;Responsable de Clínica de Admisíon;student;1;1;1;8333872_2026;NULL;NULL;;;NULL;;;17/05/2024 15:10
+852;9884462;Sandrs;yapita apaza sandra karina;Responsable de Clínica de Admisíon;student;1;1;1;9884462_2026;NULL;NULL;;;NULL;;;17/05/2024 15:11
+853;3444508;Hilda;quisbert achu hilda;Responsable de Clínica de Admisíon;student;1;1;1;3444508_2026;187.102.202.2;14/11/2024 19:30;oe34tvhib7gvnl6oaa78sk0oh5;j6flsqiprr3lmpj9lc4e2mj0ru;11/11/2024 15:05;;;14/11/2024 19:30
+854;7040473;Cristian;cristian quenta perca;Responsable de Clínica de Admisíon;student;1;1;1;7040473_2026;187.102.202.2;13/11/2024 14:54;4lqat3e9jrulmvmooh0k3phuk0;4lqat3e9jrulmvmooh0k3phuk0;24/06/2024 14:13;;;13/11/2024 14:54
+855;13180021;Elmer;elmer quispe alarcón;Responsable de Clínica de Admisíon;student;1;1;1;13180021_2026;187.102.201.156;25/02/2025 18:17;pcrb1ne0l2psgufibsuu5gcsps;pcrb1ne0l2psgufibsuu5gcsps;30/10/2024 18:28;;;25/02/2025 18:17
+856;6024882;Reynaldo;reynaldo epifanio aliaga mayta;Responsable de Clínica de Admisíon;student;1;1;1;6024882_2026;187.102.201.155;19/06/2024 18:07;6mgn1t61019dt7giom0nlggu94;hhtgguspc8k6mg3eur52ir2bm3;NULL;;;19/06/2024 18:07
+857;7086018;Jorge;jorge luis chiri ticona;Responsable de Clínica de Admisíon;student;1;1;1;7086018_2026;187.102.202.2;06/11/2024 14:56;7m0355297p6ve12um4p02bp0st;7m0355297p6ve12um4p02bp0st;30/10/2024 14:30;;;06/11/2024 14:56
+858;4888808;Vannesa;morales gutierrez vannesa cecilia;Docente Operatoria;teacher;1;1;1;4888808_2026;186.121.216.57;18/06/2024 16:06;;;18/06/2024 16:07;;;18/06/2024 16:07
+859;2442395;Johnny;chambi##;Docente Cirugía;teacher;1;1;1;2442395_2026;181.114.166.178;13/06/2024 1:01;;;13/06/2024 1:03;;;13/06/2024 1:05
+860;4876916;Efra;gutierrez laura efrain;Docente cirugia;teacher;1;1;1;4876916_2026;200.105.221.123;06/06/2024 20:18;;;06/06/2024 20:18;;;06/06/2024 20:18
+861;2442395;Johnny24;chambi santos johnny juan;Docente cirugia;teacher;1;1;1;2442395_2026;200.105.221.123;14/06/2024 20:05;;;14/06/2024 20:07;;;14/06/2024 20:07
+862;4912092;Mauricio;belmonte ayala mauricio eduardo;Docente Endodoncia;teacher;1;1;1;4912092_2026;189.28.89.89;20/06/2024 15:44;e056t3jqkb80tcb7t98h726rg6;e056t3jqkb80tcb7t98h726rg6;20/06/2024 15:40;;;20/06/2024 15:44
+863;8352297;Guadalupe;guadalupe belen soria mita;Responsable de Clinica de Admision ;student;1;1;1;8352297_2026;187.102.201.156;09/08/2024 19:45;h3fq57488lpb9kcult9k59bc1j;h3fq57488lpb9kcult9k59bc1j;15/07/2024 20:29;;;09/08/2024 19:45
+864;8396986;Jhonathan;max jhonathan pinto mamani;Responsable de Clinica de Admision ;admission;1;1;1;8396986_2026;187.102.201.156;29/08/2024 18:35;rueopv5t6c2nu573vmpbjqeq9k;g50isp4g7f0rnus7r0bih4phgf;15/08/2024 14:33;;;29/08/2024 18:35
+865;9906166;SilviaM;silvia morales sanga;Responsable de Clinica de Admision ;student;1;1;1;9906166_2026;186.121.216.57;24/06/2024 15:24;;;24/06/2024 15:24;;;24/06/2024 15:24
+866;9920485;Raquel;raquel paula quispe castro;Responsable de Clinica de Admision ;student;1;1;1;9920485_2026;187.102.201.156;29/08/2024 14:03;bm3r0kojls6hu7iqfglaf4jfmc;bm3r0kojls6hu7iqfglaf4jfmc;08/08/2024 18:46;;;29/08/2024 14:03
+867;10041995;Alvaro;alvaro gustavo huanca cordero;Responsable de Clinica de Admision ;student;1;1;1;10041995_2026;187.102.201.156;02/08/2024 19:31;fuvgchs4bf2uiugqjsbjhqcdg6;fuvgchs4bf2uiugqjsbjhqcdg6;31/07/2024 15:52;;;02/08/2024 19:31
+868;9173411;Elit;elit paco calamani ;Responsable de Clinica de Admision ;student;1;1;1;9173411_2026;187.102.201.156;29/08/2024 18:32;480r16doe0ujvtjo78tjlaqs3b;no1rmvqpolc3q9au91tia6hhij;07/08/2024 21:04;;;29/08/2024 18:32
+869;6821703;Alex;alex alberto cahuaya tarqui;Responsable de Clinica de Admision ;student;1;1;1;6821703_2026;187.102.201.156;02/08/2024 13:18;2ks9a8uscsokt9kj1opt1qk9tr;2ks9a8uscsokt9kj1opt1qk9tr;25/06/2024 18:56;;;02/08/2024 13:18
+870;9225308;Charo;charo rosario lopez turpo;Responsable de Clinica de Admision ;student;1;1;1;9225308_2026;187.102.201.156;29/08/2024 21:12;ttj84i18o2vdncve8u5u788kci;ofq26ifqns3ctm84flrdnt6n0s;16/08/2024 20:28;;;29/08/2024 21:12
+871;9929418;Marlene;marlene uruña quispe ;Responsable de Clinica de Admision ;student;1;1;1;9929418_2026;187.102.201.156;02/08/2024 13:26;17cu3v9ee9b7qd0te8i40h7m2t;17cu3v9ee9b7qd0te8i40h7m2t;27/06/2024 20:36;;;02/08/2024 13:26
+872;6880922;angela;angela gloria cruz huanca;Responsable de Clinica de Admision ;student;1;1;1;6880922_2026;NULL;NULL;;;NULL;;;07/08/2024 13:43
+873;6827469;Felicidad;felicidad lopez serrano;Responsable de Clinica de Admision ;student;1;1;1;6827469_2026;187.102.201.156;15/08/2024 13:40;nlshl7ndvjjiuvplgcs662lupn;nlshl7ndvjjiuvplgcs662lupn;NULL;;;15/08/2024 13:40
+874;9982669;Ximena;ximena rodriguez quispe;Responsable de Clinica de Admision ;student;1;1;1;9982669_2026;187.102.201.156;08/08/2024 18:12;9a0fmnfgk5g2hbp96b8uegl206;9a0fmnfgk5g2hbp96b8uegl206;NULL;;;08/08/2024 18:12
+875;13440155;Eva;eva colque condori;Responsable de Clinica de Admision ;student;1;1;1;13440155_2026;187.102.201.156;19/08/2024 18:32;;;19/08/2024 18:38;;;19/08/2024 18:38
+876;14157292;Bertha;bertha monzon churata;Responsable de Clinica de Admision ;student;1;1;1;14157292_2026;187.102.201.156;08/08/2024 13:20;4dm9hft4sl1nfbjgqq37446qtd;4dm9hft4sl1nfbjgqq37446qtd;NULL;;;08/08/2024 13:20
+877;6941254;Profeta;profeta peralta poma;Responsable de Clinica de Admision ;student;1;1;1;6941254_2026;187.102.201.156;08/08/2024 13:25;2bg90o269av8oggv14sq32fbvp;2bg90o269av8oggv14sq32fbvp;NULL;;;08/08/2024 13:25
+878;6983712;Zenobia;zenobia mamani mamani;Responsable de Clinica de Admision ;student;1;1;1;6983712_2026;NULL;NULL;;;NULL;;;07/08/2024 13:54
+879;13214809;Mayra;mayra mamani choque;Responsable de Clinica de Admision ;student;1;1;1;13214809_2026;NULL;NULL;;;NULL;;;07/08/2024 13:55
+880;9873869;Rodolfo;rodolfo wilfredo cadena fernandez;Responsable de Clinica de Admision ;student;1;1;1;9873869_2026;187.102.201.156;15/08/2024 13:41;;;15/08/2024 14:07;;;15/08/2024 14:07
+881;9950611;Aker;ruben aker apaza osco;Responsable de Clinica de Admision ;student;1;1;1;9950611_2026;NULL;NULL;;;NULL;9950611;;30/08/2024 20:12
+882;12891930;Erika;erika estela aruquipa mamani;Responsable de Clinica de Admision ;student;1;1;1;12891930_2026;NULL;NULL;;;NULL;12891930;;30/08/2024 20:14
+883;9931285;Grover;grover rodrigo copa limachi;Responsable de Clinica de Admision ;student;1;1;1;9931285_2026;NULL;NULL;;;NULL;9931285;;30/08/2024 20:17
+884;13311789;Jimena;jimena huanca caparicona;Responsable de Clinica de Admision ;student;1;1;1;13311789_2026;NULL;NULL;;;NULL;13311789;;30/08/2024 20:18
+885;9066062;Vladimir;vladimir mamani quispe;Responsable de Clinica de Admision ;student;1;1;1;9066062_2026;NULL;NULL;;;NULL;9066062;;30/08/2024 20:20
+886;10906177;Jhessica;jhessica mendoza mamani;Responsable de Clinica de Admision ;student;1;1;1;10906177_2026;NULL;NULL;;;NULL;10906177;;30/08/2024 20:21
+887;9885695;Doris;doris octavia pomacusi condori;Responsable de Clinica de Admision ;student;1;1;1;9885695_2026;NULL;NULL;;;NULL;9885695;;30/08/2024 20:22
+888;12575490;Jesus;jesus angel ponce mamani;Responsable de Clinica de Admision ;student;1;1;1;12575490_2026;NULL;NULL;;;NULL;12575490;;30/08/2024 20:23
+889;9879481;Flora;flora quispe condori;Responsable de Clinica de Admision ;student;1;1;1;9879481_2026;NULL;NULL;;;NULL;9879481;;30/08/2024 20:24
+890;9921024;Wendy;wendy sarai almanci mamani;Responsable de Clinica de Admision ;student;1;1;0;9921024_2026;NULL;NULL;;;NULL;9921024;;30/09/2024 13:31
+891;8345677;Karen;karen elvia annahi aro alejo;Responsable de Clinica de Admision ;student;1;1;0;8345677_2026;NULL;NULL;;;NULL;8345677;;30/09/2024 13:33
+892;9917875;Pamela;pamela callisaya mamani;Responsable de Clinica de Admision ;student;1;1;0;9917875_2026;NULL;NULL;;;NULL;9917875;;30/09/2024 13:35
+893;10033908;Miriam;miriam flores macuzaya;Responsable de Clinica de Admision ;student;1;1;0;10033908_2026;NULL;NULL;;;NULL;10033908;;30/09/2024 13:38
+894;9110370;Guido;guido alvaro huaygua chura;Responsable de Clinica de Admision ;student;1;1;0;9110370_2026;NULL;NULL;;;NULL;9110370;;30/09/2024 13:40

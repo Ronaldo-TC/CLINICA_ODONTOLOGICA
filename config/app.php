@@ -84,6 +84,8 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    'seed_users_password' => env('SEEDER_USER_PASSWORD'),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

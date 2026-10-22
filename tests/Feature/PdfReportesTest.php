@@ -119,7 +119,7 @@ class PdfReportesTest extends TestCase
         $this->actingAs($usuario)->get(route('reportes.exportar.pdf'))->assertForbidden();
     }
 
-    public function test_dompdf_genera_un_pdf_real_del_paciente_con_odontograma(): void
+    public function test_laravel_pdf_genera_un_pdf_real_del_paciente_con_odontograma(): void
     {
         $caso = $this->approvedProgress();
         $caso['admission']->update(['motivo_consulta' => 'Control odontológico', 'odontograma_pintado' => json_encode(['16' => ['o' => 'caries', 'marcas' => [['estado' => 'corona', 'color' => 'azul']]]])]);
@@ -133,7 +133,38 @@ class PdfReportesTest extends TestCase
         $this->assertGreaterThan(20000, strlen($respuesta->getContent()));
     }
 
-    public function test_dompdf_genera_un_pdf_real_horizontal_del_modulo_filtrado(): void
+    public function test_la_ficha_y_el_historial_clinico_habitual_caben_en_una_hoja_oficio(): void
+    {
+        $caso = $this->approvedProgress();
+        $caso['admission']->update([
+            'motivo_consulta' => 'Dolor al masticar en el sector posterior derecho.',
+            'historia_enfermedad_actual' => 'Molestia de intensidad moderada desde hace cinco días.',
+            'antecedentes' => 'Sin antecedentes patológicos de relevancia.',
+            'peso_kg' => 65,
+            'talla_mts' => 1.65,
+            'temperatura_c' => 36.5,
+            'pulso' => 72,
+            'presion_arterial' => '110/70',
+            'frecuencia_respiratoria' => 18,
+            'diagnostico' => 'Caries dental en pieza 16.',
+            'odontograma_pintado' => json_encode(['16' => ['o' => 'caries']]),
+        ]);
+        $admin = $this->clinicalUser('admin');
+
+        $ficha = $this->actingAs($admin)->get(route('admisiones.ficha-pdf', [
+            'admision' => $caso['admission']->id,
+            'formato' => 'pdf',
+        ]))->assertOk();
+        $historial = $this->get(route('admisiones.reporte-paciente', [
+            'admision' => $caso['admission']->id,
+            'formato' => 'pdf',
+        ]))->assertOk();
+
+        $this->assertPdfOficioDeUnaPagina($ficha->getContent());
+        $this->assertPdfOficioDeUnaPagina($historial->getContent());
+    }
+
+    public function test_laravel_pdf_genera_un_pdf_real_horizontal_del_modulo_filtrado(): void
     {
         $caso = $this->clinicalCase();
         $respuesta = $this->actingAs($this->clinicalUser('admin'))->get(route('admisiones.reporte', ['formato' => 'pdf', 'buscar' => $caso['admission']->paciente->ci]));
@@ -143,12 +174,25 @@ class PdfReportesTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $respuesta->getContent());
     }
 
-    public function test_dompdf_genera_un_pdf_real_de_las_estadisticas(): void
+    public function test_laravel_pdf_genera_un_pdf_real_de_las_estadisticas(): void
     {
         $respuesta = $this->actingAs($this->clinicalUser('admin'))->get(route('reportes.exportar.pdf'));
 
         $respuesta->assertOk()->assertHeader('Content-Type', 'application/pdf')
             ->assertHeaderContains('Content-Disposition', 'estadisticas-clinica-');
         $this->assertStringStartsWith('%PDF-', $respuesta->getContent());
+    }
+
+    private function assertPdfOficioDeUnaPagina(string $contenido): void
+    {
+        $this->assertSame(1, preg_match_all('/\/Type\s*\/Page(?!s)\b/', $contenido));
+        $this->assertGreaterThanOrEqual(32, preg_match_all('/\/Subtype\s*\/Image\b/', $contenido));
+        $this->assertSame(1, preg_match(
+            '/\/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+([\d.]+)\s+([\d.]+)\s*\]/',
+            $contenido,
+            $mediaBox,
+        ));
+        $this->assertEqualsWithDelta(612.28, (float) $mediaBox[1], 1.0);
+        $this->assertEqualsWithDelta(935.43, (float) $mediaBox[2], 1.0);
     }
 }

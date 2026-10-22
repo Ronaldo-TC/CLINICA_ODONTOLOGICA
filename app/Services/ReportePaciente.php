@@ -77,6 +77,7 @@ class ReportePaciente
         return app(ReportePdf::class)->responder('reportes.paciente', [
             'titulo' => $soloFicha ? 'Ficha de admisión' : 'Reporte clínico por paciente',
             'codigo' => ($soloFicha ? 'FIC-' : 'PAC-').str_pad((string) ($soloFicha ? $admision->id : $paciente->id), 6, '0', STR_PAD_LEFT),
+            'tamanoPapel' => 'oficio',
             'volver' => route('admisiones.show', $admision->id),
             'emitidoPor' => $usuario->nombre_completo,
             'emitidoEn' => now(),

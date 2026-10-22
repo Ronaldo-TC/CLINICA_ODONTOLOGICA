@@ -7,7 +7,7 @@ export default defineConfig({
     resolve: { alias: { events: 'events/' } },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'public/js/odontograma-3d.js', 'resources/js/radiologia-visor.js', 'resources/js/odontograma-admision.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'public/js/odontograma-3d.js', 'resources/js/radiologia-visor.js', 'resources/js/odontograma-admision.js', 'resources/js/odontograma-ficha-3d.js'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {

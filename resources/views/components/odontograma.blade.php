@@ -6,6 +6,7 @@
     'mostrarLeyenda' => true,
     'denticion' => 'adulto',
     'imagenes' => [],
+    'esPdf' => false,
 ])
 
 @php
@@ -47,6 +48,15 @@
     $estadosJson = json_encode($estados, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
 
     $valorInicial = is_array($valor) ? json_encode($valor) : (string) ($valor ?? '');
+    $datosOdontograma = is_array($valor) ? $valor : json_decode($valorInicial, true);
+    $datosOdontograma = is_array($datosOdontograma) ? $datosOdontograma : [];
+    $carasSvg = [
+        'o' => ['puntos' => '15,15 25,15 25,25 15,25', 'etiqueta' => 'Oclusal o incisal'],
+        'm' => ['puntos' => '1,1 15,15 15,25 1,39', 'etiqueta' => 'Mesial'],
+        'd' => ['puntos' => '39,1 39,39 25,25 25,15', 'etiqueta' => 'Distal'],
+        'v' => ['puntos' => '1,1 39,1 25,15 15,15', 'etiqueta' => 'Vestibular'],
+        'l' => ['puntos' => '1,39 15,25 25,25 39,39', 'etiqueta' => 'Lingual o palatino'],
+    ];
     $idComponente = $id ?: 'odontograma_' . substr(md5($nombre . microtime(true)), 0, 8);
 @endphp
 
@@ -111,33 +121,87 @@
         @foreach ($datosDenticion['cuadrantes'] as $cuadrante)
             <div class="odontograma-cuadrante">
                 <span class="odontograma-titulo">{{ $cuadrante['titulo'] }}</span>
-                <div class="odontograma-piezas">
-                    @foreach ($cuadrante['piezas'] as $pieza)
+                    <div class="odontograma-piezas">
+                        @foreach ($cuadrante['piezas'] as $pieza)
+                        @php
+                            $detallePieza = $datosOdontograma[(string) $pieza] ?? [];
+                            $detallePieza = is_array($detallePieza) ? $detallePieza : [];
+                            $marcasPieza = is_array($detallePieza['marcas'] ?? null) ? $detallePieza['marcas'] : [];
+                            $piezaAusente = collect($carasSvg)->keys()->contains(
+                                fn (string $cara): bool => ($detallePieza[$cara] ?? null) === 'ausente'
+                            ) || collect($marcasPieza)->contains(
+                                fn ($marca): bool => is_array($marca) && ($marca['estado'] ?? null) === 'ausente'
+                            );
+                            $piezaTratada = collect($carasSvg)->keys()->contains(
+                                fn (string $cara): bool => isset($detallePieza[$cara]) && $detallePieza[$cara] !== 'sano'
+                            );
+                            $imagenFrontal = $imagenes[$tipoDenticion][$pieza]['frontal'] ?? route('odontograma.imagen', ['denticion' => $tipoDenticion, 'pieza' => $pieza, 'vista' => 'frontal']);
+                            $imagenAnatomica = $imagenes[$tipoDenticion][$pieza]['anatomica'] ?? route('odontograma.imagen', ['denticion' => $tipoDenticion, 'pieza' => $pieza, 'vista' => 'anatomica']);
+                        @endphp
                         <div class="diente" data-pieza="{{ $pieza }}" title="Pieza {{ $pieza }}">
                             <span class="diente-ilustracion">
                             <img class="diente-imagen"
-                                src="{{ $imagenes[$tipoDenticion][$pieza]['frontal'] ?? route('odontograma.imagen', ['denticion' => $tipoDenticion, 'pieza' => $pieza, 'vista' => 'frontal']) }}"
-                                data-imagen-frontal="{{ $imagenes[$tipoDenticion][$pieza]['frontal'] ?? route('odontograma.imagen', ['denticion' => $tipoDenticion, 'pieza' => $pieza, 'vista' => 'frontal']) }}"
-                                data-imagen-anatomica="{{ $imagenes[$tipoDenticion][$pieza]['anatomica'] ?? route('odontograma.imagen', ['denticion' => $tipoDenticion, 'pieza' => $pieza, 'vista' => 'anatomica']) }}"
-                                alt="Pieza dental {{ $pieza }}" loading="{{ $imagenes ? 'eager' : 'lazy' }}" decoding="async">
-                            <svg class="diente-overlay" viewBox="0 0 40 70" data-overlay aria-hidden="true"></svg>
+                                src="{{ $esPdf ? $imagenAnatomica : $imagenFrontal }}"
+                                data-imagen-frontal="{{ $imagenFrontal }}"
+                                data-imagen-anatomica="{{ $imagenAnatomica }}"
+                                alt="Pieza dental {{ $pieza }}" loading="{{ $imagenes ? 'eager' : 'lazy' }}" decoding="async" @style(['opacity:0.3' => $piezaAusente])>
+                            <svg class="diente-overlay" viewBox="0 0 40 70" data-overlay aria-hidden="true">
+                                @foreach ($marcasPieza as $indiceMarca => $marca)
+                                    @php
+                                        $estadoMarca = is_array($marca) ? ($marca['estado'] ?? null) : null;
+                                        $colorMarca = is_array($marca) && ($marca['color'] ?? null) === 'azul' ? '#2563eb' : '#dc2626';
+                                        $esInferior = preg_match('/^[3478]/', (string) $pieza) === 1;
+                                        $trazoCorona = $esInferior ? 'M3 2H37V23H3Z' : 'M3 48H37V68H3Z';
+                                        $trazosMarca = [
+                                            'ausente' => 'M2 2L38 68M38 2L2 68',
+                                            'fractura' => 'M24 5L12 23L28 32L12 46L24 65',
+                                            'corona' => $trazoCorona,
+                                            'corona_temporal' => $trazoCorona,
+                                            'protesis_fija' => $trazoCorona,
+                                            'implante' => 'M20 4V66M10 12H30M10 22H30M10 32H30M10 42H30M10 52H30',
+                                            'perno' => 'M20 12V56',
+                                            'poste' => 'M20 12V56',
+                                        ];
+                                        $trazoMarca = is_string($estadoMarca) ? ($trazosMarca[$estadoMarca] ?? null) : null;
+                                        $simboloMarca = is_string($estadoMarca) ? ($estados[$estadoMarca]['simbolo'] ?? mb_strtoupper(mb_substr($estadoMarca, 0, 2))) : '';
+                                    @endphp
+                                    @if($trazoMarca)
+                                        <path d="{{ $trazoMarca }}" fill="none" stroke="{{ $colorMarca }}" stroke-width="2" />
+                                    @elseif($simboloMarca !== '')
+                                        <text x="20" y="{{ 12 + (((int) $indiceMarca % 4) * 15) }}" text-anchor="middle" font-size="12" fill="{{ $colorMarca }}">{{ $simboloMarca }}</text>
+                                    @endif
+                                @endforeach
+                            </svg>
                             </span>
                             <svg viewBox="0 0 40 40" role="img"
                                 aria-label="Caras de la pieza dental {{ $pieza }}">
-                                {{-- El JS asigna data-cara y el color de relleno --}}
-                                <polygon data-cara="o" points="15,15 25,15 25,25 15,25" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Oclusal o incisal"><title>Oclusal / incisal</title></polygon>
-                                <polygon data-cara="m" points="1,1 15,15 15,25 1,39" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Mesial"><title>Mesial</title></polygon>
-                                <polygon data-cara="d" points="39,1 39,39 25,25 25,15" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Distal"><title>Distal</title></polygon>
-                                <polygon data-cara="v" points="1,1 39,1 25,15 15,15" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Vestibular"><title>Vestibular</title></polygon>
-                                <polygon data-cara="l" points="1,39 15,25 25,25 39,39" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Lingual o palatino"><title>Lingual / palatino</title></polygon>
+                                @foreach($carasSvg as $cara => $configuracionCara)
+                                    @php
+                                        $estadoCara = $detallePieza[$cara] ?? 'sano';
+                                        $estadoCara = is_string($estadoCara) && isset($estados[$estadoCara]) ? $estadoCara : 'sano';
+                                        $condicionCara = $estados[$estadoCara] ?? $estados['sano'];
+                                        $rellenoCara = $condicionCara['color'] ?? ($estadoCara === 'sano' ? '#ffffff' : '#dc2626');
+                                        $bordeCara = $condicionCara['borde'] ?? ($estados['sano']['borde'] ?? '#cbd5e1');
+                                    @endphp
+                                    <polygon data-cara="{{ $cara }}" data-estado="{{ $estadoCara }}" points="{{ $configuracionCara['puntos'] }}" fill="{{ $rellenoCara }}" stroke="{{ $bordeCara }}" stroke-width="{{ $estadoCara === 'sano' ? '0.6' : '1' }}" tabindex="{{ $lectura ? -1 : 0 }}" role="button" aria-label="Pieza {{ $pieza }}, cara {{ mb_strtoupper($cara) }}, {{ $condicionCara['etiqueta'] ?? $configuracionCara['etiqueta'] }}"><title>{{ $configuracionCara['etiqueta'] }}</title></polygon>
+                                @endforeach
                                 <rect class="diente-borde" x="1" y="1" width="38" height="38" rx="4" />
-                                <line class="diente-ausente" x1="4" y1="4" x2="36" y2="36" />
-                                <line class="diente-ausente" x1="36" y1="4" x2="4" y2="36" />
+                                <line class="diente-ausente" x1="4" y1="4" x2="36" y2="36" @style(['display:block' => $piezaAusente]) />
+                                <line class="diente-ausente" x1="36" y1="4" x2="4" y2="36" @style(['display:block' => $piezaAusente]) />
                             </svg>
-                            <span class="diente-numero">{{ $pieza }}</span>
-                            <span class="diente-marcas" data-marcas aria-live="polite"></span>
+                            <span class="diente-numero" @style(['font-weight:700' => $piezaTratada])>{{ $pieza }}</span>
+                            <span class="diente-marcas" data-marcas aria-live="polite">
+                                @foreach($marcasPieza as $marca)
+                                    @php
+                                        $estadoMarca = is_array($marca) ? ($marca['estado'] ?? null) : null;
+                                        $etiquetaMarca = is_string($estadoMarca) ? ($estados[$estadoMarca]['simbolo'] ?? $estados[$estadoMarca]['etiqueta'] ?? $estadoMarca) : '';
+                                        $colorMarca = is_array($marca) && ($marca['color'] ?? null) === 'azul' ? '#2563eb' : '#dc2626';
+                                    @endphp
+                                    @if($etiquetaMarca !== '')<span title="{{ $estados[$estadoMarca]['etiqueta'] ?? $estadoMarca }}" style="color:{{ $colorMarca }}">{{ $etiquetaMarca }}</span>@endif
+                                @endforeach
+                            </span>
                         </div>
-                    @endforeach
+                        @endforeach
                 </div>
             </div>
         @endforeach
@@ -187,6 +251,6 @@
     </style>
 @endonce
 
-@unless($esPdf ?? false)
+@unless($esPdf)
     @include('components.partials.odontograma-js')
 @endunless

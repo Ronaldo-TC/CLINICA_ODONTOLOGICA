@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/login/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/login/logo.png') }}">
     <title>@yield('title', 'Panel') · Clínica Odontológica UPEA</title>
 
     {{-- ============================================================
@@ -249,14 +251,18 @@
             height: 42px;
             flex-shrink: 0;
             border-radius: 13px;
-            background: linear-gradient(135deg, var(--cyan), var(--teal) 55%, var(--fuchsia));
+            padding: 3px;
+            overflow: hidden;
+            background: #fff;
             color: #fff;
-            box-shadow: 0 6px 16px rgba(8, 127, 121, 0.28);
+            box-shadow: 0 4px 12px rgba(8, 127, 121, 0.16);
         }
 
-        .brand-logo svg {
-            width: 23px;
-            height: 23px;
+        .brand-logo img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .brand-text {
@@ -4833,10 +4839,6 @@
             min-height: 80px;
         }
 
-        .brand-logo {
-            background: linear-gradient(145deg, var(--cyan), var(--teal));
-        }
-
         .nav-item {
             border-radius: 12px;
             transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
@@ -6169,6 +6171,772 @@
                 transition: none;
             }
         }
+        /* ============================================
+           FICHA COMPACTA · Estilos locales
+           ============================================ */
+        .ficha-compact {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            color: var(--ink, #14232b);
+        }
+
+        /* ---------- Toolbar ---------- */
+        .ficha-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            background: var(--surface, #fff);
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 12px;
+            position: sticky;
+            top: 68px;
+            z-index: 20;
+            box-shadow: 0 1px 2px rgba(20, 35, 43, 0.04);
+        }
+
+        .ficha-toolbar .btn {
+            height: 34px;
+            padding: 0 14px;
+            font-size: 12.5px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.1s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .ficha-toolbar .btn:active {
+            transform: scale(0.97);
+        }
+
+        .ficha-toolbar .btn-secondary {
+            background: var(--surface-soft, #edf3f1);
+        }
+
+        .ficha-toolbar .spacer {
+            flex: 1;
+        }
+
+        /* ---------- Header paciente ---------- */
+        .ficha-header {
+            background: var(--surface, #fff);
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 18px;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(20, 35, 43, 0.04);
+        }
+
+        .ficha-header-main {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .ficha-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0a7d76, #5856d6);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 6px 16px rgba(10, 125, 118, 0.25);
+        }
+
+        .ficha-name {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--ink, #14232b);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ficha-sub {
+            font-size: 12px;
+            color: var(--muted, #6b7c85);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        /* ---------- Meta cards ---------- */
+        .ficha-meta {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .ficha-meta-item {
+            background: var(--surface-soft, #edf3f1);
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 10px;
+            padding: 9px 11px;
+            transition: border-color 0.15s ease;
+        }
+
+        .ficha-meta-item:hover {
+            border-color: var(--line-strong, #cdd8d5);
+        }
+
+        .ficha-meta-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted, #6b7c85);
+        }
+
+        .ficha-meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 3px;
+            color: var(--ink, #14232b);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 900px) {
+            .ficha-header {
+                grid-template-columns: 1fr;
+            }
+            .ficha-meta {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ---------- Card genérica ---------- */
+        .ficha-card {
+            background: var(--surface, #fff);
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(20, 35, 43, 0.04);
+        }
+
+        .ficha-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--surface-soft, #edf3f1);
+            border-bottom: 1px solid var(--line, #e3eae8);
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--ink, #1b2e2b);
+        }
+
+        .ficha-card-header .icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: var(--surface, #fff);
+            border: 1px solid var(--line, #e3eae8);
+            display: grid;
+            place-items: center;
+            color: var(--teal, #0a7d76);
+        }
+
+        .ficha-card-header .icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .ficha-card-body {
+            padding: 16px 18px;
+        }
+
+        /* ---------- Grid de campos ---------- */
+        .ficha-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 10px 16px;
+        }
+
+        .f-col-12 { grid-column: span 12; }
+        .f-col-8  { grid-column: span 8; }
+        .f-col-6  { grid-column: span 6; }
+        .f-col-4  { grid-column: span 4; }
+        .f-col-3  { grid-column: span 3; }
+
+        @media (max-width: 768px) {
+            .f-col-8, .f-col-6, .f-col-4, .f-col-3 {
+                grid-column: span 12;
+            }
+        }
+
+        /* ---------- Campos ---------- */
+        .f-field {
+            margin-bottom: 2px;
+            min-width: 0;
+        }
+
+        .f-field dt {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted, #6b7c85);
+            margin-bottom: 4px;
+        }
+
+        .f-field dd {
+            font-size: 13px;
+            color: var(--ink, #1b2e2b);
+            white-space: pre-wrap;
+            line-height: 1.5;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .f-field dd.empty {
+            color: var(--muted, #6b7c85);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        /* ---------- Badges ---------- */
+        .f-badge {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .f-badge-ok {
+            background: var(--success-bg);
+            color: var(--teal-dark);
+            border-color: var(--success-border);
+        }
+
+        .f-badge-warn {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border-color: var(--warning-border);
+        }
+
+        .f-badge-muted {
+            background: var(--surface-soft, #edf3f1);
+            color: var(--muted, #6b7c85);
+            border-color: var(--line, #e3eae8);
+        }
+
+        /* ---------- Detalle del include ---------- */
+        #ficha-detalle .report-admission {
+            overflow: hidden;
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 12px;
+            background: var(--surface, #fff);
+        }
+
+        #ficha-detalle .admission-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 11px 14px;
+            background: #153f3c;
+            color: #fff;
+        }
+
+        #ficha-detalle .admission-heading h2 {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            color: inherit;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+
+        #ficha-detalle .admission-heading p {
+            margin: 0;
+            color: #d9eeea;
+            font-size: 11px;
+            text-align: right;
+        }
+
+        #ficha-detalle .admission-body {
+            min-width: 0;
+            padding: 14px;
+        }
+
+        #ficha-detalle .admission-block {
+            margin: 0 0 12px;
+        }
+
+        #ficha-detalle .admission-block:last-child {
+            margin-bottom: 0;
+        }
+
+        #ficha-detalle .admission-block-title {
+            margin: 0 0 8px;
+            padding: 0 0 6px;
+            border-bottom: 1px solid var(--line, #e3eae8);
+            color: var(--teal, #0a7d76);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        #ficha-detalle .report-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 0;
+        }
+
+        #ficha-detalle .report-field {
+            min-width: 0;
+            padding: 9px 10px;
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 8px;
+            background: var(--surface-soft, #edf3f1);
+        }
+
+        #ficha-detalle .report-field dt {
+            margin: 0 0 3px;
+            color: var(--muted, #6b7c85);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        #ficha-detalle .report-field dd {
+            margin: 0;
+            color: var(--ink, #1b2e2b);
+            font-size: 12.5px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        #ficha-detalle .clinical-columns {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin: 0 0 12px;
+        }
+
+        #ficha-detalle .clinical-card {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 10px;
+            background: var(--surface-soft, #edf3f1);
+        }
+
+        #ficha-detalle .clinical-card h3 {
+            margin: 0 0 8px;
+            padding: 0;
+            border: 0;
+            color: var(--ink, #14232b);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        #ficha-detalle .clinical-card p + p {
+            margin-top: 7px;
+        }
+
+        #ficha-detalle p {
+            margin: 0;
+            font-size: 12.5px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        #ficha-detalle .clinical-label {
+            color: var(--muted, #6b7c85);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        #ficha-detalle .odontogram-panel {
+            min-width: 0;
+            margin: 0 0 12px;
+            padding: 12px;
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 10px;
+            background: var(--surface-soft, #edf3f1);
+        }
+
+        #ficha-detalle .odontogram-panel .odontograma,
+        #ficha-detalle .odontogram-panel .odontograma-denticion,
+        #ficha-detalle .odontogram-panel .odontograma-desplazable {
+            max-width: 100%;
+        }
+
+        #ficha-detalle .odontogram-panel .odontograma {
+            padding: 4px 0 0;
+        }
+
+        #ficha-detalle .odontogram-panel table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        #ficha-detalle .odontogram-panel th,
+        #ficha-detalle .odontogram-panel td {
+            padding: 7px 8px;
+            border: 1px solid var(--line, #e3eae8);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        #ficha-detalle .odontogram-panel th {
+            background: var(--surface, #fff);
+            color: var(--ink, #14232b);
+        }
+
+        #ficha-detalle .consent-line + .consent-line {
+            margin-top: 6px;
+        }
+
+        #ficha-detalle .report-signatures {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        #ficha-detalle .report-signatures > div {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid var(--line, #e3eae8);
+            border-radius: 10px;
+            background: var(--surface-soft, #edf3f1);
+        }
+
+        #ficha-detalle .report-signatures strong {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--ink, #14232b);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        #ficha-detalle .report-signatures img {
+            max-width: 100% !important;
+            margin: 4px auto 0;
+        }
+
+        @media (max-width: 900px) {
+            #ficha-detalle .report-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            #ficha-detalle .admission-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 3px;
+            }
+
+            #ficha-detalle .admission-heading p {
+                text-align: left;
+            }
+
+            #ficha-detalle .admission-body {
+                padding: 10px;
+            }
+
+            #ficha-detalle .report-grid,
+            #ficha-detalle .clinical-columns,
+            #ficha-detalle .report-signatures {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ---------- Acciones de autorización ---------- */
+        .ficha-actions {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--line, #e3eae8);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .ficha-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: transform 0.1s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .ficha-actions .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .ficha-actions .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .ficha-actions .btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .ficha-actions-status {
+            font-size: 12.5px;
+            color: var(--muted, #6b7c85);
+            transition: color 0.2s ease;
+        }
+
+        .ficha-actions-status.is-success {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .ficha-actions-status.is-error {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* ---------- Spinner del botón ---------- */
+        .ficha-compact .btn-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: fichaSpin 0.7s linear infinite;
+            display: none;
+        }
+
+        .ficha-compact .btn.loading .btn-spinner {
+            display: inline-block;
+        }
+
+        .ficha-compact .btn.loading .btn-label {
+            display: none;
+        }
+
+        @keyframes fichaSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 640px) {
+            .ficha-toolbar {
+                position: static;
+            }
+            .ficha-header {
+                padding: 16px;
+            }
+            .ficha-avatar {
+                width: 46px;
+                height: 46px;
+                font-size: 16px;
+            }
+            .ficha-name {
+                font-size: 15px;
+            }
+            .ficha-card-body {
+                padding: 14px;
+            }
+            .ficha-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ---------- Accesibilidad ---------- */
+        @media (prefers-reduced-motion: reduce) {
+            .ficha-compact,
+            .ficha-compact *,
+            .ficha-compact *::before,
+            .ficha-compact *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        :root[data-theme="dark"] .f-badge-warn {
+            color: #fcd34d;
+        }
+
+        :root[data-theme="dark"] .ficha-actions-status.is-success {
+            color: #4ade80;
+        }
+
+        :root[data-theme="dark"] .ficha-actions-status.is-error {
+            color: #f87171;
+        }
+
+        /* Ajustes compartidos para mantener alineados los modales de cada módulo. */
+        .modal-backdrop.open {
+            z-index: 1000;
+            padding: clamp(12px, 3vw, 28px);
+            background: rgba(15, 23, 23, 0.58);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .modal,
+        .modal-dynamic {
+            min-width: 0;
+            border: 1px solid var(--line);
+            box-shadow: 0 28px 80px rgba(15, 23, 23, 0.24);
+        }
+
+        .modal > form {
+            min-width: 0;
+        }
+
+        .modal-header,
+        .modal-dynamic__header {
+            min-height: 64px;
+            background: var(--surface-soft);
+        }
+
+        .modal-header h3,
+        .modal-dynamic__title {
+            flex: 1;
+            line-height: 1.4;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .modal-body,
+        .modal-dynamic__body {
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+
+        .modal :is(.form-grid, .form-group, .form-actions),
+        .modal-dynamic :is(.form-grid, .form-group, .form-actions) {
+            min-width: 0;
+        }
+
+        .modal .form-grid > *,
+        .modal-dynamic .form-grid > * {
+            min-width: 0;
+        }
+
+        .modal :is(input, select, textarea),
+        .modal-dynamic :is(input, select, textarea) {
+            max-width: 100%;
+        }
+
+        .modal-footer,
+        .modal-dynamic__footer {
+            min-height: 68px;
+            background: var(--surface-soft);
+        }
+
+        .modal-footer .btn,
+        .modal-dynamic__footer .btn {
+            min-height: 42px;
+        }
+
+        .modal-iframe-backdrop {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        :root[data-theme="dark"] .modal-backdrop.open,
+        :root[data-theme="dark"] .modal-dynamic-backdrop {
+            background: rgba(3, 8, 7, 0.72) !important;
+        }
+
+        @media (max-width: 640px) {
+            .modal-backdrop.open {
+                padding: 0;
+            }
+
+            .modal {
+                width: 100%;
+                min-height: min(60dvh, 420px);
+                max-height: 94dvh;
+                border-radius: 22px 22px 0 0;
+            }
+
+            .modal-dynamic {
+                max-height: 92dvh;
+            }
+
+            .modal-header,
+            .modal-dynamic__header {
+                min-height: 58px;
+                padding: 14px 16px;
+            }
+
+            .modal-header h3,
+            .modal-dynamic__title {
+                font-size: 15px;
+            }
+
+            .modal-body,
+            .modal-dynamic__body {
+                padding: 16px;
+                scrollbar-gutter: auto;
+            }
+
+            .modal-footer,
+            .modal-dynamic__footer {
+                padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+                gap: 8px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-footer .btn,
+            .modal-dynamic__footer .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            .modal,
+            .modal-dynamic {
+                min-height: 0;
+                max-height: 100dvh;
+                border-radius: 0;
+            }
+        }
+
     </style>
 
     @include('layouts.partials.pagination-styles')

@@ -117,7 +117,35 @@ class AdmisionInicialTest extends TestCase
             ->assertSee('Observación bucal conservada')->assertSee(self::FIRMA, false);
         $this->assertMatchesRegularExpression('/id="adm-asimetria_facial".*?<option value="0"\s+selected/s', $edicion->getContent());
         $this->get(route('admisiones.show', $caso['admission']->id))->assertOk()
-            ->assertSee('Observación bucal conservada')->assertSee('1.65 m')->assertSee(self::FIRMA, false)->assertSee('PDF de la ficha');
+            ->assertSee('Observación bucal conservada')->assertSee('1.65 m')->assertSee(self::FIRMA, false)->assertSee('PDF de la ficha')
+            ->assertSee('Vista 2D')->assertSee('Vista 3D')
+            ->assertSee('data-ficha-odontograma-visor', false)
+            ->assertSee('data-model-url="'.asset('models/odontograma.glb').'"', false);
+    }
+
+    public function test_el_visor_3d_solo_aparece_en_la_ficha_interactiva_y_conserva_el_odontograma_guardado(): void
+    {
+        $caso = $this->clinicalCase();
+        $odontograma = json_encode([
+            '16' => ['o' => 'caries'],
+            '24' => ['marcas' => [['estado' => 'corona', 'color' => 'azul']]],
+        ]);
+        $caso['admission']->update([
+            'odontograma_denticion' => 'adulto',
+            'odontograma_pintado' => $odontograma,
+        ]);
+
+        $this->actingAs($this->clinicalUser('admin'))->get(route('admisiones.show', $caso['admission']))
+            ->assertOk()
+            ->assertSee('data-ficha-odontograma-tab="3d"', false)
+            ->assertSee('data-ficha-3d-canvas', false)
+            ->assertSee('data-source-id="ficha-odontograma-'.$caso['admission']->id.'"', false)
+            ->assertSee('&quot;16&quot;:{&quot;o&quot;:&quot;caries&quot;}', false);
+
+        $this->get(route('admisiones.ficha-pdf', $caso['admission']))
+            ->assertOk()
+            ->assertDontSee('data-ficha-odontograma-visor', false)
+            ->assertDontSee('Vista 3D');
     }
 
     public function test_el_estudiante_recupera_su_ficha_sin_asignacion_y_no_la_de_otro(): void
@@ -263,7 +291,7 @@ class AdmisionInicialTest extends TestCase
         $this->get(route('dashboard'))->assertOk()->assertViewHas('tarjetas', fn (array $tarjetas): bool => collect($tarjetas)->firstWhere('label', 'Admisiones registradas')['value'] === '1');
     }
 
-    public function test_dompdf_genera_la_ficha_pdf_con_evaluacion_firma_y_odontograma_mixto(): void
+    public function test_laravel_pdf_genera_la_ficha_con_evaluacion_firma_y_odontograma_mixto(): void
     {
         $caso = $this->clinicalCase();
         $caso['admission']->update(['gpe' => 'Bueno', 'talla_mts' => 1.65, 'firma' => self::FIRMA, 'odontograma_denticion' => 'mixto', 'odontograma_pintado' => json_encode(['55' => ['o' => 'caries'], '16' => ['marcas' => [['estado' => 'corona', 'color' => 'azul']]]])]);

@@ -224,9 +224,7 @@ return $entry['href'] !== null || ! empty($entry['children']);
     {{-- ================= MARCA ================= --}}
     <div class="sidebar-brand">
         <span class="brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 5.6c-1.5-1.4-3.4-1.9-4.9-1.2C5.2 5.1 4.4 7 4.7 9.4c.3 2.3 1.2 3.9 1.8 6.2.5 1.7.6 3.5.9 4.5.2.7 1.1.8 1.5.1.5-1 .8-2.3 1.3-3.5.4-.9 1-1.4 1.8-1.4s1.4.5 1.8 1.4c.5 1.2.8 2.5 1.3 3.5.4.7 1.3.6 1.5-.1.3-1 .4-2.8.9-4.5.6-2.3 1.5-3.9 1.8-6.2.3-2.4-.5-4.3-2.4-5-1.5-.7-3.4-.2-4.9 1.2Z" />
-            </svg>
+            <img src="{{ asset('images/login/logo.png') }}" alt="">
         </span>
         <span class="brand-text">
             <span class="brand-title">Clínica Odontológica</span>

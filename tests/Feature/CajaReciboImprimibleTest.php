@@ -25,6 +25,7 @@ class CajaReciboImprimibleTest extends TestCase
 
         $response->assertOk()
             ->assertViewIs('cajas.recibo')
+            ->assertSee(asset('images/login/logo.png'), false)
             ->assertSee('Recibo de pago')
             ->assertSee('#780001')
             ->assertSee('María Flores Quispe')

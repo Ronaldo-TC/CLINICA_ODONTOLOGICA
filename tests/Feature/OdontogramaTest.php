@@ -53,7 +53,7 @@ class OdontogramaTest extends TestCase
     {
         $html = view('components.odontograma', [
             'nombre' => 'odontograma_pintado',
-            'valor' => '{"16":{"o":"caries"}}',
+            'valor' => '{"16":{"o":"caries","marcas":[{"estado":"corona","color":"azul"}]}}',
             'lectura' => false,
             'id' => 'odonto-test',
             'mostrarLeyenda' => true,
@@ -72,6 +72,8 @@ class OdontogramaTest extends TestCase
         $this->assertStringContainsString('data-odontograma-input', $html);
         $this->assertStringContainsString('odontograma_pintado', $html);
         $this->assertStringContainsString('Endodoncia', $html);
+        $this->assertMatchesRegularExpression('/data-pieza="16".*?data-cara="o" data-estado="caries"[^>]*fill="#dc2626" stroke="#b91c1c"/s', $html);
+        $this->assertMatchesRegularExpression('/data-pieza="16".*?<path d="M3 48H37V68H3Z" fill="none" stroke="#2563eb"/s', $html);
         $this->assertStringContainsString('Obturación', $html);
     }
 
@@ -90,6 +92,30 @@ class OdontogramaTest extends TestCase
         $respuesta->assertSee('data-odontograma', false);
         $respuesta->assertSee('window.Odontograma', false);
         $respuesta->assertSee('adm-odontograma', false);
+    }
+
+    public function test_el_odontograma_para_pdf_renderiza_las_caras_sin_javascript(): void
+    {
+        $html = view('components.odontograma', [
+            'valor' => '{"16":{"o":"caries","marcas":[{"estado":"corona","color":"azul"}]}}',
+            'lectura' => true,
+            'id' => 'odonto-pdf',
+            'mostrarLeyenda' => false,
+            'esPdf' => true,
+            'imagenes' => [
+                'adulto' => [
+                    '16' => [
+                        'frontal' => 'data:image/png;base64,FRONTAL',
+                        'anatomica' => 'data:image/png;base64,ANATOMICA',
+                    ],
+                ],
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('src="data:image/png;base64,ANATOMICA"', $html);
+        $this->assertStringContainsString('<path d="M3 48H37V68H3Z" fill="none" stroke="#2563eb"', $html);
+        $this->assertMatchesRegularExpression('/data-pieza="16".*?data-cara="o" data-estado="caries"[^>]*fill="#dc2626" stroke="#b91c1c"/s', $html);
+        $this->assertStringNotContainsString('window.Odontograma', $html);
     }
 
     public function test_el_componente_en_modo_lectura_desactiva_el_input(): void

@@ -553,7 +553,7 @@ Route::middleware(['auth.session'])->group(function () {
             Route::get('/pagos-por-tipo', 'pagosPorTipo')->name('pagos-por-tipo');
             Route::get('/ingresos-por-mes', 'ingresosPorMes')->name('ingresos-por-mes');
 
-            /* ---- Exportaciones CSV y PDF con DOMPDF ---- */
+            /* ---- Exportaciones CSV y PDF con Laravel PDF ---- */
             Route::get('/exportar/csv', 'exportarCsv')->name('exportar.csv');
             Route::get('/exportar/pdf', 'exportarPdf')->name('exportar.pdf');
             Route::get('/exportar/imprimible', 'imprimible')->name('exportar.imprimible');
