@@ -42,7 +42,19 @@
             <div class="form-group">
                 <label for="filtroBuscar">Buscar</label>
                 <input type="text" id="filtroBuscar" class="form-control"
-                    placeholder="Nombre o CI...">
+                    placeholder="Nombre, CI o rol...">
+            </div>
+
+            <div class="form-group">
+                <label for="filtroRol">Rol</label>
+                <select id="filtroRol" class="form-control">
+                    <option value="">Todos los roles</option>
+                    @foreach ($roles as $rolDisponible)
+                    <option value="{{ $rolDisponible->name }}" @selected($rol===$rolDisponible->name)>
+                        {{ $rolDisponible->name }}
+                    </option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="form-group">
@@ -117,8 +129,9 @@
                         <input type="checkbox" id="checkAll" aria-label="Seleccionar todo"
                             onchange="toggleCheckAll(this)">
                     </th>
-                    <th>Usuario</th>
                     <th>CI</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
                     <th>Clínica</th>
                     <th>Módulo</th>
                     <th>Rotación</th>
@@ -167,6 +180,7 @@
             totalId: 'total-especialidades',
             filtros: {
                 buscar: 'filtroBuscar',
+                rol: 'filtroRol',
                 clinica_id: 'filtroClinica',
                 estado: 'filtroEstado',
             },
@@ -175,6 +189,7 @@
     }, 300);
 
     document.getElementById('filtroBuscar')?.addEventListener('input', recargarEspecialidades);
+    document.getElementById('filtroRol')?.addEventListener('change', recargarEspecialidades);
     document.getElementById('filtroClinica')?.addEventListener('change', recargarEspecialidades);
     document.getElementById('filtroEstado')?.addEventListener('change', recargarEspecialidades);
 

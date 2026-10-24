@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Http\Resources\PacienteResource;
+use App\Models\HistoriaClinica;
 use App\Models\Paciente;
 use App\Services\AccesoClinico;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,6 +39,13 @@ class PacienteController extends Controller
     protected function buildIndexQuery(Request $request): Builder
     {
         return AccesoClinico::pacientes(Paciente::query(), $request->user())
+            ->addSelect([
+                'ultima_historia_id' => AccesoClinico::historias(HistoriaClinica::query(), $request->user())
+                    ->select('id')
+                    ->whereColumn('paciente_id', 'pacientes.id')
+                    ->orderByDesc('id')
+                    ->limit(1),
+            ])
             ->withCount([
                 'admisiones' => fn (Builder $query) => AccesoClinico::admisiones($query, $request->user()),
                 'historiasClinicas' => fn (Builder $query) => AccesoClinico::historias($query, $request->user()),
@@ -97,9 +105,11 @@ class PacienteController extends Controller
 
     protected function validationRules(?int $id): array
     {
+        $required = $id === null ? ['required'] : ['sometimes', 'required'];
+
         return [
             'ci' => [
-                'nullable',
+                ...$required,
                 'string',
                 'max:50',
                 Rule::unique('pacientes', 'ci')->ignore($id),
@@ -108,14 +118,14 @@ class PacienteController extends Controller
             'apellido_paterno' => ['nullable', 'string', 'max:100'],
             'apellido_materno' => ['nullable', 'string', 'max:100'],
             'genero' => ['nullable', 'string', 'max:50'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
-            'telefono' => ['nullable', 'string', 'max:30'],
+            'fecha_nacimiento' => [...$required, 'date', 'before:today'],
+            'telefono' => [...$required, 'string', 'max:30'],
             'estado_civil' => ['nullable', 'string', 'max:200'],
             'escuela' => ['nullable', 'string', 'max:200'],
             'ocupacion' => ['nullable', 'string', 'max:200'],
-            'direccion' => ['nullable', 'string', 'max:200'],
-            'emergencia' => ['nullable', 'string', 'max:200'],
-            'telefono_emergencia' => ['nullable', 'string', 'max:30'],
+            'direccion' => [...$required, 'string', 'max:200'],
+            'emergencia' => [...$required, 'string', 'max:200'],
+            'telefono_emergencia' => [...$required, 'string', 'max:30'],
         ];
     }
 
@@ -123,10 +133,16 @@ class PacienteController extends Controller
     {
         return [
             'ci.unique' => 'Ya existe un paciente con esa cédula.',
+            'ci.required' => 'La cédula de identidad es obligatoria.',
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.max' => 'El nombre no puede exceder 100 caracteres.',
+            'fecha_nacimiento.required' => 'La fecha de nacimiento es obligatoria.',
             'fecha_nacimiento.date' => 'La fecha de nacimiento no es válida.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'telefono.required' => 'El teléfono es obligatorio.',
+            'direccion.required' => 'La dirección es obligatoria.',
+            'emergencia.required' => 'El contacto de emergencia es obligatorio.',
+            'telefono_emergencia.required' => 'El teléfono de emergencia es obligatorio.',
         ];
     }
 

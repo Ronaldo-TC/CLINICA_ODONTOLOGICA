@@ -9,7 +9,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class EspecialidadController extends Controller
 {
@@ -21,35 +23,9 @@ class EspecialidadController extends Controller
         $buscar = trim((string) $request->input('buscar', ''));
         $clinicaId = $request->input('clinica_id');
         $estado = $request->input('estado');
+        $rol = trim((string) $request->input('rol', ''));
 
-        $asignaciones = DB::table('especialidades as e')
-            ->join('usuarios as u', 'u.id', '=', 'e.usuario_id')
-            ->join('clinicas as c', 'c.id', '=', 'e.clinica_id')
-            ->select(
-                'e.usuario_id',
-                'e.clinica_id',
-                'e.habilitado',
-                'e.rotacion',
-                'e.responsable_admision',
-                'e.fecha_inicio',
-                'u.nombre_completo',
-                'u.ci',
-                'c.especialidad',
-                'c.modulo',
-                'c.curso'
-            )
-            ->when($buscar !== '', function ($q) use ($buscar) {
-                $q->where(function ($qq) use ($buscar) {
-                    $qq->where('u.nombre_completo', 'like', "%{$buscar}%")
-                        ->orWhere('u.ci', 'like', "%{$buscar}%");
-                });
-            })
-            ->when(! empty($clinicaId), fn ($q) => $q->where('e.clinica_id', (int) $clinicaId))
-            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('e.habilitado', (int) $estado))
-            ->orderBy('u.nombre_completo')
-            ->orderBy('c.especialidad')
-            ->paginate(20)
-            ->withQueryString();
+        $asignaciones = $this->consultarAsignaciones($request);
 
         $usuarios = Usuario::query()
             ->where('habilitado', true)
@@ -69,13 +45,19 @@ class EspecialidadController extends Controller
             ->orderBy('especialidad')
             ->get(['id', 'modulo', 'especialidad', 'curso']);
 
+        $roles = Role::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('especialidades.index', compact(
             'asignaciones',
             'usuarios',
             'clinicas',
             'buscar',
             'clinicaId',
-            'estado'
+            'estado',
+            'rol',
+            'roles'
         ));
     }
 
@@ -112,9 +94,26 @@ class EspecialidadController extends Controller
        ============================================================ */
     public function tabla(Request $request): JsonResponse
     {
+        $asignaciones = $this->consultarAsignaciones($request);
+
+        $filas = view('especialidades.partials.filas', compact('asignaciones'))->render();
+        $paginacion = $asignaciones->links()->toHtml();
+        $total = $asignaciones->total();
+
+        return response()->json([
+            'html' => $filas,
+            'filas' => $filas,
+            'paginacion' => $paginacion,
+            'total' => $total,
+        ]);
+    }
+
+    private function consultarAsignaciones(Request $request): LengthAwarePaginator
+    {
         $buscar = trim((string) $request->input('buscar', ''));
         $clinicaId = $request->input('clinica_id');
         $estado = $request->input('estado');
+        $rol = trim((string) $request->input('rol', ''));
 
         $asignaciones = DB::table('especialidades as e')
             ->join('usuarios as u', 'u.id', '=', 'e.usuario_id')
@@ -135,7 +134,25 @@ class EspecialidadController extends Controller
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($qq) use ($buscar) {
                     $qq->where('u.nombre_completo', 'like', "%{$buscar}%")
-                        ->orWhere('u.ci', 'like', "%{$buscar}%");
+                        ->orWhere('u.ci', 'like', "%{$buscar}%")
+                        ->orWhereExists(function ($roles) use ($buscar) {
+                            $roles->selectRaw('1')
+                                ->from('model_has_roles as mhr')
+                                ->join('roles as r', 'r.id', '=', 'mhr.role_id')
+                                ->whereColumn('mhr.model_id', 'u.id')
+                                ->where('mhr.model_type', Usuario::class)
+                                ->where('r.name', 'like', "%{$buscar}%");
+                        });
+                });
+            })
+            ->when($rol !== '', function ($q) use ($rol) {
+                $q->whereExists(function ($roles) use ($rol) {
+                    $roles->selectRaw('1')
+                        ->from('model_has_roles as mhr')
+                        ->join('roles as r', 'r.id', '=', 'mhr.role_id')
+                        ->whereColumn('mhr.model_id', 'u.id')
+                        ->where('mhr.model_type', Usuario::class)
+                        ->where('r.name', $rol);
                 });
             })
             ->when(! empty($clinicaId), fn ($q) => $q->where('e.clinica_id', (int) $clinicaId))
@@ -145,16 +162,17 @@ class EspecialidadController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $filas = view('especialidades.partials.filas', compact('asignaciones'))->render();
-        $paginacion = $asignaciones->links()->toHtml();
-        $total = $asignaciones->total();
+        $usuarios = Usuario::query()
+            ->whereKey($asignaciones->getCollection()->pluck('usuario_id')->unique())
+            ->with('roles:id,name')
+            ->get(['id'])
+            ->keyBy('id');
 
-        return response()->json([
-            'html' => $filas,
-            'filas' => $filas,
-            'paginacion' => $paginacion,
-            'total' => $total,
-        ]);
+        $asignaciones->getCollection()->each(function (object $asignacion) use ($usuarios): void {
+            $asignacion->roles = $usuarios->get($asignacion->usuario_id)?->roles->pluck('name') ?? collect();
+        });
+
+        return $asignaciones;
     }
 
     /* ============================================================

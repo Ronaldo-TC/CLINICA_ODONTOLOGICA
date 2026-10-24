@@ -67,6 +67,7 @@ function formularioDOM({ solicitar, pacienteInicialId = '', ...configuracion } =
     const ids = [
         'adm-paciente-buscar', 'adm-paciente-id', 'wrapPaciente', 'dropdownPaciente', 'datosPacienteResumen',
         'datosPacienteNombre', 'datosPacienteMeta', 'datosPacienteOrigen', 'datosPacienteFicha', 'datosPacienteReporte',
+        'datosPacienteHistoria',
         'cargaPacienteEstado', 'cargaPacienteMensaje', 'btnReintentarPaciente', 'btnGuardarAdmision', 'formAdmisionError', 'formAdmisionErrorText',
     ];
     const elementos = new Map(ids.map(id => [id, new Elemento()]));
@@ -98,7 +99,7 @@ function formularioDOM({ solicitar, pacienteInicialId = '', ...configuracion } =
         form, odontograma, firma,
         config: {
             modo: 'crear', preservarInicial: false, campos: nombres.filter(nombre => !['periodo_id', 'odontograma_pintado_anterior', '_token'].includes(nombre)),
-            urls: { buscarPacientes: '/admisiones/buscar-pacientes', datosPaciente: '/admisiones/buscar-pacientes/__ID__/datos', ficha: '/admisiones/__ID__', reporte: '/admisiones/__ID__/reporte-paciente' },
+            urls: { buscarPacientes: '/admisiones/buscar-pacientes', datosPaciente: '/admisiones/buscar-pacientes/__ID__/datos', ficha: '/admisiones/__ID__', reporte: '/admisiones/__ID__/reporte-paciente', historia: '/historias/__ID__' },
             ...configuracion,
         },
         solicitar: (url, opciones) => { peticiones.push({ url, opciones }); return solicitar(url, opciones); },
@@ -305,7 +306,7 @@ test('la normalización mantiene datos ausentes separados de cero y respuestas n
 test('el formulario inicial precarga controles, motivo anterior y odontograma sin interpretar etiquetas', async () => {
     const odontograma = { '55': { o: 'caries' }, '16': { marcas: [{ estado: 'corona', color: 'azul' }] } };
     const pagina = formularioDOM({ pacienteInicialId: '1', solicitar: async () => ({ ok: true, json: async () => ({
-        id: 1, nombre_completo: '<img src=x onerror=alert(1)>', ci: '000123', edad: 0,
+        id: 1, nombre_completo: '<img src=x onerror=alert(1)>', ci: '000123', edad: 0, historia_clinica: { id: 33 },
         admision_anterior: { id: 17, fecha_admision: '2026-10-01', motivo_consulta_nombre: '<script>Motivo anterior</script>', datos: {
             telefono: '007000001', pulso: 0, asimetria_facial: false, motivo_consulta_id: 7,
             odontograma_pintado: JSON.stringify(odontograma), odontograma_denticion: 'mixto',
@@ -325,6 +326,7 @@ test('el formulario inicial precarga controles, motivo anterior y odontograma si
     assert.deepEqual(pagina.odontograma.datos, odontograma);
     assert.equal(pagina.odontograma.denticion, 'mixto');
     assert.equal(pagina.elementos.get('datosPacienteFicha').href, '/admisiones/17');
+    assert.equal(pagina.elementos.get('datosPacienteHistoria').href, '/historias/33');
     assert.equal(pagina.elementos.get('btnGuardarAdmision').disabled, false);
     assert.equal(pagina.peticiones[0].opciones.credentials, 'same-origin');
 });
@@ -349,6 +351,7 @@ test('cambiar de paciente reinicia la evaluación, firma, consentimientos y deri
     assert.equal(pagina.firma.limpiezas, 1);
     assert.equal(pagina.elementos.get('datosPacienteFicha').style.display, 'none');
     assert.equal(pagina.elementos.get('datosPacienteReporte').style.display, 'none');
+    assert.equal(pagina.elementos.get('datosPacienteHistoria').style.display, 'none');
 });
 
 test('enviar mientras se carga el paciente muestra un error y no registra una admisión incompleta', async () => {

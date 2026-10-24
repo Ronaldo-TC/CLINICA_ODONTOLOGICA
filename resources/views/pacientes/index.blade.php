@@ -1,93 +1,710 @@
 @extends('layouts.app')
 
 @section('title', 'Gestión de Pacientes')
+@section('page-title', 'Pacientes')
+@section('page-subtitle', 'Directorio de atención clínica')
 
 @section('content')
 
-<div class="dashboard-toolbar">
-    <div class="toolbar-info">
-        <span class="toolbar-dot live"></span>
-        <span id="crud-total-label">{{ $registros->total() }} pacientes registrados</span>
-    </div>
-    <div class="toolbar-actions">
-        <x-boton-reporte ruta="pacientes.reporte" />
-        @can('pacientes.crear')
-        <button type="button" class="btn btn-primary" id="btnNuevoPaciente">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Nuevo Paciente
-        </button>
-        @endcan
-    </div>
-</div>
+<div class="patients-page">
+    <section class="patients-welcome" aria-labelledby="patients-welcome-title">
+        <div class="patients-welcome__copy">
+            <span class="patients-eyebrow">DIRECTORIO CLÍNICO</span>
+            <h2 id="patients-welcome-title">Una atención más cercana empieza aquí</h2>
+            <p>Encuentra a cada paciente y continúa su cuidado desde un solo lugar.</p>
+            <div class="patients-welcome__count">
+                <span class="patients-welcome__count-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="10" cy="7" r="4" />
+                        <path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </span>
+                <span><strong id="crud-total-label">{{ $registros->total() }} pacientes registrados</strong><small>Directorio actualizado</small></span>
+            </div>
+        </div>
+        <div class="patients-welcome__actions">
+            <x-boton-reporte ruta="pacientes.reporte" />
+            @can('pacientes.crear')
+            <button type="button" class="btn btn-primary patients-new-button" id="btnNuevoPaciente">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Registrar paciente
+            </button>
+            @endcan
+        </div>
+        <svg class="patients-welcome__decoration" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+            <circle cx="110" cy="110" r="88" stroke="currentColor" stroke-width="1" />
+            <circle cx="110" cy="110" r="64" stroke="currentColor" stroke-width="1" />
+            <path d="M110 52c-22 0-38 16-38 39 0 22 13 40 20 57 4 9 6 22 13 22s7-20 12-20 8 20 14 20 10-13 14-23c7-16 19-34 19-56 0-23-16-39-38-39-7 0-13 5-16 5s-8-5-20-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="M93 109c3 4 8 6 17 6s14-2 17-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+    </section>
 
-<div class="card">
-    <div class="card-header">
-        <h2>Lista de Pacientes</h2>
-        <div class="card-header-actions">
-            <span class="tabla-status" id="crud-status">
+    <section class="patients-directory card" aria-labelledby="patients-directory-title">
+        <div class="patients-directory__heading">
+            <div>
+                <span class="patients-section-label">CUIDADO Y SEGUIMIENTO</span>
+                <h2 id="patients-directory-title">Directorio de pacientes</h2>
+                <p>Consulta datos básicos y accede rápidamente a la atención.</p>
+            </div>
+            <span class="patients-live-status" id="crud-status" role="status" aria-live="polite">
                 <span class="dot"></span>
                 <span id="crud-status-text">Cargando...</span>
             </span>
         </div>
-    </div>
 
-    <div class="card-body" style="padding-bottom: 14px;">
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Buscar</label>
-                <input type="text" id="filtro-buscar" class="form-control"
-                    placeholder="CI, nombre o apellidos..."
+        <div class="patients-filters">
+            <div class="patients-search">
+                <label class="sr-only" for="filtro-buscar">Buscar paciente por nombre o CI</label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-4-4" />
+                </svg>
+                <input type="search" id="filtro-buscar" class="form-control"
+                    placeholder="Buscar por nombre o CI..."
                     autocomplete="off">
             </div>
-
-            <div class="form-group">
-                <label>Género</label>
-                <select id="filtro-genero" class="form-control">
-                    <option value="">Todos</option>
-                    @foreach ($generos as $g)
-                    <option value="{{ $g }}">{{ $g }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                    Limpiar
-                </button>
-            </div>
+            <label class="sr-only" for="filtro-genero">Filtrar por género</label>
+            <select id="filtro-genero" class="form-control patients-gender-filter">
+                <option value="">Todos los géneros</option>
+                @foreach ($generos as $g)
+                <option value="{{ $g }}">{{ $g }}</option>
+                @endforeach
+            </select>
+            <button type="button" class="btn btn-secondary patients-clear-button" id="btnLimpiarFiltros">
+                Limpiar filtros
+            </button>
         </div>
-    </div>
 
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>CI</th>
-                    <th>Nombre completo</th>
-                    <th>Género</th>
-                    <th>Edad</th>
-                    <th>Admisiones</th>
-                    <th>Historias</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tbodyPacientes">
-                @include('pacientes.partials.filas')
-            </tbody>
-        </table>
-    </div>
-
-    <div id="paginacionWrap">{{ $registros->links() }}</div>
+        <div class="patients-results">
+            <div class="patients-results__heading">
+                <span>Personas en seguimiento</span>
+                <span class="patients-results__hint">Selecciona una acción para continuar</span>
+            </div>
+            <div class="patients-table-wrap">
+                <table class="patients-table">
+                    <thead class="sr-only">
+                        <tr>
+                            <th>Paciente</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyPacientes">
+                        @include('pacientes.partials.filas')
+                    </tbody>
+                </table>
+            </div>
+            <div class="patients-pagination" id="paginacionWrap">{{ $registros->links() }}</div>
+        </div>
+    </section>
 </div>
 
 @include('pacientes.partials.modal')
 
 @endsection
+
+@push('styles')
+<style>
+    .patients-page {
+        display: grid;
+        gap: 22px;
+    }
+
+    .patients-welcome {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 28px;
+        min-height: 228px;
+        padding: 34px clamp(22px, 4vw, 48px);
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid color-mix(in srgb, var(--teal) 18%, var(--line));
+        border-radius: 24px;
+        background:
+            radial-gradient(ellipse at 86% 18%, color-mix(in srgb, var(--cyan) 16%, transparent), transparent 38%),
+            linear-gradient(120deg, var(--surface) 5%, color-mix(in srgb, var(--teal) 6%, var(--surface)) 100%);
+        box-shadow: var(--shadow-card);
+    }
+
+    .patients-welcome__copy,
+    .patients-welcome__actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    .patients-welcome__copy {
+        max-width: 610px;
+    }
+
+    .patients-eyebrow,
+    .patients-section-label {
+        display: inline-block;
+        color: var(--teal);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .14em;
+    }
+
+    .patients-welcome h2 {
+        max-width: 580px;
+        margin-top: 11px;
+        color: var(--ink);
+        font-size: clamp(25px, 3vw, 36px);
+        font-weight: 750;
+        letter-spacing: -.045em;
+        line-height: 1.15;
+    }
+
+    .patients-welcome__copy > p {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .patients-welcome__count {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        margin-top: 22px;
+    }
+
+    .patients-welcome__count-icon {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--teal) 18%, var(--line));
+        border-radius: 13px;
+        background: var(--surface);
+        color: var(--teal);
+    }
+
+    .patients-welcome__count-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .patients-welcome__count strong,
+    .patients-welcome__count small {
+        display: block;
+    }
+
+    .patients-welcome__count strong {
+        color: var(--ink);
+        font-size: 13px;
+    }
+
+    .patients-welcome__count small {
+        margin-top: 1px;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .patients-welcome__actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .patients-new-button {
+        min-height: 46px;
+        padding-inline: 18px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--teal) 22%, transparent);
+    }
+
+    .patients-new-button svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .patients-welcome__decoration {
+        position: absolute;
+        z-index: -1;
+        right: 16%;
+        bottom: -74px;
+        width: 220px;
+        color: color-mix(in srgb, var(--teal) 12%, transparent);
+        transform: rotate(-12deg);
+        pointer-events: none;
+    }
+
+    .patients-page .patients-directory {
+        margin-bottom: 0;
+        border-radius: 20px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .patients-directory__heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 23px 26px 20px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .patients-directory__heading h2 {
+        margin-top: 5px;
+        color: var(--ink);
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -.025em;
+    }
+
+    .patients-directory__heading p {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .patients-live-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 0 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .patients-live-status .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 14%, transparent);
+    }
+
+    .patients-filters {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(170px, 220px) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 26px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface-soft) 38%, var(--surface));
+    }
+
+    .patients-search {
+        position: relative;
+        min-width: 0;
+    }
+
+    .patients-search > svg {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        width: 17px;
+        height: 17px;
+        color: var(--muted);
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    .patients-search .form-control {
+        min-height: 44px;
+        padding-left: 42px;
+        border-radius: 12px;
+        background: var(--surface);
+    }
+
+    .patients-gender-filter {
+        min-height: 44px;
+        border-radius: 12px;
+    }
+
+    .patients-clear-button {
+        min-height: 44px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+
+    .patients-results {
+        padding: 0 26px 10px;
+    }
+
+    .patients-results__heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 17px 0 5px;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .patients-results__hint {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 400;
+    }
+
+    .patients-table-wrap {
+        overflow: visible;
+    }
+
+    .patients-table {
+        width: 100%;
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .patients-table tbody tr.patient-row > td {
+        padding: 0;
+        border: 0;
+    }
+
+    .patient-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 22px;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .patient-card:hover {
+        border-color: color-mix(in srgb, var(--teal) 38%, var(--line));
+        box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 7%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .patient-card__identity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .patient-card__avatar {
+        width: 48px !important;
+        height: 48px !important;
+        border: 3px solid color-mix(in srgb, var(--surface) 82%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 18%, var(--line));
+        font-size: 14px !important;
+    }
+
+    .patient-card__identity-copy {
+        min-width: 0;
+    }
+
+    .patient-card__name {
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .patient-card__details {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .patient-card__ci {
+        color: var(--teal);
+        font-weight: 650;
+    }
+
+    .patient-card__separator {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--muted) 55%, transparent);
+    }
+
+    .patient-card__metrics {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .patient-card__metric {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 112px;
+        padding: 9px 11px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--surface-soft) 48%, var(--surface));
+    }
+
+    .patient-card__metric-icon {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--cyan) 12%, var(--surface));
+        color: var(--teal);
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .patient-card__metric strong,
+    .patient-card__metric small {
+        display: block;
+    }
+
+    .patient-card__metric strong {
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .patient-card__metric small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    .patient-card__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+    }
+
+    .patient-card__actions .btn {
+        min-height: 36px;
+        border-radius: 10px;
+    }
+
+    .patient-card__actions .patient-card__edit,
+    .patient-card__actions .patient-card__delete {
+        width: 36px;
+        min-width: 36px;
+        padding: 0;
+    }
+
+    .patient-card__actions .patient-card__delete {
+        border: 1px solid color-mix(in srgb, var(--danger) 20%, var(--line));
+        background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+        color: var(--danger);
+    }
+
+    .patients-empty {
+        display: grid;
+        justify-items: center;
+        padding: 44px 20px;
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--surface-soft) 35%, var(--surface));
+        color: var(--muted);
+        text-align: center;
+    }
+
+    .patients-empty svg {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 12px;
+        color: var(--teal);
+    }
+
+    .patients-empty strong {
+        color: var(--ink);
+        font-size: 14px;
+    }
+
+    .patients-empty p {
+        margin-top: 4px;
+        font-size: 12px;
+    }
+
+    .patients-pagination {
+        padding: 10px 0 4px;
+    }
+
+    @media (max-width: 900px) {
+        .patients-welcome {
+            align-items: flex-start;
+        }
+
+        .patients-welcome__decoration {
+            right: 8%;
+        }
+
+        .patient-card {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+        }
+
+        .patient-card__metrics {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .patient-card__actions {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .patients-page {
+            gap: 15px;
+        }
+
+        .patients-welcome {
+            min-height: auto;
+            flex-direction: column;
+            gap: 20px;
+            padding: 24px 20px;
+            border-radius: 18px;
+        }
+
+        .patients-welcome h2 {
+            max-width: 420px;
+            font-size: 27px;
+        }
+
+        .patients-welcome__copy > p {
+            max-width: 300px;
+            font-size: 13px;
+        }
+
+        .patients-welcome__count {
+            margin-top: 16px;
+        }
+
+        .patients-welcome__actions {
+            width: 100%;
+        }
+
+        .patients-welcome__actions > * {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .patients-welcome__decoration {
+            right: -62px;
+            bottom: 36px;
+            width: 170px;
+        }
+
+        .patients-directory__heading {
+            align-items: flex-start;
+            padding: 19px 18px 16px;
+        }
+
+        .patients-directory__heading h2 {
+            font-size: 17px;
+        }
+
+        .patients-live-status {
+            padding-inline: 9px;
+            font-size: 0;
+        }
+
+        .patients-live-status .dot {
+            width: 8px;
+            height: 8px;
+        }
+
+        .patients-filters {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 9px;
+            padding: 14px 18px;
+        }
+
+        .patients-search {
+            grid-column: 1 / -1;
+        }
+
+        .patients-gender-filter,
+        .patients-clear-button {
+            min-width: 0;
+            font-size: 12px;
+        }
+
+        .patients-results {
+            padding: 0 14px 8px;
+        }
+
+        .patients-results__hint {
+            display: none;
+        }
+
+        .patients-table {
+            border-spacing: 0 8px;
+        }
+
+        .patient-card {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 13px;
+            padding: 14px;
+        }
+
+        .patient-card__identity {
+            gap: 11px;
+        }
+
+        .patient-card__avatar {
+            width: 42px !important;
+            height: 42px !important;
+        }
+
+        .patient-card__metrics {
+            grid-column: auto;
+            grid-row: auto;
+        }
+
+        .patient-card__metric {
+            min-width: 0;
+            flex: 1;
+            padding: 7px;
+        }
+
+        .patient-card__actions {
+            grid-column: auto;
+            grid-row: auto;
+            justify-content: flex-start;
+            padding-top: 11px;
+            border-top: 1px solid var(--line);
+        }
+
+        .patient-card__actions .btn-primary {
+            flex: 1;
+        }
+
+        .patients-pagination {
+            overflow-x: auto;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .patient-card {
+            transition: none;
+        }
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

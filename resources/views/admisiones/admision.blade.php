@@ -6,6 +6,8 @@
 @section('content')
 @php
 $ficha = $admision ?? null;
+$pacienteSeleccionado = $ficha?->paciente ?? $pacienteInicial ?? null;
+$pacienteSeleccionadoId = old('paciente_id', $ficha?->paciente_id ?? $pacienteSeleccionado?->id);
 $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', true)->pluck('clinica_id')->all() ?? []);
 @endphp
 <div class="dashboard-toolbar">
@@ -26,9 +28,9 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
         <div class="card-body form-grid">
             <div class="form-group" style="grid-column:1/-1">
                 <label for="adm-paciente-buscar">Paciente <span class="req">*</span></label>
-                <div class="autocomplete-wrap {{ $ficha?->paciente_id ? 'has-value' : '' }}" id="wrapPaciente">
-                    <input type="hidden" name="paciente_id" id="adm-paciente-id" value="{{ $ficha?->paciente_id ?? old('paciente_id') }}">
-                    <input type="text" id="adm-paciente-buscar" class="form-control autocomplete-input" value="{{ $ficha?->paciente?->nombre_completo }}" placeholder="Buscar por nombre o CI..." autocomplete="off" required @readonly(isset($admision))>
+                <div class="autocomplete-wrap {{ $pacienteSeleccionadoId ? 'has-value' : '' }}" id="wrapPaciente">
+                    <input type="hidden" name="paciente_id" id="adm-paciente-id" value="{{ $pacienteSeleccionadoId }}">
+                    <input type="text" id="adm-paciente-buscar" class="form-control autocomplete-input" value="{{ $pacienteSeleccionado?->nombre_completo }}" placeholder="Buscar por nombre o CI..." autocomplete="off" required @readonly(isset($admision))>
                     <button type="button" class="autocomplete-clear" aria-label="Limpiar paciente" @if(isset($admision)) disabled hidden style="display:none;" @endif>×</button>
                     <div class="autocomplete-dropdown" id="dropdownPaciente"></div>
                 </div>
@@ -39,6 +41,9 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
                     @canany(['admisiones.ver', 'admisiones.gestionar'])
                     <a id="datosPacienteFicha" class="btn btn-sm btn-secondary" href="#" style="display:none; margin-top:10px;">Ver última ficha</a>
                     <a id="datosPacienteReporte" class="btn btn-sm btn-secondary" href="#" style="display:none; margin-top:10px;" target="_blank" rel="noopener">Ver seguimiento del paciente</a>
+                    @endcanany
+                    @canany(['historias.ver', 'historias.gestionar'])
+                    <a id="datosPacienteHistoria" class="btn btn-sm btn-secondary" href="#" style="display:none; margin-top:10px;">Ver historia clínica</a>
                     @endcanany
                 </div>
                 <div id="cargaPacienteEstado" role="status" aria-live="polite" style="display:none; margin-top:10px;">
@@ -304,6 +309,7 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
                     datosPaciente: @json(route('admisiones.buscar-pacientes.datos', ['paciente' => '__ID__'])),
                     ficha: @json(route('admisiones.show', ['admision' => '__ID__'])),
                     reporte: @json(route('admisiones.reporte-paciente', ['admision' => '__ID__'])),
+                    historia: @json(route('historias.show', ['historia' => '__ID__'])),
                 },
             },
         });

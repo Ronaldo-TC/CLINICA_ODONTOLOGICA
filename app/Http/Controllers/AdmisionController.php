@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Models\Admision;
 use App\Models\Bitacora;
 use App\Models\Clinica;
+use App\Models\HistoriaClinica;
 use App\Models\MotivoConsulta;
 use App\Models\Paciente;
 use App\Models\Periodo;
@@ -41,8 +42,18 @@ class AdmisionController extends Controller
     {
         $this->authorizeAction('crear');
 
+        $pacienteInicial = null;
+        if ($request->filled('paciente_id')) {
+            $pacienteId = $request->validate([
+                'paciente_id' => ['required', 'integer'],
+            ])['paciente_id'];
+            $pacienteInicial = AccesoClinico::pacientes(Paciente::query(), $request->user())
+                ->findOrFail($pacienteId);
+        }
+
         return view('admisiones.admision', [
             'odontograma3d' => $request->routeIs('admisiones.create-3d'),
+            'pacienteInicial' => $pacienteInicial,
         ] + $this->catalogosFormulario());
     }
 
@@ -622,6 +633,12 @@ class AdmisionController extends Controller
             ->with('motivoConsulta:id,nombre')
             ->orderByRaw('COALESCE(fecha_admision, DATE(created_at)) DESC')
             ->orderByDesc('created_at')->orderByDesc('id')->first();
+        $historiaClinica = $request->user()->canAny(['historias.ver', 'historias.gestionar'])
+            ? AccesoClinico::historias(HistoriaClinica::query(), $request->user())
+                ->where('paciente_id', $paciente->id)
+                ->orderByDesc('id')
+                ->first(['id'])
+            : null;
 
         return response()->json([
             'id' => $paciente->id,
@@ -633,6 +650,8 @@ class AdmisionController extends Controller
             'genero' => $paciente->genero,
             'fecha_nacimiento' => $paciente->fecha_nacimiento?->format('Y-m-d'),
             'edad' => $paciente->edad,
+            ...$paciente->only(Paciente::CAMPOS_CONTACTO),
+            'historia_clinica' => $historiaClinica ? ['id' => $historiaClinica->id] : null,
             'admision_anterior' => $admisionAnterior ? [
                 'id' => $admisionAnterior->id,
                 'fecha_admision' => $admisionAnterior->fecha_admision?->format('Y-m-d') ?? $admisionAnterior->created_at?->format('Y-m-d'),

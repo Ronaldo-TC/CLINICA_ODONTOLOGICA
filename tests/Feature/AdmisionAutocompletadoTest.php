@@ -128,9 +128,32 @@ class AdmisionAutocompletadoTest extends TestCase
     public function test_registered_patient_without_admissions_returns_null_previous_admission(): void
     {
         $patient = $this->registeredPatient();
+        $patient->update([
+            'telefono' => '007000009',
+            'direccion' => 'Zona Central',
+            'emergencia' => 'Familiar',
+        ]);
 
         $this->actingAs($this->clinicalUser('admision'))->getJson(route('admisiones.buscar-pacientes.datos', $patient->id))
-            ->assertOk()->assertJsonPath('id', $patient->id)->assertJsonPath('admision_anterior', null);
+            ->assertOk()->assertJsonPath('id', $patient->id)->assertJsonPath('admision_anterior', null)
+            ->assertJsonPath('telefono', '007000009')->assertJsonPath('direccion', 'Zona Central')
+            ->assertJsonPath('emergencia', 'Familiar')->assertJsonPath('historia_clinica', null);
+    }
+
+    public function test_create_form_accepts_a_patient_and_exposes_their_accessible_history(): void
+    {
+        $case = $this->clinicalCase();
+        $operator = $this->clinicalUser('admision');
+
+        $this->actingAs($operator)->get(route('admisiones.create', ['paciente_id' => $case['admission']->paciente_id]))
+            ->assertOk()
+            ->assertViewHas('pacienteInicial', fn (Paciente $patient): bool => $patient->is($case['admission']->paciente))
+            ->assertSee('id="adm-paciente-id" value="'.$case['admission']->paciente_id.'"', false)
+            ->assertSee($case['admission']->paciente->nombre_completo);
+
+        $this->getJson(route('admisiones.buscar-pacientes.datos', $case['admission']->paciente_id))
+            ->assertOk()
+            ->assertJsonPath('historia_clinica.id', $case['history']->id);
     }
 
     public function test_missing_patient_returns_404(): void
@@ -157,6 +180,7 @@ class AdmisionAutocompletadoTest extends TestCase
 
         $this->actingAs($this->clinicalUser('estudiante'))->getJson(route('admisiones.buscar-pacientes.datos', $case['admission']->paciente_id))
             ->assertOk()->assertJsonPath('id', $case['admission']->paciente_id)->assertJsonPath('admision_anterior', null)
+            ->assertJsonPath('historia_clinica', null)
             ->assertJsonMissing(['telefono' => '07000099', 'antecedentes' => 'Antecedente reservado']);
     }
 

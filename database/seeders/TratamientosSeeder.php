@@ -55,6 +55,7 @@ class TratamientosSeeder extends Seeder
                     'nombre' => $t['nombre'],
                     'costo' => $t['costo'],
                     'descripcion' => '',
+                    'precio_asignado' => true,
                     'clinica_id' => $clinicas[$especialidad],
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -63,9 +64,21 @@ class TratamientosSeeder extends Seeder
         }
 
         foreach ($rows as $row) {
-            if (! DB::table('tratamientos')->where('clinica_id', $row['clinica_id'])->where('nombre', $row['nombre'])->exists()) {
-                DB::table('tratamientos')->insert($row);
+            $tratamiento = DB::table('tratamientos')
+                ->where('clinica_id', $row['clinica_id'])
+                ->where('nombre', $row['nombre']);
+
+            if ($tratamiento->exists()) {
+                $tratamiento->update([
+                    'costo' => $row['costo'],
+                    'precio_asignado' => true,
+                    'updated_at' => $now,
+                ]);
+
+                continue;
             }
+
+            DB::table('tratamientos')->insert($row);
         }
     }
 }

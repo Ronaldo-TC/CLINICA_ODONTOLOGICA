@@ -154,6 +154,7 @@ export function inicializarFormularioAdmision({
     const resumenOrigen = documento.getElementById('datosPacienteOrigen');
     const fichaAnterior = documento.getElementById('datosPacienteFicha');
     const reporteAnterior = documento.getElementById('datosPacienteReporte');
+    const historiaClinica = documento.getElementById('datosPacienteHistoria');
     const cargaEstado = documento.getElementById('cargaPacienteEstado');
     const cargaMensaje = documento.getElementById('cargaPacienteMensaje');
     const reintentar = documento.getElementById('btnReintentarPaciente');
@@ -183,7 +184,7 @@ export function inicializarFormularioAdmision({
             resumenNombre.textContent = '';
             resumenMeta.textContent = '';
             resumenOrigen.textContent = '';
-            [fichaAnterior, reporteAnterior].forEach((enlace) => {
+            [fichaAnterior, reporteAnterior, historiaClinica].forEach((enlace) => {
                 if (enlace) enlace.style.display = 'none';
             });
             return;
@@ -211,6 +212,12 @@ export function inicializarFormularioAdmision({
             });
         } else {
             resumenOrigen.textContent = 'El paciente no tiene una ficha anterior disponible. Complete los datos y la evaluación para esta visita.';
+        }
+        if (historiaClinica && paciente.historia_clinica && config.urls.historia) {
+            historiaClinica.href = urlConId(config.urls.historia, paciente.historia_clinica.id);
+            historiaClinica.style.display = 'inline-flex';
+        } else if (historiaClinica) {
+            historiaClinica.style.display = 'none';
         }
         resumen.style.display = 'block';
     };

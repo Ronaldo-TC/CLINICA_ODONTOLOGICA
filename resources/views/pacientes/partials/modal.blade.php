@@ -1,6 +1,6 @@
 <div class="modal-backdrop" id="modalPaciente">
     <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modalPacienteTitulo">
-        <form id="formPaciente" novalidate>
+        <form id="formPaciente">
             @csrf
             <input type="hidden" name="_method" id="formPacienteMethod" value="POST">
             <input type="hidden" name="paciente_id" id="formPacienteId" value="">
@@ -19,8 +19,8 @@
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="paciente-ci">CI</label>
-                        <input type="text" id="paciente-ci" name="ci"
+                        <label for="paciente-ci">CI <span class="req">*</span></label>
+                        <input type="text" id="paciente-ci" name="ci" required
                             class="form-control" maxlength="50"
                             placeholder="Ej: 12345678">
                         <span class="form-error" data-error-for="ci"></span>
@@ -39,8 +39,8 @@
 
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="paciente-nombre">Nombre <span class="req">*</span></label>
-                        <input type="text" id="paciente-nombre" name="nombre"
-                            class="form-control" required maxlength="100"
+                        <input type="text" id="paciente-nombre" name="nombre" required
+                            class="form-control" maxlength="100"
                             placeholder="Ej: Juan">
                         <span class="form-error" data-error-for="nombre"></span>
                     </div>
@@ -62,26 +62,42 @@
                     </div>
 
                     <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="paciente-fecha-nacimiento">Fecha de nacimiento</label>
-                        <input type="date" id="paciente-fecha-nacimiento" name="fecha_nacimiento"
+                        <label for="paciente-fecha-nacimiento">Fecha de nacimiento <span class="req">*</span></label>
+                        <input type="date" id="paciente-fecha-nacimiento" name="fecha_nacimiento" required
                             class="form-control" max="{{ date('Y-m-d') }}">
                         <span class="form-error" data-error-for="fecha_nacimiento"></span>
                     </div>
                 </div>
 
                 <div class="form-grid" style="margin-top:18px;">
-                    @foreach(['telefono' => ['Teléfono', 30], 'estado_civil' => ['Estado civil', 200], 'ocupacion' => ['Ocupación', 200], 'direccion' => ['Dirección', 200], 'emergencia' => ['Contacto de emergencia', 200], 'telefono_emergencia' => ['Teléfono de emergencia', 30]] as $campo => [$etiqueta, $limite])
+                    {{-- Estado Civil con opciones --}}
                     <div class="form-group">
-                        <label for="paciente-{{ $campo }}">{{ $etiqueta }}</label>
-                        <input type="{{ str_starts_with($campo, 'telefono') ? 'tel' : 'text' }}" id="paciente-{{ $campo }}" name="{{ $campo }}" class="form-control" maxlength="{{ $limite }}">
+                        <label for="paciente-estado_civil">Estado civil</label>
+                        <select id="paciente-estado_civil" name="estado_civil" class="form-control">
+                            <option value="">Seleccione...</option>
+                            <option value="Soltero">Soltero</option>
+                            <option value="Casado">Casado</option>
+                            <option value="Viudo">Viudo</option>
+                            <option value="Divorciado">Divorciado</option>
+                            <option value="Separado">Separado</option>
+                            <option value="Unión libre">Unión libre</option>
+                            <option value="Conviviente">Conviviente</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                        <span class="form-error" data-error-for="estado_civil"></span>
+                    </div>
+
+                    @foreach(['telefono' => ['Teléfono', 30, true], 'ocupacion' => ['Ocupación', 200, false], 'direccion' => ['Dirección', 200, true], 'emergencia' => ['Contacto de emergencia', 200, true], 'telefono_emergencia' => ['Teléfono de emergencia', 30, true]] as $campo => [$etiqueta, $limite, $obligatorio])
+                    <div class="form-group">
+                        <label for="paciente-{{ $campo }}">{{ $etiqueta }} @if($obligatorio)<span class="req">*</span>@endif</label>
+                        <input type="{{ str_starts_with($campo, 'telefono') ? 'tel' : 'text' }}" id="paciente-{{ $campo }}" name="{{ $campo }}" @if($obligatorio)required @endif class="form-control" maxlength="{{ $limite }}">
                         <span class="form-error" data-error-for="{{ $campo }}"></span>
                     </div>
                     @endforeach
                 </div>
 
                 <div id="formPacienteError" class="alert alert-danger" style="display:none; margin-top:18px;">
-                    <span class="alert-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="alert-icon"[STRIPPED 39 bytes]"0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />

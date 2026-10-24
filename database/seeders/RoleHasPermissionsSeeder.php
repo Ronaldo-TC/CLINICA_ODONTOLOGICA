@@ -59,10 +59,12 @@ class RoleHasPermissionsSeeder extends Seeder
                 'pacientes.gestionar',
                 'tratamientos.gestionar',
                 'historias.ver',
+                'cajas.ver',
                 'reportes.ver',
             ],
             'jefe-catedra' => [
                 'historias.ver',
+                'cajas.ver',
                 'reportes.ver',
             ],
             'docente' => [
@@ -72,6 +74,7 @@ class RoleHasPermissionsSeeder extends Seeder
                 'sesiones.ver',
                 'sesiones.gestionar',
                 'tratamientos.ver',
+                'cajas.ver',
                 'solicitudes-insumos.ver',
                 'esterilizaciones.ver',
                 'esterilizaciones.gestionar',

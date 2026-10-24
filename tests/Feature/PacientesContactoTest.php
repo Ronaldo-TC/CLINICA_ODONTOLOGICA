@@ -21,10 +21,16 @@ class PacientesContactoTest extends TestCase
         'telefono_emergencia' => '007000002',
     ];
 
+    private const DATOS_REQUERIDOS = [
+        'ci' => 'CI-PACIENTE-001',
+        'nombre' => 'Paciente contacto',
+        'fecha_nacimiento' => '1990-01-01',
+    ];
+
     public function test_puede_registrar_consultar_y_editar_los_datos_de_contacto_del_paciente(): void
     {
         $this->actingAs($this->clinicalUser('admin'));
-        $respuesta = $this->postJson(route('pacientes.store'), ['nombre' => 'Paciente contacto', ...self::CONTACTO])->assertCreated();
+        $respuesta = $this->postJson(route('pacientes.store'), [...self::DATOS_REQUERIDOS, ...self::CONTACTO])->assertCreated();
         $id = $respuesta->json('id');
 
         $consulta = $this->getJson(route('pacientes.datos', $id))->assertOk();
@@ -33,20 +39,24 @@ class PacientesContactoTest extends TestCase
         }
         $this->assertDatabaseHas('pacientes', ['id' => $id, ...self::CONTACTO]);
 
-        $this->putJson(route('pacientes.update', $id), ['nombre' => 'Paciente contacto', 'telefono' => '007000003', 'direccion' => 'La Paz', 'emergencia' => ''])
+        $this->putJson(route('pacientes.update', $id), ['nombre' => self::DATOS_REQUERIDOS['nombre'], 'telefono' => '007000003', 'direccion' => 'La Paz'])
             ->assertOk();
-        $this->assertDatabaseHas('pacientes', ['id' => $id, 'telefono' => '007000003', 'direccion' => 'La Paz', 'emergencia' => null, 'telefono_emergencia' => self::CONTACTO['telefono_emergencia']]);
+        $this->assertDatabaseHas('pacientes', ['id' => $id, 'telefono' => '007000003', 'direccion' => 'La Paz', 'emergencia' => self::CONTACTO['emergencia'], 'telefono_emergencia' => self::CONTACTO['telefono_emergencia']]);
     }
 
-    public function test_los_contactos_son_opcionales_y_validan_la_longitud_sin_crear_pacientes_invalidos(): void
+    public function test_el_registro_rechaza_campos_obligatorios_vacios_y_no_crea_pacientes_invalidos(): void
     {
         $this->actingAs($this->clinicalUser('admin'));
-        $this->postJson(route('pacientes.store'), ['nombre' => 'Paciente sin contacto'])->assertCreated()
-            ->assertJsonPath('registro.telefono', null)->assertJsonPath('registro.emergencia', null);
-
         $cantidad = Paciente::count();
+        $camposRequeridos = ['ci', 'nombre', 'fecha_nacimiento', 'telefono', 'direccion', 'emergencia', 'telefono_emergencia'];
+
+        $this->postJson(route('pacientes.store'), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($camposRequeridos);
+        $this->assertSame($cantidad, Paciente::count());
+
         $invalidos = array_map(fn (string $campo): string => str_repeat('x', str_starts_with($campo, 'telefono') ? 31 : 201), Paciente::CAMPOS_CONTACTO);
-        $this->postJson(route('pacientes.store'), ['nombre' => 'Paciente invalido', ...array_combine(Paciente::CAMPOS_CONTACTO, $invalidos)])
+        $this->postJson(route('pacientes.store'), [...self::DATOS_REQUERIDOS, ...array_combine(Paciente::CAMPOS_CONTACTO, $invalidos)])
             ->assertUnprocessable()->assertJsonValidationErrors(Paciente::CAMPOS_CONTACTO);
         $this->assertSame($cantidad, Paciente::count());
     }
@@ -65,6 +75,9 @@ class PacientesContactoTest extends TestCase
             }
             $creacion->assertDontSee('name="'.$campo.'"', false);
             $creacion3d->assertDontSee('name="'.$campo.'"', false);
+        }
+        foreach (['ci', 'nombre', 'fecha_nacimiento', 'telefono', 'direccion', 'emergencia', 'telefono_emergencia'] as $campo) {
+            $pacientes->assertSee('name="'.$campo.'" required', false);
         }
     }
 

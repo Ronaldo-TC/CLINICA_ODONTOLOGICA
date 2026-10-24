@@ -7,14 +7,22 @@
             data-clinica="{{ $a->clinica_id }}"
             aria-label="Seleccionar fila">
     </td>
-
+    <td>
+        <code>{{ $a->ci ?? '—' }}</code>
+    </td>
     <td>
         <strong>{{ $a->nombre_completo }}</strong>
     </td>
 
     <td>
-        <code>{{ $a->ci ?? '—' }}</code>
+        @forelse ($a->roles as $rol)
+        <span class="badge badge-info">{{ $rol }}</span>
+        @empty
+        <span class="badge badge-muted">Sin rol</span>
+        @endforelse
     </td>
+
+
 
     <td>{{ $a->especialidad }}</td>
 
@@ -102,7 +110,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="9">
+    <td colspan="10">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

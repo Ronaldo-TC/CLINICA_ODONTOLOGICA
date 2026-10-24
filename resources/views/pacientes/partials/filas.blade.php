@@ -43,6 +43,14 @@
 
     <td>
         <div class="actions">
+            @canany(['admisiones.crear', 'admisiones.gestionar'])
+            <a href="{{ route('admisiones.create', ['paciente_id' => $paciente->id]) }}"
+                class="btn btn-sm btn-primary">
+                <x-icono nombre="ficha" /> Nueva admisión
+            </a>
+            @endcanany
+
+
             @can('pacientes.editar')
             <button type="button"
                 class="btn btn-sm btn-secondary"

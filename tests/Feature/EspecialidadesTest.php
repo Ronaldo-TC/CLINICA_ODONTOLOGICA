@@ -81,6 +81,43 @@ class EspecialidadesTest extends TestCase
         $this->assertStringContainsString($caso['student']->nombre_completo, $respuesta->json('html'));
     }
 
+    public function test_la_pantalla_muestra_el_filtro_y_la_columna_de_rol(): void
+    {
+        $this->clinicalCase();
+
+        $respuesta = $this->actingAs($this->clinicalUser('admin'))->get(route('especialidades.index'));
+
+        $respuesta->assertOk()
+            ->assertSee('id="filtroRol"', false)
+            ->assertSee('<th>Rol</th>', false)
+            ->assertSee('estudiante');
+    }
+
+    public function test_las_asignaciones_se_pueden_buscar_y_filtrar_por_rol(): void
+    {
+        $caso = $this->clinicalCase();
+        $admin = $this->clinicalUser('admin');
+
+        $filtrada = $this->actingAs($admin)->getJson(route('especialidades.tabla', [
+            'rol' => 'estudiante',
+            'clinica_id' => $caso['clinic']->id,
+        ]));
+
+        $filtrada->assertOk()->assertJsonPath('total', 1);
+        $this->assertStringContainsString($caso['student']->nombre_completo, $filtrada->json('html'));
+        $this->assertStringContainsString('estudiante', $filtrada->json('html'));
+        $this->assertStringNotContainsString($caso['teacher']->nombre_completo, $filtrada->json('html'));
+
+        $buscada = $this->actingAs($admin)->getJson(route('especialidades.tabla', [
+            'buscar' => 'docente',
+            'clinica_id' => $caso['clinic']->id,
+        ]));
+
+        $buscada->assertOk()->assertJsonPath('total', 1);
+        $this->assertStringContainsString($caso['teacher']->nombre_completo, $buscada->json('html'));
+        $this->assertStringNotContainsString($caso['student']->nombre_completo, $buscada->json('html'));
+    }
+
     public function test_el_modal_ajax_asigna_y_deshabilita_sin_eliminar_la_asignacion(): void
     {
         $estudiante = $this->clinicalUser('estudiante');
