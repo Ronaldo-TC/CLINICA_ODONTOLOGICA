@@ -206,7 +206,8 @@ class PacientesDerivadosSeeder extends Seeder
         $recibo = Caja::query()->where('solicitud_radiologica_id', $solicitud->id)->first();
         if (! $recibo) {
             $recibo = new Caja;
-            $recibo->recibo = Caja::siguienteNumeroRecibo();
+            $recibo->recibo = Caja::siguienteNumeroRecibo()
+                ?? throw new \RuntimeException('No se pudo generar un número de recibo para radiología.');
         }
         $recibo->fill([
             'monto' => 0,

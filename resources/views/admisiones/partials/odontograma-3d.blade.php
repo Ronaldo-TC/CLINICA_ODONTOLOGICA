@@ -137,7 +137,6 @@
     .odontograma-3d-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
     #adm-3d-resumen { margin-bottom: 16px; }
     #adm-3d-resumen button { margin: 4px; }
-    #adm-odontograma-alternativo summary { cursor: pointer; margin: 12px 0; }
     #adm-odontograma-3d.is-fullscreen, #adm-odontograma-3d:fullscreen { position: fixed; inset: 0; z-index: 100000; width: 100%; height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; padding: 20px; background: var(--bg, #f1f5f9); overflow: auto; }
     #adm-odontograma-3d.is-fullscreen .odontograma-3d-layout { flex: 1; min-height: 0; }
     #adm-odontograma-3d.is-fullscreen .odontograma-3d-panel { max-height: none; }

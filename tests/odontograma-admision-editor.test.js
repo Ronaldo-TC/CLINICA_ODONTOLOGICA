@@ -41,8 +41,10 @@ test('el editor real sincroniza marcas, historial, vistas y pantalla completa co
         .btn{padding:7px;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer} .btn:disabled{opacity:.5}
         @media(max-width:640px){main{margin:10px}.sidebar{display:none}}
         </style></head><body><aside class="sidebar">Menú</aside><header class="topbar">Admisiones</header><main><form id="formAdmision">
-        @include('admisiones.partials.odontograma-3d')
-        <details id="adm-odontograma-alternativo"><x-odontograma id="adm-odontograma" /></details>
+        <button type="button" id="adm-odontograma-tab-2d" aria-selected="false">Vista 2D</button>
+        <button type="button" id="adm-odontograma-tab-3d" aria-selected="true">Vista 3D</button>
+        <div id="adm-odontograma-vista-2d" hidden><x-odontograma id="adm-odontograma" /></div>
+        <div id="adm-odontograma-vista-3d">@include('admisiones.partials.odontograma-3d')</div>
         </form></main>@stack('styles')@stack('scripts')</body></html>`;
     const php = 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); Illuminate\\Support\\Facades\\URL::forceRootUrl($argv[1]); echo Illuminate\\Support\\Facades\\Blade::render($argv[2]);';
     html = execFileSync('php', ['-r', php, origin, plantilla], { encoding: 'utf8' });

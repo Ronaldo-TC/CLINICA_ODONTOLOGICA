@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', isset($admision) ? 'Editar admisión' : (($odontograma3d ?? false) ? 'Nueva admisión 3D' : 'Nueva admisión'))
-@section('page-title', isset($admision) ? 'Editar admisión' : (($odontograma3d ?? false) ? 'Nueva admisión 3D' : 'Nueva admisión'))
+@section('title', isset($admision) ? 'Editar admisión' : 'Nueva admisión')
+@section('page-title', isset($admision) ? 'Editar admisión' : 'Nueva admisión')
 @section('page-subtitle', 'Ficha de evaluación inicial del paciente')
 
 @section('content')
@@ -9,6 +9,7 @@ $ficha = $admision ?? null;
 $pacienteSeleccionado = $ficha?->paciente ?? $pacienteInicial ?? null;
 $pacienteSeleccionadoId = old('paciente_id', $ficha?->paciente_id ?? $pacienteSeleccionado?->id);
 $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', true)->pluck('clinica_id')->all() ?? []);
+$vistaOdontogramaInicial = ($odontograma3d ?? false) ? '3d' : '2d';
 @endphp
 <div class="dashboard-toolbar">
     <a href="{{ route('admisiones.index') }}" class="btn btn-secondary">Volver a Admisiones</a>
@@ -23,7 +24,7 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
     <input type="hidden" name="odontograma_pintado_anterior" value="{{ $ficha?->odontograma_pintado }}">
     <div class="card">
         <div class="card-header">
-            <h2>{{ isset($admision) ? 'Ficha de admisión #'.$admision->id : (($odontograma3d ?? false) ? 'Nueva admisión 3D' : 'Nueva Admisión') }}</h2>
+            <h2>{{ isset($admision) ? 'Ficha de admisión #'.$admision->id : 'Nueva admisión' }}</h2>
         </div>
         <div class="card-body form-grid">
             <div class="form-group" style="grid-column:1/-1">
@@ -203,15 +204,32 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
             <h2>Odontograma</h2>
         </div>
         <div class="card-body">
-            @if($odontograma3d ?? false)
-            @include('admisiones.partials.odontograma-3d')
-            <details id="adm-odontograma-alternativo">
-                <summary>Ver o editar también en 2D</summary>
-                @endif
+            <div class="admision-view-switcher" role="tablist" aria-label="Vista del odontograma">
+                <button type="button" id="adm-odontograma-tab-2d" class="admision-view-tab"
+                    role="tab" aria-controls="adm-odontograma-vista-2d"
+                    aria-selected="{{ $vistaOdontogramaInicial === '2d' ? 'true' : 'false' }}"
+                    tabindex="{{ $vistaOdontogramaInicial === '2d' ? '0' : '-1' }}" data-admision-odontograma-vista="2d">
+                    <span aria-hidden="true">2D</span>
+                    Vista 2D
+                </button>
+                <button type="button" id="adm-odontograma-tab-3d" class="admision-view-tab"
+                    role="tab" aria-controls="adm-odontograma-vista-3d"
+                    aria-selected="{{ $vistaOdontogramaInicial === '3d' ? 'true' : 'false' }}"
+                    tabindex="{{ $vistaOdontogramaInicial === '3d' ? '0' : '-1' }}" data-admision-odontograma-vista="3d">
+                    <span aria-hidden="true">3D</span>
+                    Vista 3D
+                </button>
+            </div>
+            <p class="admision-view-help">Puede alternar entre ambas vistas; las marcas realizadas se conservan en el mismo odontograma.</p>
+
+            <div id="adm-odontograma-vista-2d" class="admision-view-panel" role="tabpanel"
+                aria-labelledby="adm-odontograma-tab-2d" @if($vistaOdontogramaInicial !== '2d') hidden @endif>
                 <x-odontograma nombre="odontograma_pintado" id="adm-odontograma" :valor="old('odontograma_pintado', $ficha?->odontograma_pintado)" :denticion="old('odontograma_denticion', $ficha?->odontograma_denticion ?? 'adulto')" />
-                @if($odontograma3d ?? false)
-            </details>
-            @endif
+            </div>
+            <div id="adm-odontograma-vista-3d" class="admision-view-panel" role="tabpanel"
+                aria-labelledby="adm-odontograma-tab-3d" @if($vistaOdontogramaInicial !== '3d') hidden @endif>
+                @include('admisiones.partials.odontograma-3d')
+            </div>
             <div class="form-group" style="margin-top:18px;">
                 <label for="adm-odontograma-observaciones">Observaciones del odontograma</label>
                 <textarea id="adm-odontograma-observaciones" name="odontograma" class="form-control" rows="2" maxlength="10000">{{ old('odontograma', $ficha?->odontograma) }}</textarea>
@@ -286,11 +304,109 @@ $seleccionadas = old('clinica_ids', $ficha?->remisiones->where('habilitado', tru
 </form>
 @endsection
 
+@push('styles')
+<style>
+    .admision-view-switcher {
+        display: inline-grid;
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface-soft);
+    }
+
+    .admision-view-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .admision-view-tab span {
+        display: grid;
+        min-width: 30px;
+        height: 26px;
+        place-items: center;
+        border-radius: 7px;
+        background: color-mix(in srgb, currentColor 10%, transparent);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .admision-view-tab[aria-selected="true"] {
+        background: var(--surface);
+        color: var(--teal-dark);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 10%, transparent);
+    }
+
+    .admision-view-tab:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+    }
+
+    .admision-view-help {
+        margin: 10px 0 18px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .admision-view-panel[hidden] {
+        display: none;
+    }
+
+    @media (max-width: 520px) {
+        .admision-view-switcher {
+            display: grid;
+            width: 100%;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script type="module">
     import {
         inicializarFormularioAdmision
     } from @json(asset('js/admision-autocompletado.js'));
+
+    const cambiarVistaOdontograma = (vista, enfocar = false) => {
+        const botones = [...document.querySelectorAll('[data-admision-odontograma-vista]')];
+        botones.forEach((boton) => {
+            const activo = boton.dataset.admisionOdontogramaVista === vista;
+            boton.setAttribute('aria-selected', String(activo));
+            boton.tabIndex = activo ? 0 : -1;
+        });
+
+        ['2d', '3d'].forEach((tipo) => {
+            const panel = document.getElementById(`adm-odontograma-vista-${tipo}`);
+            if (panel) panel.hidden = tipo !== vista;
+        });
+
+        if (vista === '3d') window.dispatchEvent(new Event('resize'));
+        if (enfocar) botones.find((boton) => boton.dataset.admisionOdontogramaVista === vista)?.focus();
+    };
+
+    document.querySelectorAll('[data-admision-odontograma-vista]').forEach((boton) => {
+        boton.addEventListener('click', () => cambiarVistaOdontograma(boton.dataset.admisionOdontogramaVista));
+        boton.addEventListener('keydown', (evento) => {
+            if (!['ArrowLeft', 'ArrowRight'].includes(evento.key)) return;
+            evento.preventDefault();
+            cambiarVistaOdontograma(boton.dataset.admisionOdontogramaVista === '2d' ? '3d' : '2d', true);
+        });
+    });
 
     const inicializar = () => {
         const form = document.getElementById('formAdmision');

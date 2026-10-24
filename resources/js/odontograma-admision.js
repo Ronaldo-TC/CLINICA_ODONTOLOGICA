@@ -329,7 +329,16 @@ function iniciarEditor() {
     const mostrarError = error => {
         console.error('No se pudo iniciar el odontograma 3D.', error);
         status.textContent = 'No se pudo cargar el editor 3D. Puede completar el odontograma en la vista 2D.';
-        document.getElementById('adm-odontograma-alternativo').open = true;
+        const tab2d = document.getElementById('adm-odontograma-tab-2d');
+        const tab3d = document.getElementById('adm-odontograma-tab-3d');
+        const panel2d = document.getElementById('adm-odontograma-vista-2d');
+        const panel3d = document.getElementById('adm-odontograma-vista-3d');
+        tab2d?.setAttribute('aria-selected', 'true');
+        tab3d?.setAttribute('aria-selected', 'false');
+        if (tab2d) tab2d.tabIndex = 0;
+        if (tab3d) tab3d.tabIndex = -1;
+        if (panel2d) panel2d.hidden = false;
+        if (panel3d) panel3d.hidden = true;
         botonesModelo.forEach(boton => boton.disabled = true);
     };
 

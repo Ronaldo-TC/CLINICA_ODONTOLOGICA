@@ -61,6 +61,10 @@ class DatabaseSeederTest extends TestCase
             'nombre' => 'Resina simple',
             'precio_asignado' => true,
         ]);
+        $this->assertDatabaseHas('insumos', [
+            'nombre' => 'Resina fotopolimerizable A2',
+            'costo_unitario' => 150,
+        ]);
 
         $tratamientoId = DB::table('tratamientos')->where('nombre', 'Resina simple')->value('id');
         $insumoId = DB::table('insumos')->where('nombre', 'Resina fotopolimerizable A2')->value('id');
@@ -81,7 +85,12 @@ class DatabaseSeederTest extends TestCase
             ->where('nombre', 'like', '%demo%')
             ->count());
         $this->assertSame(3, DB::table('remisiones')->whereIn('paciente_id', $patientIds)->count());
+        $this->assertSame(3, DB::table('historias_clinicas')->whereIn('paciente_id', $patientIds)->count());
         $this->assertSame(3, DB::table('solicitudes_radiologicas')->whereIn('paciente_id', $patientIds)->count());
+        $this->assertSame(3, DB::table('cajas')
+            ->whereIn('paciente_id', $patientIds)
+            ->whereNotNull('solicitud_radiologica_id')
+            ->count());
         $this->assertSame(3, DB::table('radiologias')
             ->whereIn('paciente_id', $patientIds)
             ->whereNotNull('solicitud_radiologica_id')
@@ -102,6 +111,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertDatabaseHas('roles', ['name' => 'admin', 'guard_name' => 'web']);
         $this->assertDatabaseHas('usuarios', ['nombre_usuario' => 'estudiante']);
         $this->assertDatabaseHas('tratamientos', ['nombre' => 'Endodoncia unirradicular']);
+        $this->assertDatabaseHas('insumos', ['nombre' => 'Conos de gutapercha surtidos']);
     }
 
     /** @return array<string, int> */
@@ -133,9 +143,25 @@ class DatabaseSeederTest extends TestCase
             'referrals' => DB::table('remisiones')->whereIn('paciente_id', function ($query): void {
                 $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
             })->count(),
+            'admissions' => DB::table('admisiones')->whereIn('paciente_id', function ($query): void {
+                $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
+            })->count(),
+            'histories' => DB::table('historias_clinicas')->whereIn('paciente_id', function ($query): void {
+                $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
+            })->count(),
+            'completed_treatments' => DB::table('tratamientos_realizados')->whereIn('historia_clinica_id', function ($query): void {
+                $query->select('id')->from('historias_clinicas')->whereIn('paciente_id', function ($subquery): void {
+                    $subquery->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
+                });
+            })->count(),
             'radiology_requests' => DB::table('solicitudes_radiologicas')->whereIn('paciente_id', function ($query): void {
                 $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
             })->count(),
+            'radiology_receipts' => DB::table('cajas')
+                ->whereNotNull('solicitud_radiologica_id')
+                ->whereIn('paciente_id', function ($query): void {
+                    $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
+                })->count(),
             'radiologies' => DB::table('radiologias')->whereIn('paciente_id', function ($query): void {
                 $query->select('id')->from('pacientes')->whereIn('ci', self::PACIENTE_CI);
             })->count(),

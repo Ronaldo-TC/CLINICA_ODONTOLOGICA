@@ -11,11 +11,13 @@ class Admision3dTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
 
-    public function test_admissions_offer_a_3d_form_in_the_same_tab(): void
+    public function test_admissions_list_links_directly_to_the_unified_form(): void
     {
         $this->actingAs($this->clinicalUser('admision'))->get(route('admisiones.index'))
-            ->assertSee('href="'.route('admisiones.create-3d').'" class="btn btn-primary">', false)
-            ->assertSee('Nueva admisión 3D');
+            ->assertSee('href="'.route('admisiones.create').'" class="btn btn-primary admisiones-primary-action">', false)
+            ->assertSee('Nueva admisión')
+            ->assertDontSee('modalTipoAdmision')
+            ->assertDontSee('href="'.route('admisiones.create-3d').'"', false);
     }
 
     public function test_the_3d_form_uses_the_same_patient_signature_referral_and_save_flow(): void
@@ -23,7 +25,11 @@ class Admision3dTest extends TestCase
         $this->actingAs($this->clinicalUser('admision'))->get(route('admisiones.create-3d'))
             ->assertViewIs('admisiones.admision')
             ->assertViewHas('odontograma3d', true)
-            ->assertSee('Nueva admisión 3D')
+            ->assertSee('Nueva admisión')
+            ->assertSee('id="adm-odontograma-tab-2d"', false)
+            ->assertSee('id="adm-odontograma-tab-3d"', false)
+            ->assertSee('Vista 2D')
+            ->assertSee('Vista 3D')
             ->assertSee('data-model-url="'.asset('models/odontograma.glb').'"', false)
             ->assertSee('action="'.route('admisiones.store').'"', false)
             ->assertSee('id="adm-3d-canvas"', false)
@@ -43,12 +49,15 @@ class Admision3dTest extends TestCase
             ->assertSee('Marcar ausente / extraído');
     }
 
-    public function test_the_original_create_form_keeps_its_2d_odontogram(): void
+    public function test_the_unified_create_form_contains_the_2d_and_3d_views(): void
     {
         $this->actingAs($this->clinicalUser('admision'))->get(route('admisiones.create'))
             ->assertViewHas('odontograma3d', false)
+            ->assertSee('id="adm-odontograma-tab-2d"', false)
+            ->assertSee('id="adm-odontograma-tab-3d"', false)
             ->assertSee('id="adm-odontograma"', false)
-            ->assertDontSee('id="adm-3d-canvas"', false);
+            ->assertSee('id="adm-3d-canvas"', false)
+            ->assertSee('id="adm-odontograma-vista-3d"', false);
     }
 
     public function test_the_3d_form_requires_authentication(): void
