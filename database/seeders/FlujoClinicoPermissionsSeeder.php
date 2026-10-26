@@ -14,10 +14,10 @@ class FlujoClinicoPermissionsSeeder extends Seeder
     {
         $matrix = [
             'admision' => ['remisiones.asignar', 'remisiones.editar'],
-            'jefatura-clinicas' => ['especialidades.ver', 'especialidades.gestionar', 'remisiones.ver', 'remisiones.asignar', 'cajas.ver'],
+            'jefatura-clinicas' => ['especialidades.ver', 'especialidades.gestionar', 'remisiones.ver', 'remisiones.asignar'],
             'subadmin' => ['atenciones.gestionar', 'atenciones.ver', 'admisiones.gestionar', 'especialidades.ver', 'especialidades.gestionar'],
-            'docente' => ['remisiones.ver', 'remisiones.asignar', 'admisiones.ver', 'admisiones.autorizar', 'atenciones.autorizar', 'atenciones.ver', 'historias.autorizar', 'radiologias.crear', 'radiologias.revisar', 'cajas.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar', 'esterilizaciones.autorizar'],
-            'jefe-catedra' => ['remisiones.ver', 'remisiones.asignar', 'admisiones.ver', 'admisiones.autorizar', 'tratamientos.ver', 'atenciones.autorizar', 'atenciones.ver', 'historias.autorizar', 'radiologias.revisar', 'cajas.ver', 'insumos.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar', 'esterilizaciones.autorizar'],
+            'docente' => ['remisiones.ver', 'remisiones.asignar', 'admisiones.ver', 'admisiones.autorizar', 'atenciones.autorizar', 'atenciones.ver', 'historias.autorizar', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar', 'esterilizaciones.autorizar'],
+            'jefe-catedra' => ['remisiones.ver', 'remisiones.asignar', 'admisiones.ver', 'admisiones.autorizar', 'tratamientos.ver', 'atenciones.autorizar', 'atenciones.ver', 'historias.autorizar', 'insumos.ver', 'solicitudes-insumos.ver', 'solicitudes-insumos.autorizar', 'solicitudes-insumos.rechazar', 'esterilizaciones.autorizar'],
             'estudiante' => ['admisiones.ver', 'admisiones.crear', 'admisiones.editar', 'tratamientos.ver', 'atenciones.ver', 'atenciones.crear', 'atenciones.editar', 'solicitudes-insumos.consumir'],
             'interno' => ['admisiones.ver', 'admisiones.crear', 'admisiones.editar', 'tratamientos.ver', 'atenciones.ver', 'atenciones.crear', 'atenciones.editar', 'solicitudes-insumos.consumir'],
             'insumos' => ['solicitudes-insumos.entregar', 'solicitudes-insumos.consumir', 'solicitudes-insumos.aprobar', 'solicitudes-insumos.rechazar', 'tratamientos.ver', 'tratamientos.insumos'],

@@ -217,7 +217,7 @@ class ReportesTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
-    public function test_el_menu_incluye_reportes_con_el_patron_correcto(): void
+    public function test_el_menu_no_incluye_reportes(): void
     {
         $menu = MenuBuilder::forUser($this->admin());
 
@@ -230,8 +230,6 @@ class ReportesTest extends TestCase
             }
         }
 
-        $this->assertNotNull($reportes, 'El menú debe incluir la entrada "Reportes"');
-        $this->assertSame('reportes.index', $reportes['route']);
-        $this->assertSame('reportes.*', $reportes['pattern']);
+        $this->assertNull($reportes, 'El menú no debe incluir la entrada "Reportes"');
     }
 }

@@ -27,7 +27,8 @@ class EstudiantePacientesTest extends TestCase
 
         $this->actingAs($case['student'])->get(route('estudiante.historias'))
             ->assertViewHas('registros', fn ($records): bool => $records->getCollection()->modelKeys() === [$case['history']->id])
-            ->assertSee('Mis Pacientes Designados')->assertSee('Mis Historias Clínicas')->assertSee('Mis Pacientes Admitidos')
+            ->assertSee('Mis Historias Clínicas')->assertSee('Mis Pacientes Admitidos')
+            ->assertDontSee('Mis Pacientes Designados')
             ->assertSee('Pacientes derivados')->assertSee('Esterilización')->assertSee('data-estudiante-filtros', false)
             ->assertDontSee('Paciente ajeno');
     }
@@ -54,12 +55,12 @@ class EstudiantePacientesTest extends TestCase
         $this->assertStringNotContainsString('<html', $response->json('tabla'));
     }
 
-    public function test_designated_patients_exclude_closed_histories_but_history_archive_keeps_them(): void
+    public function test_old_designated_patients_url_redirects_to_the_complete_history_list(): void
     {
         $case = $this->clinicalCase();
         $case['history']->update(['estado' => 'culminado']);
 
-        $this->actingAs($case['student'])->getJson(route('estudiante.designados'))->assertJsonPath('total', 0);
+        $this->actingAs($case['student'])->get(route('estudiante.designados'))->assertRedirectToRoute('estudiante.historias');
         $this->getJson(route('estudiante.historias'))->assertJsonPath('total', 1);
         $this->getJson(route('estudiante.historia', $case['history']->id))->assertOk()
             ->assertJsonPath('success', true);

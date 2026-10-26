@@ -1,0 +1,12 @@
+database/seeders/
+├── DatabaseSeeder.php
+├── RolesSeeder.php              ← 15 roles
+├── PermissionsSeeder.php        ← 90 permisos base (18 módulos × 5)
+├── UsersSeeder.php              ← 15 usuarios de prueba
+├── RoleHasPermissionsSeeder.php ← matriz rol ↔ permiso
+├── ClinicasSeeder.php           ← 16 clínicas
+├── PeriodosSeeder.php           ← periodo anual 2026
+├── MotivosConsultaSeeder.php    ← motivos de consulta
+├── EspecialidadesSeeder.php     ← usuarios ↔ clínicas
+├── InsumosTratamientoSeeder.php ← tipos de insumos
+└── TratamientosSeeder.php       ← catálogo de tratamientos

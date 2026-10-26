@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Pacientes derivados')
 @section('content')
-<div class="dashboard-toolbar"><div class="toolbar-info"><span data-estudiante-total>{{ $registros->total() }}</span> derivaciones recibidas</div><a class="btn btn-primary" href="{{ route('estudiante.designados') }}">Mis Pacientes Designados</a></div>
+<div class="dashboard-toolbar"><div class="toolbar-info"><span data-estudiante-total>{{ $registros->total() }}</span> derivaciones recibidas</div><a class="btn btn-primary" href="{{ route('estudiante.historias') }}">Mis Historias Clínicas</a></div>
 <div class="card">
     <div class="card-header"><h2>Pacientes derivados</h2></div>
     <div class="card-body"><p>Pacientes que el docente te ha asignado para su atención en una especialidad.</p>@include('historias.partials.filtros-estudiante')</div>

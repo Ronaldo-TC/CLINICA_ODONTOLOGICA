@@ -42,7 +42,7 @@ class SolicitudesPacientesDesignadosTest extends TestCase
         $this->assertDatabaseHas('insumos_solicitados', ['id' => $response->json('id'), 'historia_clinica_id' => $case['history']->id, 'tratamiento_id' => $case['treatment']->id, 'usuario_id' => $case['student']->id, 'estado' => 'pendiente', 'sesion_atencion_id' => null]);
         $this->assertDatabaseHas('insumos_solicitados_detalle', ['insumo_solicitado_id' => $response->json('id'), 'insumo_id' => $material->id, 'cantidad_solicitada' => 2]);
         $this->assertSame('10.00', $material->fresh()->cantidad_numerica);
-        $this->get(route('estudiante.designados'))->assertOk()->assertSee('data-solicitar-designado', false);
+        $this->get(route('estudiante.historias'))->assertOk()->assertSee('data-solicitar-designado', false);
         $this->get(route('estudiante.historia', $case['history']))->assertOk()->assertSee('Solicitud #'.$response->json('id'));
         $this->getJson(route('solicitudes-insumos.datos', $response->json('id')))
             ->assertOk()->assertJsonPath('detalles.0.stock_actual', 10);

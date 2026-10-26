@@ -27,12 +27,12 @@ class SidebarNavigationTest extends TestCase
         $menu = $this->navigationIndex($response->getContent());
 
         $this->assertSame(['Dashboard', 'Seguridad', 'Clínicas', 'Periodos', 'Asignar especialidades',
-            'Tratamientos', 'Bitácoras', 'Reportes', 'Kardex', 'Investigación', 'Pacientes', 'Admisiones',
+            'Tratamientos', 'Bitácoras', 'Pacientes', 'Admisiones',
             'Remisiones', 'Pacientes remitidos', 'Historias clínicas', 'Atención y avances', 'Radiología',
             'Insumos', 'Solicitudes de insumos', 'Esterilización', 'Cajas', 'Reposición de insumos'], array_column($menu, 'label'));
         $this->assertSame(['Usuarios', 'Roles y permisos'], array_column($menu[1]['children'], 'label'));
-        $this->assertSame(route('cajas.index'), $menu[20]['href']);
-        $this->assertSame(route('insumos.reposiciones'), $menu[21]['href']);
+        $this->assertSame(route('cajas.index'), $menu[17]['href']);
+        $this->assertSame(route('insumos.reposiciones'), $menu[18]['href']);
         $this->assertSame(1, count(array_filter($menu, fn (array $item): bool => $item['children'] !== [])));
         $response->assertDontSee('data-nav-group-id="nav-group-atencion-clinica"', false)
             ->assertDontSee('data-nav-group-id="nav-group-administracion"', false);
@@ -62,7 +62,7 @@ class SidebarNavigationTest extends TestCase
         $response = $this->actingAs($user)->get(route('auth.profile'))->assertOk();
         $menu = $this->navigationIndex($response->getContent());
 
-        $this->assertSame(['Dashboard', 'Mis Pacientes Admitidos', 'Pacientes derivados', 'Mis Pacientes Designados', 'Mis Historias Clínicas', 'Mis inscripciones'], array_column($menu, 'label'));
+        $this->assertSame(['Dashboard', 'Mis Pacientes Admitidos', 'Pacientes derivados', 'Mis Historias Clínicas', 'Mis inscripciones'], array_column($menu, 'label'));
         $response->assertDontSee('href="'.route('pacientes.index').'"', false)
             ->assertDontSee('href="'.route('admisiones.index').'"', false)
             ->assertDontSee('href="'.route('historias.index').'"', false);

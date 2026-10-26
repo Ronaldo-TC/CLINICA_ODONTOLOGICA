@@ -4,7 +4,7 @@
 <div class="dashboard-toolbar">
     <div class="toolbar-info">
         <span data-estudiante-total>{{ $registros->total() }}</span>
-        {{ $soloActivas ? 'pacientes en atención' : 'historias clínicas' }}
+        historias clínicas
     </div>
     <div class="toolbar-actions">
         <a class="btn btn-secondary" href="{{ route('estudiante.derivados') }}">Pacientes derivados</a>

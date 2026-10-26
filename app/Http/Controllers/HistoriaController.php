@@ -683,14 +683,14 @@ class HistoriaController extends Controller
         return $bytes.' B';
     }
 
-    public function designados(Request $request): View|JsonResponse
+    public function designados(): RedirectResponse
     {
-        return $this->listadoHistorias($request, true);
+        return redirect()->route('estudiante.historias');
     }
 
     public function historiasEstudiante(Request $request): View|JsonResponse
     {
-        return $this->listadoHistorias($request, false);
+        return $this->listadoHistorias($request);
     }
 
     public function historiaEstudiante(Request $request, int $historia): View|JsonResponse
@@ -740,18 +740,16 @@ class HistoriaController extends Controller
             : $vista;
     }
 
-    private function listadoHistorias(Request $request, bool $soloActivas): View|JsonResponse
+    private function listadoHistorias(Request $request): View|JsonResponse
     {
         $query = HistoriaClinica::query()->select(['id', 'remision_id', 'admision_id', 'paciente_id', 'clinica_id', 'periodo_id',
             'docente_id', 'estudiante_id', 'estado', 'autorizado', 'fecha_inicio', 'fecha_fin', 'created_at'])
             ->where('estudiante_id', $request->user()->id)
-            ->when($soloActivas, fn (Builder $query) => $query->whereNotIn('estado', self::ESTADOS_CERRADOS)->whereNull('fecha_fin'))
             ->with(['paciente', 'clinica', 'docente', 'admision:id,motivo_consulta', 'remision:id,fecha_asignacion'])
             ->withCount(['archivos', 'tratamientosRealizados']);
 
         return $this->respuestaListadoEstudiante($request, 'historias.estudiante', $this->datosListadoEstudiante($request, $query) + [
-            'titulo' => $soloActivas ? 'Mis Pacientes Designados' : 'Mis Historias Clínicas',
-            'soloActivas' => $soloActivas,
+            'titulo' => 'Mis Historias Clínicas',
             'estadosCerrados' => self::ESTADOS_CERRADOS,
         ]);
     }

@@ -15,7 +15,7 @@ class SolicitudesInsumosPermisosTest extends TestCase
 {
     use CreatesClinicalCase, DatabaseTransactions;
 
-    public function test_student_requests_from_both_lists_and_assigned_teacher_authorizes_before_warehouse_delivers(): void
+    public function test_student_requests_from_the_history_list_and_assigned_teacher_authorizes_before_warehouse_delivers(): void
     {
         $this->freezeTime();
         $studentRoleId = DB::table('roles')->where('name', 'estudiante')->where('guard_name', 'web')->value('id');
@@ -38,12 +38,10 @@ class SolicitudesInsumosPermisosTest extends TestCase
         $this->getJson(route('solicitudes-insumos.catalogo-designado', ['historia_clinica_id' => $case['history']->id]))
             ->assertOk()->assertJsonPath('tratamientos.0.insumos.0.id', $material->id);
 
-        foreach (['estudiante.designados', 'estudiante.historias'] as $listRoute) {
-            $this->get(route($listRoute))->assertOk()->assertSee('Ver solicitudes')->assertSee('Solicitar insumos')
-                ->assertSee('data-solicitar-designado data-historia="'.$case['history']->id.'"', false)
-                ->assertSee('id="formSolicitudDesignado"', false);
-            $this->getJson(route($listRoute))->assertOk()->assertJsonPath('total', 1);
-        }
+        $this->get(route('estudiante.historias'))->assertOk()->assertSee('Ver solicitudes')->assertSee('Solicitar insumos')
+            ->assertSee('data-solicitar-designado data-historia="'.$case['history']->id.'"', false)
+            ->assertSee('id="formSolicitudDesignado"', false);
+        $this->getJson(route('estudiante.historias'))->assertOk()->assertJsonPath('total', 1);
 
         $this->get(route('estudiante.historias'))
             ->assertSee('<button type="button"', false)
@@ -88,7 +86,7 @@ class SolicitudesInsumosPermisosTest extends TestCase
 
         $this->actingAs($case['student'])->get(route('estudiante.historias'))->assertOk()->assertSee('Ver solicitudes')
             ->assertDontSee('data-solicitar-designado', false);
-        $this->getJson(route('estudiante.designados'))->assertOk()->assertJsonPath('total', 0);
+        $this->getJson(route('estudiante.historias'))->assertOk()->assertJsonPath('total', 1);
         $this->get(route('estudiante.historia', $case['history']))->assertOk()->assertSee('Historia cerrada')
             ->assertDontSee('data-solicitar-designado', false);
     }

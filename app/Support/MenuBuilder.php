@@ -132,34 +132,6 @@ class MenuBuilder
             ['type' => 'link', 'label' => 'Reposición de insumos', 'route' => 'insumos.reposiciones',
                 'icon' => 'package', 'pattern' => 'insumos.reposiciones*', 'role' => ['insumos', 'jefatura-clinicas', 'director', 'admin']],
 
-            ['type' => 'label', 'label' => 'Análisis'],
-
-            [
-                'type' => 'link',
-                'label' => 'Kardex',
-                'route' => 'kardex.index',
-                'icon' => 'clipboard',
-                'pattern' => 'kardex.*',
-                'permission' => 'reportes.ver',
-            ],
-
-            [
-                'type' => 'link',
-                'label' => 'Reportes',
-                'route' => 'reportes.index',
-                'icon' => 'chart',
-                'pattern' => 'reportes.*',
-                'permission' => 'reportes.ver',
-            ],
-            [
-                'type' => 'link',
-                'label' => 'Investigación',
-                'route' => 'investigacion.index',
-                'icon' => 'trending',
-                'pattern' => 'investigacion.*',
-                'permission' => 'investigacion.ver',
-            ],
-
             ['type' => 'label', 'label' => 'Administración'],
             [
                 'type' => 'link', 'label' => 'Mis inscripciones', 'route' => 'especialidades.mis-inscripciones',
@@ -236,7 +208,6 @@ class MenuBuilder
             $items = array_values(array_filter($items, fn (array $item): bool => ! in_array($item['route'] ?? '', ['pacientes.index', 'admisiones.index', 'historias.index'], true)));
             array_splice($items, 2, 0, [
                 ['type' => 'link', 'label' => 'Pacientes derivados', 'route' => 'estudiante.derivados', 'icon' => 'inbox', 'pattern' => 'estudiante.derivados', 'permission' => 'historias.ver'],
-                ['type' => 'link', 'label' => 'Mis Pacientes Designados', 'route' => 'estudiante.designados', 'icon' => 'users', 'pattern' => 'estudiante.designados', 'permission' => 'historias.ver'],
                 ['type' => 'link', 'label' => 'Mis Historias Clínicas', 'route' => 'estudiante.historias', 'icon' => 'file-text', 'pattern' => 'estudiante.historia*', 'permission' => 'historias.ver'],
                 ['type' => 'link', 'label' => 'Mis Pacientes Admitidos', 'route' => 'estudiante.admitidos', 'icon' => 'clipboard', 'pattern' => 'estudiante.admitidos', 'permission' => 'admisiones.ver'],
             ]);
@@ -363,13 +334,10 @@ class MenuBuilder
                 'Seguridad', 'clinicas.index', 'periodos.index', 'especialidades.index',
                 'tratamientos.index', 'bitacoras.index',
             ]],
-            ['label' => 'Análisis', 'rutas' => [
-                'reportes.index', 'kardex.index', 'investigacion.index',
-            ]],
             ['label' => 'Atención clínica', 'rutas' => [
                 'pacientes.index', 'admisiones.index', 'remisiones.index', 'pacientes-remitidos.index',
                 'historias.index', 'tratamientos-realizados.index', 'estudiante.admitidos',
-                'estudiante.derivados', 'estudiante.designados', 'estudiante.historias',
+                'estudiante.derivados', 'estudiante.historias',
                 'especialidades.mis-inscripciones', 'radiologia.index',
             ]],
             ['label' => 'Operaciones', 'rutas' => [
