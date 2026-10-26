@@ -54,19 +54,6 @@
             </div>
 
             <div class="form-group">
-                <label for="remitidos-periodo">Periodo</label>
-                <select id="remitidos-periodo" name="periodo_id" class="form-control">
-                    <option value="">Todos los periodos</option>
-                    @foreach ($periodos as $periodo)
-                    <option value="{{ $periodo->id }}"
-                        @selected((string) request('periodo_id')===(string) $periodo->id)>
-                        {{ $periodo->nombre_completo }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label for="remitidos-estado">Estado de atención</label>
                 <select id="remitidos-estado" name="flujo_estado" class="form-control">
                     <option value="">Todos los estados</option>

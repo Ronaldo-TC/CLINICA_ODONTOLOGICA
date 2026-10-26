@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-header"><h2>{{ $registro->paciente?->nombre_completo }}</h2></div>
     <div class="card-body">
-        <p>Clínica: {{ $registro->clinica?->especialidad }} · Periodo: {{ $registro->periodo?->gestion }}</p>
+        <p>Clínica: {{ $registro->clinica?->especialidad }}</p>
         <p>Estudiante: {{ $registro->estudiante?->nombre_completo }} · Docente: {{ $registro->docente?->nombre_completo }}</p>
         <div class="actions">
             <a class="btn btn-secondary" href="#tratamientos">Tratamientos</a>
@@ -206,7 +206,7 @@
         <thead><tr><th>Control</th><th>Material</th><th>Correspondencia</th><th>Estado</th><th>Entrega</th><th>Recojo</th><th>Acciones</th></tr></thead>
         <tbody>@forelse($esterilizaciones as $control)<tr>
             <td>{{ $control->id }}</td><td>{{ $control->cantidad_sobres }} sobres · {{ $control->cantidad_paquetes }} paquetes<br>{{ $control->descripcion }}</td>
-            <td>{{ $control->remision_id ? 'De este paciente' : 'Material general de la clínica y periodo' }}</td>
+            <td>{{ $control->remision_id ? 'De este paciente' : 'Material general de la clínica' }}</td>
             <td>{{ $control->estado_proceso }}</td>
             <td>{{ $control->fecha_entrega?->format('d/m/Y') ?? 'Pendiente' }} {{ $control->hora_entrega }}</td>
             <td>{{ $control->fecha_recojo?->format('d/m/Y') ?? 'Pendiente' }} {{ $control->hora_recojo }}</td>

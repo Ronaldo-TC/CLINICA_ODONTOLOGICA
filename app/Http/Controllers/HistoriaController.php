@@ -12,7 +12,6 @@ use App\Models\Especialidad;
 use App\Models\Esterilizacion;
 use App\Models\HistoriaClinica;
 use App\Models\InsumoSolicitado;
-use App\Models\Periodo;
 use App\Models\Radiologia;
 use App\Models\Remision;
 use App\Models\SolicitudRadiologica;
@@ -58,7 +57,6 @@ class HistoriaController extends Controller
         return AccesoClinico::historias(HistoriaClinica::query(), $request->user())->with([
             'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
             'clinica:id,especialidad,modulo',
-            'periodo:id,nombre,gestion',
             'estudiante:id,nombre_completo',
             'docente:id,nombre_completo',
         ])->withCount('tratamientosRealizados')->orderByDesc('id');
@@ -127,7 +125,7 @@ class HistoriaController extends Controller
             : collect();
         $esterilizaciones = $usuario->canAny(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
             ? AccesoClinico::esterilizaciones(Esterilizacion::query(), $usuario)->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
-                ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
+                ->where('habilitada', true)
                 ->where(function (Builder $query) use ($registro): void {
                     $query->whereNull('remision_id');
                     if ($registro->remision_id) {
@@ -206,7 +204,7 @@ class HistoriaController extends Controller
             if ($seccion === 'controles') {
                 $datos['esterilizaciones'] = AccesoClinico::esterilizaciones(Esterilizacion::query(), $usuario)
                     ->with('ultimoCiclo')->where('estudiante_id', $registro->estudiante_id)->where('clinica_id', $registro->clinica_id)
-                    ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
+                    ->where('habilitada', true)
                     ->where(function (Builder $query) use ($registro): void {
                         $query->whereNull('remision_id');
                         if ($registro->remision_id) {
@@ -261,7 +259,7 @@ class HistoriaController extends Controller
                     ->orWhere('ci', 'like', "%{$buscar}%");
             });
         }
-        foreach (['clinica_id', 'periodo_id'] as $campo) {
+        foreach (['clinica_id'] as $campo) {
             if ($request->filled($campo)) {
                 $query->where($campo, $request->integer($campo));
             }
@@ -274,8 +272,6 @@ class HistoriaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -283,8 +279,6 @@ class HistoriaController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -294,7 +288,6 @@ class HistoriaController extends Controller
             'admision_id' => ['required', 'integer', 'exists:admisiones,id'],
             'paciente_id' => ['required', 'integer', 'exists:pacientes,id'],
             'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
-            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
             'estudiante_id' => ['required', 'integer', 'exists:usuarios,id'],
             'especialidad_estudiante' => ['required', 'integer', 'exists:clinicas,id'],
             'docente_id' => ['required', 'integer', 'exists:usuarios,id'],
@@ -325,7 +318,7 @@ class HistoriaController extends Controller
     protected function beforeUpdate($model, array $data): array
     {
         $this->validarAsignacion($data);
-        foreach (['admision_id', 'paciente_id', 'clinica_id', 'periodo_id', 'estudiante_id', 'especialidad_estudiante', 'docente_id', 'especialidad_docente'] as $campo) {
+        foreach (['admision_id', 'paciente_id', 'clinica_id', 'estudiante_id', 'especialidad_estudiante', 'docente_id', 'especialidad_docente'] as $campo) {
             if ((string) $model->$campo !== (string) $data[$campo]) {
                 throw ValidationException::withMessages([$campo => 'La asignación clínica se administra desde la remisión.']);
             }
@@ -450,9 +443,6 @@ class HistoriaController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => $c->especialidad]),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 
@@ -696,7 +686,7 @@ class HistoriaController extends Controller
     public function historiaEstudiante(Request $request, int $historia): View|JsonResponse
     {
         $registro = HistoriaClinica::query()->where('estudiante_id', $request->user()->id)
-            ->with(['paciente', 'admision', 'clinica', 'periodo', 'docente', 'remision', 'archivos',
+            ->with(['paciente', 'admision', 'clinica', 'docente', 'remision', 'archivos',
                 'tratamientosRealizados' => fn (HasMany $query) => $query->withExists([
                     'cajaDetalles as tiene_pago' => fn (Builder $detalle) => $detalle->where('monto', '>', 0)
                         ->whereHas('caja', fn (Builder $caja) => $caja->where('habilitada', true)->where('cancelado', '>', 0)->whereNotNull('recibo')->where('recibo', '!=', '')),
@@ -725,7 +715,7 @@ class HistoriaController extends Controller
             })->orderByDesc('id')->get(),
             'esterilizaciones' => $request->user()->canAny(['esterilizaciones.ver', 'esterilizaciones.gestionar'])
                 ? Esterilizacion::with('ultimoCiclo')->where('estudiante_id', $request->user()->id)->where('clinica_id', $registro->clinica_id)
-                    ->where('periodo_id', $registro->periodo_id)->where('habilitada', true)
+                    ->where('habilitada', true)
                     ->where(function (Builder $query) use ($registro): void {
                         $query->whereNull('remision_id');
                         if ($registro->remision_id) {
@@ -742,7 +732,7 @@ class HistoriaController extends Controller
 
     private function listadoHistorias(Request $request): View|JsonResponse
     {
-        $query = HistoriaClinica::query()->select(['id', 'remision_id', 'admision_id', 'paciente_id', 'clinica_id', 'periodo_id',
+        $query = HistoriaClinica::query()->select(['id', 'remision_id', 'admision_id', 'paciente_id', 'clinica_id',
             'docente_id', 'estudiante_id', 'estado', 'autorizado', 'fecha_inicio', 'fecha_fin', 'created_at'])
             ->where('estudiante_id', $request->user()->id)
             ->with(['paciente', 'clinica', 'docente', 'admision:id,motivo_consulta', 'remision:id,fecha_asignacion'])
@@ -759,7 +749,7 @@ class HistoriaController extends Controller
         $this->autorizarApi($request, 'historias.ver');
 
         $paginador = AccesoClinico::historias(HistoriaClinica::query(), $request->user())
-            ->with(['paciente:id,nombre,apellido_paterno,apellido_materno,ci', 'clinica:id,especialidad', 'periodo:id,nombre', 'estudiante:id,nombre_completo', 'docente:id,nombre_completo'])
+            ->with(['paciente:id,nombre,apellido_paterno,apellido_materno,ci', 'clinica:id,especialidad', 'estudiante:id,nombre_completo', 'docente:id,nombre_completo'])
             ->when($request->filled('paciente_id'), fn ($q) => $q->where('paciente_id', $request->input('paciente_id')))
             ->when($request->filled('clinica_id'), fn ($q) => $q->where('clinica_id', $request->input('clinica_id')))
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
@@ -779,7 +769,7 @@ class HistoriaController extends Controller
         $this->autorizarApi($request, 'historias.ver');
 
         $historia = AccesoClinico::historias(HistoriaClinica::query(), $request->user())
-            ->with(['paciente', 'clinica', 'periodo', 'estudiante', 'docente', 'tratamientosRealizados.tratamiento', 'admision'])
+            ->with(['paciente', 'clinica', 'estudiante', 'docente', 'tratamientosRealizados.tratamiento', 'admision'])
             ->findOrFail($id);
 
         return response()->json([

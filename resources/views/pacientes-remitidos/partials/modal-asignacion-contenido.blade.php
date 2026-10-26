@@ -99,23 +99,6 @@
                 <span class="form-error" data-error-for="docente_id"></span>
             </div>
 
-            <div class="form-group">
-                @if ($registro->periodo_id)
-                <label>Periodo de la remisión</label>
-                <strong>{{ $registro->periodo?->nombre_completo ?? '—' }}</strong>
-                @else
-                <label for="modal-asignacion-periodo">
-                    Periodo <span class="req">*</span>
-                </label>
-                <select id="modal-asignacion-periodo" name="periodo_id" class="form-control" required>
-                    <option value="">Seleccione un periodo...</option>
-                    @foreach ($periodos as $periodo)
-                    <option value="{{ $periodo->id }}">{{ $periodo->nombre_completo }}</option>
-                    @endforeach
-                </select>
-                @endif
-                <span class="form-error" data-error-for="periodo_id"></span>
-            </div>
         </div>
     </div>
 

@@ -21,14 +21,6 @@
         </span>
     </td>
 
-    <td>
-        @if ($remision->periodo)
-        <span class="badge badge-muted">{{ $remision->periodo->nombre_completo }}</span>
-        @else
-        —
-        @endif
-    </td>
-
     <td>{{ $remision->docente?->nombre_completo ?? 'Sin asignar' }}</td>
 
     <td>{{ $remision->estudiante?->nombre_completo ?? 'Sin asignar' }}</td>
@@ -69,7 +61,7 @@
             @endif
             @if (($remision->historias_clinicas_count ?? 0) > 0)
             @canany(['historias.ver', 'historias.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}"><x-icono nombre="historia" /> Historias</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id]) }}"><x-icono nombre="historia" /> Historias</a>
             @endcanany
             @endif
             @canany(['remisiones.editar', 'remisiones.gestionar'])

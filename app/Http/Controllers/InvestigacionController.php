@@ -40,7 +40,6 @@ class InvestigacionController extends Controller
         'motivo',
         'especialidad',
         'tratamiento',
-        'periodo',
         'estado',
     ];
 
@@ -133,7 +132,6 @@ class InvestigacionController extends Controller
                     $fila['motivo'],
                     $fila['especialidad'],
                     $fila['tratamiento'],
-                    $fila['periodo'],
                     $fila['estado'],
                 ]);
             }
@@ -161,7 +159,6 @@ class InvestigacionController extends Controller
             ->join('pacientes as p', 'p.id', '=', 'hc.paciente_id')
             ->join('admisiones as a', 'a.id', '=', 'hc.admision_id')
             ->leftJoin('clinicas as c', 'c.id', '=', 'hc.clinica_id')
-            ->leftJoin('periodos as pe', 'pe.id', '=', 'hc.periodo_id')
             ->leftJoin('motivos_consulta as mc', 'mc.id', '=', 'a.motivo_consulta_id')
             ->leftJoin('tratamientos_realizados as tr', 'tr.historia_clinica_id', '=', 'hc.id')
             ->leftJoin('tratamientos as t', 't.id', '=', 'tr.tratamiento_id')
@@ -174,8 +171,6 @@ class InvestigacionController extends Controller
                 'mc.nombre as motivo_catalogo',
                 'c.especialidad as especialidad',
                 't.nombre as tratamiento',
-                'pe.nombre as periodo_nombre',
-                'pe.gestion as periodo_gestion',
                 'hc.estado as estado_historia',
                 'tr.estado as estado_tratamiento',
             ])
@@ -266,7 +261,6 @@ class InvestigacionController extends Controller
             'motivo' => $this->texto($fila->motivo_catalogo ?: $fila->motivo_texto, 'No especificado'),
             'especialidad' => $this->texto($fila->especialidad, 'Sin asignar'),
             'tratamiento' => $this->texto($fila->tratamiento, 'Sin tratamiento registrado'),
-            'periodo' => $this->periodo($fila),
             'estado' => $this->texto($fila->estado_tratamiento ?: $fila->estado_historia, 'Sin estado'),
         ];
     }
@@ -293,19 +287,6 @@ class InvestigacionController extends Controller
         }
     }
 
-    private function periodo(object $fila): string
-    {
-        if ($texto = $this->texto($fila->periodo_nombre ?? null, '')) {
-            return $texto;
-        }
-
-        if ($fila->periodo_gestion !== null) {
-            return (string) $fila->periodo_gestion;
-        }
-
-        return 'Sin periodo';
-    }
-
     private function texto($valor, string $defecto): string
     {
         $valor = is_string($valor) ? trim($valor) : $valor;
@@ -330,7 +311,6 @@ class InvestigacionController extends Controller
             'edad' => $this->estadisticasEdad($edades),
             'genero' => $this->distribucion($filas, 'genero'),
             'especialidad' => $this->distribucion($filas, 'especialidad'),
-            'periodo' => $this->distribucion($filas, 'periodo'),
             'total' => $filas->count(),
         ];
     }

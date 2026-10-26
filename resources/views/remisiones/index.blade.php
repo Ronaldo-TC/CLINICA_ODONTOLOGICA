@@ -54,16 +54,6 @@
             </div>
 
             <div class="form-group">
-                <label for="filtro-periodo">Periodo</label>
-                <select id="filtro-periodo" name="periodo_id" class="form-control">
-                    <option value="">Todos</option>
-                    @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}" @selected((string) request('periodo_id') === (string) $p->id)>{{ $p->nombre_completo }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label for="filtro-flujo">Estado de atención</label>
                 <select id="filtro-flujo" name="flujo_estado" class="form-control">
                     <option value="">Todos los estados</option>
@@ -98,7 +88,6 @@
                     <th>#</th>
                     <th>Paciente</th>
                     <th>Especialidad destino</th>
-                    <th>Periodo</th>
                     <th>Docente</th>
                     <th>Estudiante</th>
                     <th>Historias</th>
@@ -141,7 +130,6 @@
 
         const $filtroBuscar = document.getElementById('filtro-buscar');
         const $filtroClinica = document.getElementById('filtro-clinica');
-        const $filtroPeriodo = document.getElementById('filtro-periodo');
         const $filtroFlujo = document.getElementById('filtro-flujo');
         const $filtroEstado = document.getElementById('filtro-estado');
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
@@ -208,7 +196,6 @@
             const params = new URLSearchParams();
             if ($filtroBuscar?.value.trim()) params.set('buscar', $filtroBuscar.value.trim());
             if ($filtroClinica?.value) params.set('clinica_id', $filtroClinica.value);
-            if ($filtroPeriodo?.value) params.set('periodo_id', $filtroPeriodo.value);
             if ($filtroFlujo?.value) params.set('flujo_estado', $filtroFlujo.value);
             if ($filtroEstado?.value !== '') params.set('estado', $filtroEstado.value);
             if (page > 1) params.set('page', page);
@@ -252,7 +239,6 @@
             debounceTimer = setTimeout(() => cargarTabla(1), 300);
         });
         $filtroClinica?.addEventListener('change', () => cargarTabla(1));
-        $filtroPeriodo?.addEventListener('change', () => cargarTabla(1));
         $filtroFlujo?.addEventListener('change', () => cargarTabla(1));
         $filtroEstado?.addEventListener('change', () => cargarTabla(1));
         document.getElementById('formFiltrosRemisiones')?.addEventListener('submit', (event) => {
@@ -263,7 +249,6 @@
         $btnLimpiar?.addEventListener('click', () => {
             $filtroBuscar.value = '';
             $filtroClinica.value = '';
-            $filtroPeriodo.value = '';
             $filtroFlujo.value = '';
             $filtroEstado.value = '';
             cargarTabla(1);

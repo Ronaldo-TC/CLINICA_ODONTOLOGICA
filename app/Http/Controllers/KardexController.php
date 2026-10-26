@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Models\Caja;
 use App\Models\Clinica;
 use App\Models\Paciente;
-use App\Models\Periodo;
 use App\Models\TratamientoRealizado;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -157,21 +156,6 @@ class KardexController extends Controller
             });
         }
 
-        // Filtro por periodo: el paciente tiene admisiones o historias de ese periodo
-        if ($periodoId = $request->input('periodo_id')) {
-            $q->where(function (Builder $x) use ($periodoId) {
-                $x->whereIn('kardex_pacientes.id', function ($sub) use ($periodoId) {
-                    $sub->select('adm.paciente_id')
-                        ->from('admisiones as adm')
-                        ->where('adm.periodo_id', $periodoId);
-                })->orWhereIn('kardex_pacientes.id', function ($sub) use ($periodoId) {
-                    $sub->select('his.paciente_id')
-                        ->from('historias_clinicas as his')
-                        ->where('his.periodo_id', $periodoId);
-                });
-            });
-        }
-
         // Filtro por clínica: por historias clínicas o por tratamientos realizados
         if ($clinicaId = $request->input('clinica_id')) {
             $q->where(function (Builder $x) use ($clinicaId) {
@@ -199,9 +183,6 @@ class KardexController extends Controller
     {
         return [
             'stats' => $this->metricas(),
-            'periodos' => Periodo::query()
-                ->orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
             'clinicas' => Clinica::query()
                 ->orderBy('especialidad')
                 ->get(['id', 'especialidad', 'modulo']),
@@ -266,7 +247,6 @@ class KardexController extends Controller
 
         // ---- Admisiones del paciente ----
         $admisiones = DB::table('admisiones as adm')
-            ->leftJoin('periodos as per', 'per.id', '=', 'adm.periodo_id')
             ->where('adm.paciente_id', $pacienteId)
             ->orderByDesc('adm.id')
             ->get([
@@ -276,13 +256,11 @@ class KardexController extends Controller
                 'adm.escuela',
                 'adm.diagnostico',
                 'adm.created_at',
-                DB::raw('per.nombre AS periodo'),
             ]);
 
         // ---- Historias clínicas ----
         $historias = DB::table('historias_clinicas as his')
             ->leftJoin('clinicas as cli', 'cli.id', '=', 'his.clinica_id')
-            ->leftJoin('periodos as per', 'per.id', '=', 'his.periodo_id')
             ->where('his.paciente_id', $pacienteId)
             ->orderByDesc('his.id')
             ->get([
@@ -293,7 +271,6 @@ class KardexController extends Controller
                 'his.fecha_fin',
                 'his.created_at',
                 DB::raw('cli.especialidad AS clinica'),
-                DB::raw('per.nombre AS periodo'),
             ]);
 
         // ---- Tratamientos realizados ----

@@ -204,7 +204,6 @@ class RadiologiaController extends Controller
                 throw ValidationException::withMessages(['paciente_id' => 'El paciente debe corresponder al recibo seleccionado.']);
             }
             $data['paciente_id'] = $caja->paciente_id;
-            $data['periodo_id'] = $caja->periodo_id;
             $data['remision_id'] = $caja->remision_id;
         }
         if (empty($data['paciente_id'])) {
@@ -215,7 +214,6 @@ class RadiologiaController extends Controller
             if ((int) $remision->paciente_id !== (int) $data['paciente_id']) {
                 throw ValidationException::withMessages(['remision_id' => 'La remisión debe corresponder al paciente del estudio.']);
             }
-            $data['periodo_id'] = $remision->periodo_id;
         }
 
         return $data;

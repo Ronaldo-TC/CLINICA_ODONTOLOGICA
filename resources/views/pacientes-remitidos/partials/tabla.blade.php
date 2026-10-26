@@ -8,7 +8,6 @@
                 <th>#</th>
                 <th>Paciente</th>
                 <th>Especialidad destino</th>
-                <th>Periodo</th>
                 <th>Docente</th>
                 <th>Estudiante</th>
                 <th>Historias</th>

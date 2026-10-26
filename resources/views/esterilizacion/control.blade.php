@@ -19,7 +19,6 @@
         <div class="form-grid">
             <div><strong>Estudiante:</strong> {{ $registro->estudiante?->nombre_completo ?? 'Sin estudiante' }}</div>
             <div><strong>Clínica:</strong> {{ $registro->clinica?->especialidad }}</div>
-            <div><strong>Periodo:</strong> {{ $registro->periodo?->nombre }}</div>
             <div><strong>Registrado por:</strong> {{ $registro->usuario?->nombre_completo }}</div>
             <div><strong>Solicitado:</strong> {{ $registro->cantidad_sobres }} sobres y {{ $registro->cantidad_paquetes }} paquetes</div>
             <div><strong>Recibido:</strong> {{ $registro->sobres_recibidos ?? 'Sin confirmar' }} sobres y {{ $registro->paquetes_recibidos ?? 'Sin confirmar' }} paquetes</div>

@@ -38,12 +38,6 @@
                 data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">
                 <x-icono nombre="ver" /> Ver
             </button>
-            @can('tratamientos.precios')
-            <button type="button" class="btn btn-sm btn-primary" data-action="precio"
-                data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">
-                <x-icono nombre="precio" /> Precio
-            </button>
-            @endcan
             @can('tratamientos.insumos')
             <button type="button" class="btn btn-sm btn-primary" data-action="insumos"
                 data-id="{{ $tratamiento->id }}" data-nombre="{{ $tratamiento->nombre }}">

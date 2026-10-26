@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             PermissionsSeeder::class,
             MotivosConsultaSeeder::class,
-            PeriodosSeeder::class,
 
             // 2. Datos institucionales importados desde database/excel.
             ExcelDataSeeder::class,

@@ -19,16 +19,6 @@
     </td>
 
     <td>
-        @if ($admision->periodo)
-        <span class="badge badge-info">
-            {{ $admision->periodo->gestion }}
-        </span>
-        @else
-        <span class="admisiones-muted">—</span>
-        @endif
-    </td>
-
-    <td>
         {{ $admision->motivoConsulta?->nombre ?? '—' }}
     </td>
 
@@ -80,7 +70,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="8">
+    <td colspan="7">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -23,7 +23,6 @@ class Esterilizacion extends Model
         'estudiante_id',
         'clinica_id',
         'usuario_id',
-        'periodo_id',
         'sobres_recibidos', 'paquetes_recibidos', 'codigos_material', 'observacion_recepcion',
         'fecha_preparacion', 'preparado_por', 'observacion_preparacion', 'recogido_por',
         'preparaciones',
@@ -48,11 +47,6 @@ class Esterilizacion extends Model
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
-    }
-
-    public function periodo()
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
     public function estudiante()

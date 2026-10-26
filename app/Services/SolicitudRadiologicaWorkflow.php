@@ -191,7 +191,6 @@ class SolicitudRadiologicaWorkflow
                 'tratamiento_realizado_id' => null,
                 'clinica_id' => $solicitud->clinica_id,
                 'remision_id' => $historia->getAttribute('remision_id'),
-                'periodo_id' => $historia->periodo_id,
                 'usuario_id' => $actor->id,
                 'solicitud_radiologica_id' => $solicitud->id,
             ]);
@@ -259,7 +258,6 @@ class SolicitudRadiologicaWorkflow
                 'paciente_id' => $solicitud->paciente_id,
                 'remision_id' => $solicitud->historiaClinica->getAttribute('remision_id'),
                 'fecha_toma' => now(),
-                'periodo_id' => $solicitud->historiaClinica->periodo_id,
                 'solicitud_radiologica_id' => $solicitud->id,
             ]);
         });

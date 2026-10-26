@@ -51,15 +51,6 @@
                         <span class="form-error" data-error-for="clinica_id"></span>
                     </div>
 
-                    {{-- Periodo --}}
-                    <div class="form-group">
-                        <label for="rem-periodo">Periodo <span class="req">*</span></label>
-                        <select id="rem-periodo" name="periodo_id" class="form-control" required>
-                            <option value="">Cargando...</option>
-                        </select>
-                        <span class="form-error" data-error-for="periodo_id"></span>
-                    </div>
-
                     {{-- Habilitado --}}
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label>Activación</label>
@@ -144,7 +135,6 @@
                 $form.admision_id.value = r.admision_id ?? '';
                 $form.paciente_id.value = r.paciente_id ?? '';
                 $form.clinica_id.value = r.clinica_id ?? '';
-                $form.periodo_id.value = r.periodo_id ?? '';
                 $form.habilitado.checked = [true, 1, '1'].includes(r.habilitado);
 
                 if (r.paciente) {
@@ -179,15 +169,10 @@
                 data.clinicas.forEach((clinica) => {
                     $form.clinica_id.add(new Option(clinica.texto, clinica.id));
                 });
-                $form.periodo_id.replaceChildren(new Option('Seleccione...', ''));
-                data.periodos.forEach((periodo) => {
-                    $form.periodo_id.add(new Option(periodo.texto, periodo.id));
-                });
-
                 datosInicialesCargados = true;
             } catch (err) {
                 console.error('[Remisiones] Error:', err);
-                $errorTxt.textContent = 'No se pudieron cargar las especialidades y periodos. Cierre e intente nuevamente.';
+                $errorTxt.textContent = 'No se pudieron cargar las especialidades. Cierre e intente nuevamente.';
                 $errorBox.style.display = 'flex';
             }
         }

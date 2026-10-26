@@ -12,7 +12,6 @@
         </div>
     </td>
     <td><span class="badge badge-info">{{ $remision->clinica?->especialidad ?? '—' }}</span></td>
-    <td>{{ $remision->periodo?->nombre_completo ?? 'Sin periodo' }}</td>
     <td>{{ $remision->docente?->nombre_completo ?? 'Sin asignar' }}</td>
     <td>{{ $remision->estudiante?->nombre_completo ?? 'Sin asignar' }}</td>
     <td><span class="badge badge-info">{{ $remision->historias_clinicas_count ?? 0 }}</span></td>
@@ -44,7 +43,7 @@
             @endif
             @if (($remision->historias_clinicas_count ?? 0) > 0)
             @canany(['historias.ver', 'historias.gestionar'])
-            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id, 'periodo_id' => $remision->periodo_id]) }}"><x-icono nombre="historia" /> Historias</a>
+            <a class="btn btn-sm btn-secondary" href="{{ route('historias.index', ['buscar' => $remision->paciente?->ci, 'clinica_id' => $remision->clinica_id]) }}"><x-icono nombre="historia" /> Historias</a>
             @endcanany
             @endif
         </div>
@@ -52,7 +51,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="10">
+    <td colspan="9">
         <div class="empty-state"><p>No hay pacientes remitidos para las especialidades y filtros seleccionados.</p></div>
     </td>
 </tr>

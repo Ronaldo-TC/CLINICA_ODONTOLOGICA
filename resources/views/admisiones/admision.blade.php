@@ -54,16 +54,6 @@ $vistaOdontogramaInicial = ($odontograma3d ?? false) ? '3d' : '2d';
                 <span class="form-error" data-error-for="paciente_id"></span>
             </div>
             <div class="form-group">
-                <label for="adm-periodo">Periodo</label>
-                <select id="adm-periodo" name="periodo_id" class="form-control">
-                    <option value="">Sin periodo</option>
-                    @foreach($periodos as $periodo)
-                    <option value="{{ $periodo->id }}" @selected((string) old('periodo_id', $ficha?->periodo_id) === (string) $periodo->id)>{{ $periodo->nombre }} ({{ $periodo->gestion }})</option>
-                    @endforeach
-                </select>
-                <span class="form-error" data-error-for="periodo_id"></span>
-            </div>
-            <div class="form-group">
                 <label for="adm-motivo">Motivo de consulta</label>
                 <select id="adm-motivo" name="motivo_consulta_id" class="form-control">
                     <option value="">Sin motivo</option>

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
  *  - 80 permisos (16 módulos × 5 acciones)
  *  - 14 clínicas (13 especialidades + admisión)
  *  - Motivos de consulta
- *  - Periodo anual activo 2026
  */
 class CatalogSeeder extends Seeder
 {
@@ -59,7 +58,6 @@ class CatalogSeeder extends Seeder
             'roles' => 'Roles y permisos',
             'pacientes' => 'Datos de pacientes',
             'clinicas' => 'Especialidades',
-            'periodos' => 'Periodos académicos',
             'tratamientos' => 'Catálogo de tratamientos',
             'admisiones' => 'Registro inicial',
             'remisiones' => 'Derivaciones entre clínicas',
@@ -147,17 +145,5 @@ class CatalogSeeder extends Seeder
             $motivos
         ));
 
-        // ═══════════════════════════════════════════════════════
-        // 5. PERIODO ANUAL ACTIVO 2026
-        // ═══════════════════════════════════════════════════════
-        DB::table('periodos')->insert([
-            'nombre' => 'Gestión 2026',
-            'gestion' => 2026,
-            'fecha_inicio' => '2026-01-05',
-            'fecha_fin' => '2026-12-31',
-            'habilitado' => true,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
     }
 }

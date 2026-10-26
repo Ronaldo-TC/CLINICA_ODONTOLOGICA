@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Http\Requests\AsignarRemisionRequest;
 use App\Models\Admision;
 use App\Models\Clinica;
-use App\Models\Periodo;
 use App\Models\Remision;
 use App\Services\AccesoClinico;
 use App\Services\AsignacionRemision;
@@ -76,10 +75,6 @@ class RemisionController extends Controller
             $q->where('clinica_id', $clinicaId);
         }
 
-        if ($periodoId = $request->input('periodo_id')) {
-            $q->where('periodo_id', $periodoId);
-        }
-
         if (($estado = $request->input('estado')) !== null && $estado !== '') {
             $q->where('habilitado', (int) $estado);
         }
@@ -99,8 +94,6 @@ class RemisionController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -110,8 +103,6 @@ class RemisionController extends Controller
 
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -125,7 +116,6 @@ class RemisionController extends Controller
             'admision_id' => ['required', 'integer', 'exists:admisiones,id'],
             'paciente_id' => ['required', 'integer', 'exists:pacientes,id'],
             'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
-            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
             'habilitado' => ['nullable', 'boolean'],
         ];
     }
@@ -136,7 +126,6 @@ class RemisionController extends Controller
             'admision_id.required' => 'Debe seleccionar una admisión.',
             'paciente_id.required' => 'Debe seleccionar un paciente.',
             'clinica_id.required' => 'Debe seleccionar una clínica destino.',
-            'periodo_id.required' => 'Debe seleccionar un periodo.',
         ];
     }
 
@@ -160,7 +149,7 @@ class RemisionController extends Controller
     {
         $registro = Remision::query()->lockForUpdate()->findOrFail($model->id);
         if ($registro->estado !== 'pendiente' || $registro->estudiante_id || $registro->docente_id || $registro->historiasClinicas()->exists()) {
-            foreach (['admision_id', 'paciente_id', 'clinica_id', 'periodo_id'] as $campo) {
+            foreach (['admision_id', 'paciente_id', 'clinica_id'] as $campo) {
                 if ((string) $registro->$campo !== (string) $data[$campo]) {
                     throw ValidationException::withMessages([$campo => 'La remisión ya tiene una asignación o historia clínica.']);
                 }
@@ -200,7 +189,6 @@ class RemisionController extends Controller
             $request->user(),
             $request->integer('estudiante_id'),
             $request->docenteResponsableId(),
-            $request->filled('periodo_id') ? $request->integer('periodo_id') : null,
         );
 
         $mensaje = 'Asignación registrada. La historia clínica fue creada y autorizada automáticamente.';
@@ -267,9 +255,6 @@ class RemisionController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 
@@ -281,8 +266,6 @@ class RemisionController extends Controller
             'registros' => $registros,
             'items' => $registros,
             'clinicas' => $this->clinicasRemitidos($request),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ]);
     }
 
@@ -299,7 +282,7 @@ class RemisionController extends Controller
             'total' => $registros->total(),
             'tabla' => $tablaHtml,
             'paginacion' => $paginacionHtml,
-            'query' => $request->only(['buscar', 'clinica_id', 'periodo_id', 'flujo_estado', 'page']),
+            'query' => $request->only(['buscar', 'clinica_id', 'flujo_estado', 'page']),
         ]);
     }
 
@@ -308,7 +291,6 @@ class RemisionController extends Controller
         $filtros = $request->validate([
             'buscar' => ['nullable', 'string', 'max:255'],
             'clinica_id' => ['nullable', 'integer'],
-            'periodo_id' => ['nullable', 'integer'],
             'flujo_estado' => ['nullable', Rule::in(['pendiente', 'asignada'])],
         ]);
 
@@ -328,7 +310,7 @@ class RemisionController extends Controller
             });
         }
 
-        foreach (['clinica_id', 'periodo_id'] as $campo) {
+        foreach (['clinica_id'] as $campo) {
             if ($request->filled($campo)) {
                 $query->where($campo, $request->integer($campo));
             }

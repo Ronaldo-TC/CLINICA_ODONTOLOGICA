@@ -15,7 +15,6 @@ class HistoriaClinica extends Model
         'admision_id',
         'paciente_id',
         'clinica_id',
-        'periodo_id',
         'estado',
         'archivo_nombre',
         'archivo',
@@ -62,11 +61,6 @@ class HistoriaClinica extends Model
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
-    }
-
-    public function periodo()
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
     public function estudiante()

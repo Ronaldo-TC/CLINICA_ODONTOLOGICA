@@ -1,7 +1,7 @@
 <article class="report-admission">
     <header class="admission-heading">
         <h2>Ficha de admisión #{{ $ficha->id }}</h2>
-        <p>{{ $ficha->fecha_admision?->format('d/m/Y') ?? $ficha->created_at?->format('d/m/Y') }} · {{ $ficha->periodo?->nombre ?? 'Sin periodo' }} · {{ ucfirst(str_replace('_', ' ', (string) $ficha->estado)) }}</p>
+        <p>{{ $ficha->fecha_admision?->format('d/m/Y') ?? $ficha->created_at?->format('d/m/Y') }} · {{ ucfirst(str_replace('_', ' ', (string) $ficha->estado)) }}</p>
     </header>
 
     <div class="admission-body">

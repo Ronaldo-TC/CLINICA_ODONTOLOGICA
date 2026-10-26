@@ -26,7 +26,14 @@
                         <span class="form-error" data-error-for="nombre"></span>
                     </div>
 
-                    <p style="grid-column:1 / -1; color:var(--muted);">El precio se asigna desde la opción Precio y los materiales desde Insumos.</p>
+                    <p style="grid-column:1 / -1; color:var(--muted);">El costo puede ingresarse aquí y actualizarse al editar el tratamiento. Los materiales se asignan desde Insumos.</p>
+
+                    <div class="form-group">
+                        <label for="trat-costo">Costo (Bs)</label>
+                        <input type="number" id="trat-costo" name="costo" class="form-control"
+                            min="0" max="99999999.99" step="0.01" placeholder="Ej: 150.00">
+                        <span class="form-error" data-error-for="costo"></span>
+                    </div>
 
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="trat-clinica">Clínica <span class="req">*</span></label>
@@ -112,6 +119,7 @@
 
                 $form.nombre.value = t.nombre ?? '';
                 $form.descripcion.value = t.descripcion ?? '';
+                $form.costo.value = t.precio_asignado ? t.costo : '';
                 $form.clinica_id.value = t.clinica_id ?? '';
 
                 openModal();

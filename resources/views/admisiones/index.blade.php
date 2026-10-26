@@ -114,18 +114,6 @@
             </div>
 
             <div class="form-group">
-                <label for="filtro-periodo">Periodo académico</label>
-                <select id="filtro-periodo" class="form-control">
-                    <option value="">Todos los periodos</option>
-                    @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}">
-                        {{ $p->nombre }} ({{ $p->gestion }})
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label for="filtro-desde">Desde</label>
                 <input type="date" id="filtro-desde" class="form-control">
             </div>
@@ -143,7 +131,6 @@
                 <tr>
                     <th>#</th>
                     <th>Paciente</th>
-                    <th>Periodo</th>
                     <th>Motivo</th>
                     <th>Áreas derivadas</th>
                     <th>Registrado por</th>
@@ -674,7 +661,6 @@
         const $totalLabel = document.getElementById('crud-total-label');
 
         const $filtroBuscar = document.getElementById('filtro-buscar');
-        const $filtroPeriodo = document.getElementById('filtro-periodo');
         const $filtroDesde = document.getElementById('filtro-desde');
         const $filtroHasta = document.getElementById('filtro-hasta');
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
@@ -739,7 +725,6 @@
 
             const params = new URLSearchParams();
             if ($filtroBuscar?.value.trim()) params.set('buscar', $filtroBuscar.value.trim());
-            if ($filtroPeriodo?.value) params.set('periodo_id', $filtroPeriodo.value);
             if ($filtroDesde?.value) params.set('desde', $filtroDesde.value);
             if ($filtroHasta?.value) params.set('hasta', $filtroHasta.value);
             if (page > 1) params.set('page', page);
@@ -764,7 +749,7 @@
             } catch (err) {
                 console.error('[Admisiones] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="8">
+                <tr><td colspan="7">
                     <div class="empty-state"><p>Error al cargar admisiones.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');
@@ -778,13 +763,11 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => cargarTabla(1), 300);
         });
-        $filtroPeriodo?.addEventListener('change', () => cargarTabla(1));
         $filtroDesde?.addEventListener('change', () => cargarTabla(1));
         $filtroHasta?.addEventListener('change', () => cargarTabla(1));
 
         $btnLimpiar?.addEventListener('click', () => {
             $filtroBuscar.value = '';
-            $filtroPeriodo.value = '';
             $filtroDesde.value = '';
             $filtroHasta.value = '';
             cargarTabla(1);

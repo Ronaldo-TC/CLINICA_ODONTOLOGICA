@@ -22,7 +22,7 @@ class Caja extends Model
     }
 
     protected $fillable = [
-        'tratamiento_realizado_id', 'paciente_id', 'periodo_id',
+        'tratamiento_realizado_id', 'paciente_id',
         'recibo',
         'monto',
         'costo_total',

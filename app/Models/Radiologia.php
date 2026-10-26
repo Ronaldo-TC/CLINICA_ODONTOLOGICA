@@ -17,7 +17,6 @@ class Radiologia extends Model
         'caja_id',
         'clinica_id',
         'paciente_id',
-        'periodo_id',
         'remision_id',
         'archivo_ruta',
         'fecha_toma',
@@ -50,11 +49,6 @@ class Radiologia extends Model
     public function paciente()
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
-    }
-
-    public function periodo(): BelongsTo
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
     public function remision()

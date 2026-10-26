@@ -7,7 +7,6 @@ use App\Models\Clinica;
 use App\Models\Esterilizacion;
 use App\Models\HistoriaClinica;
 use App\Models\Paciente;
-use App\Models\Periodo;
 use App\Models\Radiologia;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
@@ -37,13 +36,9 @@ use Illuminate\Validation\Rule;
  *   { "labels": [...], "valores": [...], "total": n }
  *
  * Filtros globales opcionales (query string), aplicados en todos los endpoints:
- *   desde=Y-m-d   hasta=Y-m-d   periodo_id=<int>   clinica_id=<int>
+ *   desde=Y-m-d   hasta=Y-m-d   clinica_id=<int>
  *
- * NOTA sobre filtros: solo se aplican sobre columnas que EXISTEN en el esquema.
- *   - `cajas` y `radiologias` no tienen `periodo_id`, por lo que el filtro
- *     periodo_id no se aplica en `pagos-por-tipo`, `ingresos-por-mes` ni
- *     `radiografias-por-mes` (no se inventan columnas ni rutas de join dudosas).
- *   - El resto de reportes filtran por `created_at` o por la columna `fecha_*`
+ * Los reportes filtran por `created_at` o por la columna `fecha_*`
  *     correspondiente (fecha_inicio / fecha_toma / fecha).
  */
 class ReporteController extends Controller
@@ -55,13 +50,6 @@ class ReporteController extends Controller
     public static function catalogo(): array
     {
         return [
-            'pacientes-por-periodo' => [
-                'titulo' => 'Admisiones por periodo',
-                'grafico' => 'barra',
-                'etiqueta' => 'Periodo',
-                'valor' => 'Admisiones',
-                'ruta' => 'reportes.pacientes-por-periodo',
-            ],
             'pacientes-por-especialidad' => [
                 'titulo' => 'Admisiones por clínica',
                 'grafico' => 'torta',
@@ -159,9 +147,6 @@ class ReporteController extends Controller
 
         return view('reportes.index', [
             'catalogo' => self::catalogo(),
-            'periodos' => Periodo::query()
-                ->orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
             'clinicas' => Clinica::query()
                 ->orderBy('especialidad')
                 ->get(['id', 'especialidad', 'modulo']),
@@ -172,11 +157,6 @@ class ReporteController extends Controller
     /* ============================================================
        ENDPOINTS JSON — un método público por reporte
        ============================================================ */
-
-    public function pacientesPorPeriodo(Request $request): JsonResponse
-    {
-        return $this->respuestaJson('pacientes-por-periodo', $request);
-    }
 
     public function pacientesPorEspecialidad(Request $request): JsonResponse
     {
@@ -356,7 +336,6 @@ class ReporteController extends Controller
     public function datos(string $clave, Request $request): array
     {
         return match ($clave) {
-            'pacientes-por-periodo' => $this->datosPacientesPorPeriodo($request),
             'pacientes-por-especialidad' => $this->datosPacientesPorEspecialidad($request),
             'pacientes-por-edad' => $this->datosPacientesPorEdad($request),
             'pacientes-por-sexo' => $this->datosPacientesPorSexo($request),
@@ -384,29 +363,6 @@ class ReporteController extends Controller
        CONSTRUCTORES DE DATOS
        ============================================================ */
 
-    /** Barras: admisiones agrupadas por periodo. */
-    protected function datosPacientesPorPeriodo(Request $request): array
-    {
-        $f = $this->filtros($request);
-
-        $query = $this->consultaReporte($request, 'admisiones as a')
-            ->leftJoin('periodos as p', 'p.id', '=', 'a.periodo_id')
-            ->selectRaw("COALESCE(NULLIF(p.nombre, ''), 'Sin periodo') AS etiqueta, COUNT(*) AS total, MAX(p.fecha_inicio) AS orden")
-            ->groupBy('a.periodo_id', 'p.nombre');
-
-        if ($f['periodo_id']) {
-            $query->where('a.periodo_id', $f['periodo_id']);
-        }
-
-        $this->rango($query, $f, 'a.created_at');
-
-        $filas = $query->get()->sortBy(static function ($fila) {
-            return ($fila->orden ?: '9999-12-31').'|'.$fila->etiqueta;
-        })->values();
-
-        return $this->armar($filas->pluck('etiqueta')->all(), $filas->pluck('total')->all());
-    }
-
     /** Torta: admisiones agrupadas por clínica (vía historia clínica). */
     protected function datosPacientesPorEspecialidad(Request $request): array
     {
@@ -420,9 +376,6 @@ class ReporteController extends Controller
 
         if ($f['clinica_id']) {
             $query->where('h.clinica_id', $f['clinica_id']);
-        }
-        if ($f['periodo_id']) {
-            $query->where('h.periodo_id', $f['periodo_id']);
         }
 
         $this->rango($query, $f, 'h.created_at');
@@ -462,16 +415,6 @@ class ReporteController extends Controller
             });
         }
 
-        if ($f['periodo_id']) {
-            $periodoId = $f['periodo_id'];
-            $query->whereExists(static function ($sub) use ($periodoId) {
-                $sub->selectRaw('1')
-                    ->from('admisiones as ad')
-                    ->whereColumn('ad.paciente_id', 'pa.id')
-                    ->where('ad.periodo_id', $periodoId);
-            });
-        }
-
         $this->rango($query, $f, 'pa.created_at');
 
         $mapa = $query->get()->pluck('total', 'etiqueta');
@@ -507,16 +450,6 @@ class ReporteController extends Controller
             });
         }
 
-        if ($f['periodo_id']) {
-            $periodoId = $f['periodo_id'];
-            $query->whereExists(static function ($sub) use ($periodoId) {
-                $sub->selectRaw('1')
-                    ->from('admisiones as ad')
-                    ->whereColumn('ad.paciente_id', 'pa.id')
-                    ->where('ad.periodo_id', $periodoId);
-            });
-        }
-
         $this->rango($query, $f, 'pa.created_at');
 
         $conteo = ['Masculino' => 0, 'Femenino' => 0, 'Otro' => 0];
@@ -539,10 +472,6 @@ class ReporteController extends Controller
             ->groupBy('a.motivo_consulta_id', 'm.nombre')
             ->orderByDesc('total')
             ->limit(10);
-
-        if ($f['periodo_id']) {
-            $query->where('a.periodo_id', $f['periodo_id']);
-        }
 
         $this->filtrarPorClinicaDeAdmision($query, $f);
 
@@ -568,8 +497,6 @@ class ReporteController extends Controller
             $query->where('tr.clinica_id', $f['clinica_id']);
         }
 
-        $this->filtrarPorPeriodoDeHistoria($query, $f, 'tr.historia_clinica_id');
-
         $this->rango($query, $f, DB::raw('COALESCE(tr.fecha_inicio, tr.created_at)'));
 
         $filas = $query->get();
@@ -593,10 +520,6 @@ class ReporteController extends Controller
         if ($f['clinica_id']) {
             $query->where('h.clinica_id', $f['clinica_id']);
         }
-        if ($f['periodo_id']) {
-            $query->where('h.periodo_id', $f['periodo_id']);
-        }
-
         $this->rango($query, $f, 'h.created_at');
 
         $filas = $query->get();
@@ -620,10 +543,6 @@ class ReporteController extends Controller
         if ($f['clinica_id']) {
             $query->where('tr.clinica_id', $f['clinica_id']);
         }
-        if ($f['periodo_id']) {
-            $query->where('h.periodo_id', $f['periodo_id']);
-        }
-
         $this->rango($query, $f, DB::raw('COALESCE(tr.fecha_inicio, tr.created_at)'));
 
         $filas = $query->get();
@@ -648,10 +567,6 @@ class ReporteController extends Controller
         if ($f['clinica_id']) {
             $query->whereRaw('COALESCE(tr.clinica_id, i.clinica_id) = ?', [$f['clinica_id']]);
         }
-        if ($f['periodo_id']) {
-            $query->where('h.periodo_id', $f['periodo_id']);
-        }
-
         $this->rango($query, $f, DB::raw('COALESCE(iu.fecha_uso, iu.created_at)'));
 
         $filas = $query->get();
@@ -667,21 +582,20 @@ class ReporteController extends Controller
         $expresion = "DATE_FORMAT(COALESCE(r.fecha_toma, r.created_at), '%Y-%m')";
 
         $query = $this->consultaReporte($request, 'radiologias as r')
-            ->selectRaw("{$expresion} AS periodo, COUNT(*) AS total")
+            ->selectRaw("{$expresion} AS mes, COUNT(*) AS total")
             ->groupByRaw($expresion)
-            ->orderBy('periodo');
+            ->orderBy('mes');
 
         if ($f['clinica_id']) {
             $query->where('r.clinica_id', $f['clinica_id']);
         }
 
-        // `radiologias` no tiene periodo_id -> ese filtro no se aplica aquí.
         $this->rango($query, $f, DB::raw('COALESCE(r.fecha_toma, r.created_at)'));
 
         $filas = $query->get();
 
         return $this->armar(
-            $filas->pluck('periodo')->map(fn ($p) => $this->etiquetaMes($p))->all(),
+            $filas->pluck('mes')->map(fn ($mes) => $this->etiquetaMes($mes))->all(),
             $filas->pluck('total')->all()
         );
     }
@@ -694,23 +608,19 @@ class ReporteController extends Controller
         $expresion = "DATE_FORMAT(e.created_at, '%Y-%m')";
 
         $query = $this->consultaReporte($request, 'esterilizaciones as e')
-            ->selectRaw("{$expresion} AS periodo, COUNT(*) AS total")
+            ->selectRaw("{$expresion} AS mes, COUNT(*) AS total")
             ->groupByRaw($expresion)
-            ->orderBy('periodo');
+            ->orderBy('mes');
 
         if ($f['clinica_id']) {
             $query->where('e.clinica_id', $f['clinica_id']);
         }
-        if ($f['periodo_id']) {
-            $query->where('e.periodo_id', $f['periodo_id']);
-        }
-
         $this->rango($query, $f, 'e.created_at');
 
         $filas = $query->get();
 
         return $this->armar(
-            $filas->pluck('periodo')->map(fn ($p) => $this->etiquetaMes($p))->all(),
+            $filas->pluck('mes')->map(fn ($mes) => $this->etiquetaMes($mes))->all(),
             $filas->pluck('total')->all()
         );
     }
@@ -729,7 +639,6 @@ class ReporteController extends Controller
             $query->where('ca.clinica_id', $f['clinica_id']);
         }
 
-        // `cajas` no tiene periodo_id -> ese filtro no se aplica aquí.
         $this->rango($query, $f, 'ca.created_at');
 
         $filas = $query->get();
@@ -745,21 +654,20 @@ class ReporteController extends Controller
         $expresion = "DATE_FORMAT(ca.created_at, '%Y-%m')";
 
         $query = $this->consultaReporte($request, 'cajas as ca')
-            ->selectRaw("{$expresion} AS periodo, SUM(ca.cancelado) AS total")
+            ->selectRaw("{$expresion} AS mes, SUM(ca.cancelado) AS total")
             ->groupByRaw($expresion)
-            ->orderBy('periodo');
+            ->orderBy('mes');
 
         if ($f['clinica_id']) {
             $query->where('ca.clinica_id', $f['clinica_id']);
         }
 
-        // `cajas` no tiene periodo_id -> ese filtro no se aplica aquí.
         $this->rango($query, $f, 'ca.created_at');
 
         $filas = $query->get();
 
         return $this->armar(
-            $filas->pluck('periodo')->map(fn ($p) => $this->etiquetaMes($p))->all(),
+            $filas->pluck('mes')->map(fn ($mes) => $this->etiquetaMes($mes))->all(),
             $filas->pluck('total')->all(),
             true
         );
@@ -772,14 +680,13 @@ class ReporteController extends Controller
     /**
      * Normaliza los filtros globales del query string.
      *
-     * @return array{desde: ?string, hasta: ?string, periodo_id: ?int, clinica_id: ?int}
+     * @return array{desde: ?string, hasta: ?string, clinica_id: ?int}
      */
     protected function filtros(Request $request): array
     {
         return [
             'desde' => $this->fechaValida($request->input('desde')),
             'hasta' => $this->fechaValida($request->input('hasta')),
-            'periodo_id' => $this->enteroValido($request->input('periodo_id')),
             'clinica_id' => $this->enteroValido($request->input('clinica_id')),
         ];
     }
@@ -859,26 +766,6 @@ class ReporteController extends Controller
         });
     }
 
-    /**
-     * Filtra tratamientos realizados por periodo a través de su historia clínica.
-     * whereExists evita duplicar filas cuando un tratamiento tiene varias historias.
-     */
-    protected function filtrarPorPeriodoDeHistoria($query, array $filtros, string $columnaHistoria): void
-    {
-        if (! $filtros['periodo_id']) {
-            return;
-        }
-
-        $periodoId = $filtros['periodo_id'];
-
-        $query->whereExists(static function ($sub) use ($periodoId, $columnaHistoria) {
-            $sub->selectRaw('1')
-                ->from('historias_clinicas as hc')
-                ->whereColumn('hc.id', $columnaHistoria)
-                ->where('hc.periodo_id', $periodoId);
-        });
-    }
-
     /* ============================================================
        HELPERS — formato
        ============================================================ */
@@ -903,16 +790,16 @@ class ReporteController extends Controller
     }
 
     /** '2026-03' -> 'Mar 2026' (locale español, sin tocar la config global). */
-    protected function etiquetaMes(?string $periodo): string
+    protected function etiquetaMes(?string $mes): string
     {
-        if (! $periodo) {
+        if (! $mes) {
             return 'Sin fecha';
         }
 
         try {
-            return ucfirst(Carbon::createFromFormat('Y-m', $periodo)->locale('es')->translatedFormat('M Y'));
+            return ucfirst(Carbon::createFromFormat('Y-m', $mes)->locale('es')->translatedFormat('M Y'));
         } catch (\Throwable $e) {
-            return $periodo;
+            return $mes;
         }
     }
 
@@ -954,9 +841,6 @@ class ReporteController extends Controller
         }
         if ($f['hasta']) {
             $partes[] = 'hasta '.$f['hasta'];
-        }
-        if ($f['periodo_id']) {
-            $partes[] = 'periodo #'.$f['periodo_id'];
         }
         if ($f['clinica_id']) {
             $partes[] = 'clínica #'.$f['clinica_id'];

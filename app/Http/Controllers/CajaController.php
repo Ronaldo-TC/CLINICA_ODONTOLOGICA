@@ -218,7 +218,6 @@ class CajaController extends Controller
         $data['tratamiento_id'] = $caso->tratamiento_id;
         $data['clinica_id'] = $caso->clinica_id;
         $data['paciente_id'] = $caso->historiaClinica->paciente_id;
-        $data['periodo_id'] = $caso->historiaClinica->periodo_id;
         $data['remision_id'] = $caso->historiaClinica->remision_id;
         $data['paciente_nombre_completo'] = mb_substr($caso->historiaClinica->paciente->nombre_completo, 0, 100);
         $data['costo_total'] = $caso->costo_cobrado;

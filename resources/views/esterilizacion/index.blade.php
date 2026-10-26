@@ -54,16 +54,6 @@
             </div>
 
             <div class="form-group">
-                <label>Periodo</label>
-                <select id="filtro-periodo" class="form-control">
-                    <option value="">Todos</option>
-                    @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}">{{ $p->gestion }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label>Habilitación</label>
                 <select id="filtro-estado" class="form-control">
                     <option value="">Todos</option>
@@ -132,7 +122,6 @@
 
         const $filtroBuscar = document.getElementById('filtro-buscar');
         const $filtroClinica = document.getElementById('filtro-clinica');
-        const $filtroPeriodo = document.getElementById('filtro-periodo');
         const $filtroEstado = document.getElementById('filtro-estado');
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
 
@@ -197,7 +186,6 @@
             const params = new URLSearchParams();
             if ($filtroBuscar?.value.trim()) params.set('buscar', $filtroBuscar.value.trim());
             if ($filtroClinica?.value) params.set('clinica_id', $filtroClinica.value);
-            if ($filtroPeriodo?.value) params.set('periodo_id', $filtroPeriodo.value);
             if ($filtroEstado?.value !== '') params.set('estado', $filtroEstado.value);
             if (page > 1) params.set('page', page);
 
@@ -236,13 +224,11 @@
             debounceTimer = setTimeout(() => cargarTabla(1), 300);
         });
         $filtroClinica?.addEventListener('change', () => cargarTabla(1));
-        $filtroPeriodo?.addEventListener('change', () => cargarTabla(1));
         $filtroEstado?.addEventListener('change', () => cargarTabla(1));
 
         $btnLimpiar?.addEventListener('click', () => {
             $filtroBuscar.value = '';
             $filtroClinica.value = '';
-            $filtroPeriodo.value = '';
             $filtroEstado.value = '';
             cargarTabla(1);
         });

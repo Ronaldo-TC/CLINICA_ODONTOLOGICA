@@ -144,7 +144,6 @@ class TratamientoController extends Controller
 
     protected function beforeStore(array $data): array
     {
-        $this->autorizarPrecio($data);
         $data['precio_asignado'] = isset($data['costo']);
         $data['costo'] = $data['costo'] ?? 0;
 
@@ -153,7 +152,6 @@ class TratamientoController extends Controller
 
     protected function beforeUpdate(Model $model, array $data): array
     {
-        $this->autorizarPrecio($data);
         if ((int) $model->clinica_id !== (int) $data['clinica_id'] && ($model->insumos()->exists() || $model->tratamientosRealizados()->exists())) {
             throw ValidationException::withMessages(['clinica_id' => 'No puede cambiar la clínica de un tratamiento con insumos o atenciones registradas.']);
         }
@@ -175,13 +173,6 @@ class TratamientoController extends Controller
         }
 
         return [true, ''];
-    }
-
-    private function autorizarPrecio(array $data): void
-    {
-        if (isset($data['costo'])) {
-            abort_unless(Gate::allows('tratamientos.precios'), 403, 'No tiene permiso para asignar precios.');
-        }
     }
 
     public function show(Request $request, Tratamiento $tratamiento): View|JsonResponse

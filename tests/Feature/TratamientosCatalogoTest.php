@@ -27,6 +27,42 @@ class TratamientosCatalogoTest extends TestCase
         $this->get(route('tratamientos.index', ['clinica_id' => $clinic->id]))->assertOk()->assertSee('Precio pendiente');
     }
 
+    public function test_treatment_editor_can_set_cost_when_creating_and_editing_a_treatment(): void
+    {
+        $clinic = $this->clinic();
+        $this->actingAs($this->clinicalUser('admin'));
+
+        $response = $this->postJson(route('tratamientos.store'), [
+            'clinica_id' => $clinic->id,
+            'nombre' => 'Tratamiento con costo',
+            'costo' => '240.50',
+        ])->assertCreated()->assertJsonPath('registro.precio_asignado', true);
+        $treatmentId = $response->json('id');
+
+        $this->assertDatabaseHas('tratamientos', [
+            'id' => $treatmentId,
+            'costo' => 240.50,
+            'precio_asignado' => true,
+        ]);
+
+        $this->putJson(route('tratamientos.update', $treatmentId), [
+            'clinica_id' => $clinic->id,
+            'nombre' => 'Tratamiento con costo',
+            'costo' => '300.00',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('tratamientos', [
+            'id' => $treatmentId,
+            'costo' => 300.00,
+            'precio_asignado' => true,
+        ]);
+
+        $this->get(route('tratamientos.index'))->assertOk()
+            ->assertSee('Costo')
+            ->assertSee('name="costo"', false)
+            ->assertDontSee('data-action="precio"', false);
+    }
+
     public function test_clinic_link_filters_initial_and_ajax_catalog(): void
     {
         $first = $this->treatment($this->clinic(), 'Visible aquí');
@@ -141,15 +177,15 @@ class TratamientosCatalogoTest extends TestCase
         $this->assertSame('100.00', $treatment->fresh()->costo);
     }
 
-    public function test_catalog_editor_cannot_change_price_through_generic_update(): void
+    public function test_catalog_editor_can_change_price_through_generic_update(): void
     {
         $treatment = $this->treatment($this->clinic());
         $this->actingAs($this->clinicalUser('subadmin'));
 
-        $this->putJson(route('tratamientos.update', $treatment), ['nombre' => $treatment->nombre, 'clinica_id' => $treatment->clinica_id, 'costo' => 1])->assertForbidden();
-        $this->assertSame('100.00', $treatment->fresh()->costo);
+        $this->putJson(route('tratamientos.update', $treatment), ['nombre' => $treatment->nombre, 'clinica_id' => $treatment->clinica_id, 'costo' => 1])->assertOk();
+        $this->assertDatabaseHas('tratamientos', ['id' => $treatment->id, 'costo' => 1, 'precio_asignado' => true]);
         $this->putJson(route('tratamientos.update', $treatment), ['nombre' => 'Nombre actualizado', 'clinica_id' => $treatment->clinica_id])->assertOk();
-        $this->assertDatabaseHas('tratamientos', ['id' => $treatment->id, 'nombre' => 'Nombre actualizado', 'costo' => 100, 'precio_asignado' => true]);
+        $this->assertDatabaseHas('tratamientos', ['id' => $treatment->id, 'nombre' => 'Nombre actualizado', 'costo' => 1, 'precio_asignado' => true]);
     }
 
     public function test_assigned_treatment_and_material_cannot_move_to_another_clinic(): void

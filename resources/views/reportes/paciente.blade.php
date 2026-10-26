@@ -216,9 +216,9 @@
     <section class="patient-section">
         <h2 class="patient-section-title">Derivaciones a especialidades</h2>
         <table>
-            <thead><tr><th>Derivación / ficha</th><th>Especialidad</th><th>Periodo</th><th>Asignación</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Derivación / ficha</th><th>Especialidad</th><th>Asignación</th><th>Estado</th></tr></thead>
             <tbody>@foreach($remisiones as $remision)
-                <tr><td>#{{ $remision->id }} / #{{ $remision->admision_id }}</td><td>{{ $remision->clinica?->especialidad }}</td><td>{{ $remision->periodo?->nombre }}</td><td>{{ $remision->fecha_asignacion?->format('d/m/Y') ?? 'Pendiente' }}</td><td>{{ ucfirst(str_replace('_', ' ', (string) $remision->estado)) }}{{ $remision->habilitado ? '' : ' · Inhabilitada' }}</td></tr>
+                <tr><td>#{{ $remision->id }} / #{{ $remision->admision_id }}</td><td>{{ $remision->clinica?->especialidad }}</td><td>{{ $remision->fecha_asignacion?->format('d/m/Y') ?? 'Pendiente' }}</td><td>{{ ucfirst(str_replace('_', ' ', (string) $remision->estado)) }}{{ $remision->habilitado ? '' : ' · Inhabilitada' }}</td></tr>
             @endforeach</tbody>
         </table>
     </section>
@@ -231,7 +231,7 @@
             <article class="patient-history">
                 <header class="patient-history-heading">
                     <h3>Historia #{{ $historia->id }} · {{ $historia->clinica?->especialidad }}</h3>
-                    <p>{{ $historia->periodo?->nombre }} · {{ ucfirst((string) $historia->estado) }} · {{ $historia->autorizado ? 'Autorizada' : 'Pendiente de autorización' }}</p>
+                    <p>{{ ucfirst((string) $historia->estado) }} · {{ $historia->autorizado ? 'Autorizada' : 'Pendiente de autorización' }}</p>
                 </header>
                 <p class="patient-history-meta">Estudiante: {{ $historia->estudiante?->nombre_completo }} · Docente: {{ $historia->docente?->nombre_completo }}</p>
                 @forelse($historia->tratamientosRealizados as $tratamiento)

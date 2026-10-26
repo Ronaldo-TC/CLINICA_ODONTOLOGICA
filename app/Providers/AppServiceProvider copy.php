@@ -168,7 +168,6 @@ class AppServiceProvider extends ServiceProvider
                 ['label' => 'Usuarios',         'route' => 'admin.usuarios.index',      'icon' => 'users'],
                 ['label' => 'Roles y permisos', 'route' => 'admin.roles.index',         'icon' => 'shield'],
                 ['label' => 'Clínicas',         'route' => 'admin.clinicas.index',      'icon' => 'layers'],
-                ['label' => 'Periodos',         'route' => 'admin.periodos.index',      'icon' => 'folder'],
                 ['label' => 'Pacientes',        'route' => 'admin.pacientes.index',     'icon' => 'user-plus'],
                 ['label' => 'Tratamientos',     'route' => 'admin.tratamientos.index',  'icon' => 'activity'],
                 ['label' => 'Historias',        'route' => 'admin.historias.index',     'icon' => 'file-text'],
@@ -188,7 +187,6 @@ class AppServiceProvider extends ServiceProvider
                 $items = [
                     ['label' => 'Pacientes',      'route' => 'director.pacientes.index',      'icon' => 'user-plus'],
                     ['label' => 'Clínicas',       'route' => 'director.clinicas.index',       'icon' => 'layers'],
-                    ['label' => 'Periodos',       'route' => 'director.periodos.index',       'icon' => 'folder'],
                     ['label' => 'Tratamientos',   'route' => 'director.tratamientos.index',   'icon' => 'activity'],
                     ['label' => 'Historias',      'route' => 'director.historias.index',      'icon' => 'file-text'],
                     ['label' => 'Cajas',          'route' => 'director.cajas.index',          'icon' => 'credit-card'],

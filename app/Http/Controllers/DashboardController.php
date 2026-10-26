@@ -24,7 +24,6 @@ class DashboardController extends Controller
             'pacientesPorMes' => DashboardMetrics::pacientesPorMes($user),
             'topEspecialidades' => DashboardMetrics::topEspecialidades(5, $user),
             'actividadReciente' => $user ? DashboardMetrics::actividadReciente($user) : collect(),
-            'proximosVencimientos' => DashboardMetrics::proximosVencimientos(),
         ]);
     }
 

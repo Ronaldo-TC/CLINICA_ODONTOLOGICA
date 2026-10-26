@@ -46,15 +46,6 @@
                         <span class="form-error" data-error-for="paciente_id"></span>
                     </div>
 
-                    {{-- Periodo --}}
-                    <div class="form-group">
-                        <label for="adm-periodo">Periodo</label>
-                        <select id="adm-periodo" name="periodo_id" class="form-control">
-                            <option value="">Cargando...</option>
-                        </select>
-                        <span class="form-error" data-error-for="periodo_id"></span>
-                    </div>
-
                     {{-- Motivo --}}
                     <div class="form-group">
                         <label for="adm-motivo">Motivo de consulta</label>
@@ -357,7 +348,6 @@
                 $form.paciente_id.value = a.paciente_id ?? '';
                 $form.estudiante_id.value = a.estudiante_id ?? '';
                 $form.responsable_id.value = a.responsable_id ?? '';
-                $form.periodo_id.value = a.periodo_id ?? '';
                 $form.motivo_consulta_id.value = a.motivo_consulta_id ?? '';
                 $form.especialidad_estudiante.value = a.especialidad_estudiante ?? '';
                 $form.especialidad_responsable.value = a.especialidad_responsable ?? '';
@@ -417,7 +407,7 @@
         };
 
         /* ============================================================
-           CARGA DE DATOS INICIALES (periodos, motivos, clinicas)
+           CARGA DE DATOS INICIALES (motivos y clinicas)
            ============================================================ */
         async function cargarDatosIniciales() {
             if (datosInicialesCargados) return;
@@ -433,12 +423,6 @@
 
                 if (!res.ok) throw new Error('Error al cargar datos iniciales');
                 const data = await res.json();
-
-                // Periodos
-                $form.periodo_id.innerHTML = '<option value="">Sin periodo</option>' +
-                    data.periodos.map((p) =>
-                        `<option value="${p.id}">${p.texto}</option>`
-                    ).join('');
 
                 // Motivos
                 $form.motivo_consulta_id.innerHTML = '<option value="">Sin motivo</option>' +
@@ -696,7 +680,7 @@
                 if ($wrap) $wrap.classList.remove('has-value');
             });
 
-            // Resetear periodos/motivos (se recargan en cargarDatosIniciales)
+            // Los catálogos se recargan al abrir el formulario.
             datosInicialesCargados = false;
 
             // Odontograma en blanco

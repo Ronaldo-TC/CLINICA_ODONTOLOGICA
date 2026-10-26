@@ -15,7 +15,6 @@ use App\Http\Controllers\KardexController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\OdontogramaController;
 use App\Http\Controllers\PacienteController;
-use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\RadiologiaController;
 use App\Http\Controllers\RemisionController;
 use App\Http\Controllers\ReporteController;
@@ -539,7 +538,6 @@ Route::middleware(['auth.session'])->group(function () {
             Route::get('/', 'index')->name('index');
 
             /* ---- Endpoints JSON de gráficos: {labels, valores, total} ---- */
-            Route::get('/pacientes-por-periodo', 'pacientesPorPeriodo')->name('pacientes-por-periodo');
             Route::get('/pacientes-por-especialidad', 'pacientesPorEspecialidad')->name('pacientes-por-especialidad');
             Route::get('/pacientes-por-edad', 'pacientesPorEdad')->name('pacientes-por-edad');
             Route::get('/pacientes-por-sexo', 'pacientesPorSexo')->name('pacientes-por-sexo');
@@ -668,31 +666,6 @@ Route::middleware(['auth.session'])->group(function () {
 
         Route::middleware('permission:clinicas.eliminar|clinicas.gestionar')->group(function () {
             Route::delete('/{clinica}', 'destroy')->name('destroy');
-        });
-    });
-
-    /* ============================================================
-       PERIODOS
-       ============================================================ */
-    Route::prefix('periodos')->name('periodos.')->controller(PeriodoController::class)->group(function () {
-
-        Route::middleware('permission:periodos.ver|periodos.gestionar')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/tabla', 'tabla')->name('tabla');
-            Route::get('/{periodo}/datos', 'datos')->name('datos');
-            Route::get('/{periodo}', 'show')->name('show');
-        });
-
-        Route::middleware('permission:periodos.crear|periodos.gestionar')->group(function () {
-            Route::post('/', 'store')->name('store');
-        });
-
-        Route::middleware('permission:periodos.editar|periodos.gestionar')->group(function () {
-            Route::put('/{periodo}', 'update')->name('update');
-        });
-
-        Route::middleware('permission:periodos.eliminar|periodos.gestionar')->group(function () {
-            Route::delete('/{periodo}', 'destroy')->name('destroy');
         });
     });
 

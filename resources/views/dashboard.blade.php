@@ -6,7 +6,6 @@
     /** @var array $pacientesPorMes */
     /** @var array $topEspecialidades */
     /** @var \Illuminate\Support\Collection $actividadReciente */
-    /** @var \Illuminate\Support\Collection $proximosVencimientos */
 
     $rolPrincipal = $user?->getRoleNames()->first() ?? 'usuario';
     $etiquetasRol = [
@@ -217,42 +216,6 @@
         </div>
     </div>
 
-    <div class="card" style="min-width:0;">
-        <div class="card-header">
-            <h2>Próximos vencimientos</h2>
-            <span class="card-meta">Periodos · 30 días</span>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Periodo</th>
-                        <th>Vence</th>
-                        <th>Días</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($proximosVencimientos as $p)
-                    <tr>
-                        <td><small>{{ $p->nombre }}</small></td>
-                        <td><small>{{ $p->fecha_fin?->format('d/m/Y') }}</small></td>
-                        <td>
-                            <span class="badge {{ $p->fecha_fin && $p->fecha_fin->diffInDays(today()) <= 7 ? 'badge-warning' : 'badge-muted' }}">
-                                {{ $p->fecha_fin ? (int) $p->fecha_fin->diffInDays(today()) : '—' }} d
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3">
-                            <div class="empty-state"><p>Sin vencimientos próximos</p></div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 @endsection

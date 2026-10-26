@@ -25,7 +25,7 @@ class JefaturaClinicasPermissionsSeeder extends Seeder
                 'pacientes.ver', 'pacientes.gestionar',
                 'tratamientos.ver', 'tratamientos.gestionar',
                 'especialidades.ver', 'especialidades.gestionar',
-                'periodos.ver', 'admisiones.ver',
+                'admisiones.ver',
                 'remisiones.ver', 'remisiones.asignar',
                 'historias.ver', 'atenciones.ver', 'sesiones.ver',
                 'insumos.ver', 'solicitudes-insumos.ver',

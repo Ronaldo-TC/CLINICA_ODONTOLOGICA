@@ -19,18 +19,18 @@ class ReportePaciente
         $admisiones = AccesoClinico::admisiones(Admision::query(), $usuario)
             ->where('paciente_id', $paciente->id)
             ->when($soloFicha, fn (Builder $query) => $query->whereKey($admision->id))
-            ->with(['periodo', 'motivoConsulta', 'estudiante', 'responsable', 'clinicaEstudiante', 'clinicaResponsable', 'registradoPor', 'remisiones.clinica'])
+            ->with(['motivoConsulta', 'estudiante', 'responsable', 'clinicaEstudiante', 'clinicaResponsable', 'registradoPor', 'remisiones.clinica'])
             ->orderByDesc('fecha_admision')->orderByDesc('id')->get();
         $permisos = collect(['historias', 'remisiones', 'radiologias', 'cajas'])
             ->mapWithKeys(fn (string $modulo): array => [$modulo => ! $soloFicha && ($usuario->hasRole('admin') || $usuario->canAny([$modulo.'.ver', $modulo.'.gestionar']))])->all();
         $historias = $permisos['historias']
             ? AccesoClinico::historias(HistoriaClinica::query(), $usuario)->where('paciente_id', $paciente->id)
-                ->with(['clinica', 'periodo', 'estudiante', 'docente', 'tratamientosRealizados.tratamiento', 'tratamientosRealizados.sesionesAtencion.docente'])
+                ->with(['clinica', 'estudiante', 'docente', 'tratamientosRealizados.tratamiento', 'tratamientosRealizados.sesionesAtencion.docente'])
                 ->orderByDesc('id')->get()
             : collect();
         $remisiones = $permisos['remisiones']
             ? AccesoClinico::remisiones(Remision::query(), $usuario)->where('paciente_id', $paciente->id)
-                ->with(['clinica', 'periodo'])->orderByDesc('id')->get()
+                ->with('clinica')->orderByDesc('id')->get()
             : collect();
         $radiologias = $permisos['radiologias']
             ? AccesoClinico::radiologias(Radiologia::query(), $usuario)->where('paciente_id', $paciente->id)

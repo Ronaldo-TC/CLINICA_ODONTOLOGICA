@@ -53,7 +53,6 @@ class AssignmentSeeder extends Seeder
                 'usuarios.gestionar',
                 'pacientes.gestionar',
                 'clinicas.gestionar',
-                'periodos.ver',
                 'tratamientos.gestionar',
                 'reportes.ver',
             ],
@@ -61,7 +60,6 @@ class AssignmentSeeder extends Seeder
                 // Solo lectura global + reportes + investigación
                 'pacientes.ver',
                 'clinicas.ver',
-                'periodos.ver',
                 'tratamientos.ver',
                 'historias.ver',
                 'cajas.ver',

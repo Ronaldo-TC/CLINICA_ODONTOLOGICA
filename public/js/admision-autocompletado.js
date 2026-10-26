@@ -257,7 +257,6 @@ export function inicializarFormularioAdmision({
         firma?.limpiar('#adm-firma');
         form.querySelectorAll('[name="clinica_ids[]"], [name^="consentimiento_"]').forEach((control) => control.checked = false);
         if (config.modo === 'crear') {
-            form.elements.namedItem('periodo_id').value = '';
         }
         form.elements.namedItem('odontograma_pintado_anterior').value = '';
         form.querySelectorAll('[data-error-for]').forEach((control) => control.textContent = '');

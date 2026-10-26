@@ -46,13 +46,7 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertSame(15, Usuario::query()->whereBetween('ci', ['10000001', '10000015'])->count());
         $this->assertTrue($docente->hasRole('docente'));
-        $this->assertFalse(Schema::hasColumn('periodos', 'semestre'));
-        $this->assertDatabaseHas('periodos', [
-            'nombre' => 'Gestión 2026',
-            'gestion' => 2026,
-            'fecha_inicio' => '2026-01-05',
-            'fecha_fin' => '2026-12-31',
-        ]);
+        $this->assertFalse(Schema::hasTable('periodos'));
         $this->assertDatabaseHas('especialidades', [
             'usuario_id' => $docente->id,
             'clinica_id' => $clinicaId,
@@ -134,7 +128,6 @@ class DatabaseSeederTest extends TestCase
             'users' => DB::table('usuarios')->count(),
             'specialties' => DB::table('especialidades')->count(),
             'clinics' => DB::table('clinicas')->count(),
-            'periods' => DB::table('periodos')->count(),
             'treatments' => DB::table('tratamientos')->count(),
             'supplies' => DB::table('insumos_tratamiento')->count(),
             'inventory' => DB::table('insumos')->count(),

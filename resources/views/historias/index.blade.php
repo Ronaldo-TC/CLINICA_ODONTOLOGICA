@@ -56,18 +56,6 @@
             </div>
 
             <div class="form-group">
-                <label>Periodo</label>
-                <select id="filtro-periodo" class="form-control">
-                    <option value="">Todos los periodos</option>
-                    @foreach ($periodos as $p)
-                    <option value="{{ $p->id }}">
-                        {{ $p->gestion }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label>&nbsp;</label>
                 <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
                     Limpiar
@@ -84,7 +72,6 @@
                     <th>#</th>
                     <th>Paciente</th>
                     <th>Clínica</th>
-                    <th>Periodo</th>
                     <th>Estudiante</th>
                     <th>Docente</th>
                     <th>Tratamientos</th>
@@ -138,7 +125,6 @@
 
         const $filtroBuscar = document.getElementById('filtro-buscar');
         const $filtroClinica = document.getElementById('filtro-clinica');
-        const $filtroPeriodo = document.getElementById('filtro-periodo');
         const $btnLimpiar = document.getElementById('btnLimpiarFiltros');
 
         let debounceTimer = null;
@@ -202,7 +188,6 @@
             const params = new URLSearchParams();
             if ($filtroBuscar?.value.trim()) params.set('buscar', $filtroBuscar.value.trim());
             if ($filtroClinica?.value) params.set('clinica_id', $filtroClinica.value);
-            if ($filtroPeriodo?.value) params.set('periodo_id', $filtroPeriodo.value);
             if (page > 1) params.set('page', page);
 
             try {
@@ -225,7 +210,7 @@
             } catch (err) {
                 console.error('[Historias] Error:', err);
                 $tbody.innerHTML = `
-                <tr><td colspan="9">
+                <tr><td colspan="11">
                     <div class="empty-state"><p>Error al cargar historias.</p></div>
                 </td></tr>`;
                 setStatus('error', 'Error al cargar');
@@ -240,12 +225,10 @@
             debounceTimer = setTimeout(() => cargarTabla(1), 300);
         });
         $filtroClinica?.addEventListener('change', () => cargarTabla(1));
-        $filtroPeriodo?.addEventListener('change', () => cargarTabla(1));
 
         $btnLimpiar?.addEventListener('click', () => {
             $filtroBuscar.value = '';
             $filtroClinica.value = '';
-            $filtroPeriodo.value = '';
             cargarTabla(1);
         });
 

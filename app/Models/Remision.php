@@ -21,7 +21,6 @@ class Remision extends Model
         'admision_id',
         'paciente_id',
         'clinica_id',
-        'periodo_id',
         'habilitado',
     ];
 
@@ -38,10 +37,9 @@ class Remision extends Model
     {
         return $query->with([
             'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
-            'admision:id,paciente_id,periodo_id',
+            'admision:id,paciente_id',
             'tratamientoPropuesto:id,nombre,clinica_id,costo',
             'clinica:id,especialidad,modulo',
-            'periodo:id,nombre,gestion',
             'docente:id,nombre_completo',
             'estudiante:id,nombre_completo',
         ])->withCount(['historiasClinicas', 'insumosSolicitados']);
@@ -65,11 +63,6 @@ class Remision extends Model
     public function clinica(): BelongsTo
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
-    }
-
-    public function periodo(): BelongsTo
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
     public function docente(): BelongsTo

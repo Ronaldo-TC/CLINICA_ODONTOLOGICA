@@ -13,7 +13,7 @@
             <h2>{{ $registro->paciente?->nombre_completo }}</h2><span class="badge {{ $registro->autorizado ? 'badge-success' : 'badge-warning' }}">{{ $cerrada ? 'Historia cerrada' : ($registro->autorizado ? 'Historia autorizada' : 'Pendiente de revisión docente') }}</span>
         </div>
         <div class="card-body">
-            <p>Ficha #{{ $registro->admision_id }} · CI: {{ $registro->paciente?->ci }} · Edad: {{ $registro->paciente?->edad ?? '—' }} · {{ $registro->clinica?->especialidad }} · Periodo {{ $registro->periodo?->nombre }}</p>
+            <p>Ficha #{{ $registro->admision_id }} · CI: {{ $registro->paciente?->ci }} · Edad: {{ $registro->paciente?->edad ?? '—' }} · {{ $registro->clinica?->especialidad }}</p>
             <p>Docente asignado: <strong>{{ $registro->docente?->nombre_completo }}</strong></p>
             <p>Motivo de consulta: {{ $registro->admision?->motivo_consulta ?: 'Sin especificar' }}</p>
             <div class="actions">
@@ -257,12 +257,12 @@
             <h2>Esterilización</h2>
         </div>
         <div class="card-body">
-            <p>Controles del paciente y controles generales de tu material en esta especialidad y periodo. El docente firma la solicitud; el servicio registra la recepción, preparación, ciclo y controles. Puedes recoger el material cuando esté liberado.</p>
+            <p>Controles del paciente y controles generales de tu material en esta especialidad. El docente firma la solicitud; el servicio registra la recepción, preparación, ciclo y controles. Puedes recoger el material cuando esté liberado.</p>
             @if(!$cerrada && $registro->remision_id)
             @canany(['esterilizaciones.crear', 'esterilizaciones.gestionar'])
             <form data-estudiante-form action="{{ route('esterilizacion.store') }}" method="POST" class="form-grid">
                 @csrf
-                <input type="hidden" name="remision_id" value="{{ $registro->remision_id }}"><input type="hidden" name="estudiante_id" value="{{ auth()->id() }}"><input type="hidden" name="docente_id" value="{{ $registro->docente_id }}"><input type="hidden" name="clinica_id" value="{{ $registro->clinica_id }}"><input type="hidden" name="periodo_id" value="{{ $registro->periodo_id }}"><input type="hidden" name="usuario_id" value="{{ auth()->id() }}"><input type="hidden" name="habilitada" value="1">
+                <input type="hidden" name="remision_id" value="{{ $registro->remision_id }}"><input type="hidden" name="estudiante_id" value="{{ auth()->id() }}"><input type="hidden" name="docente_id" value="{{ $registro->docente_id }}"><input type="hidden" name="clinica_id" value="{{ $registro->clinica_id }}"><input type="hidden" name="usuario_id" value="{{ auth()->id() }}"><input type="hidden" name="habilitada" value="1">
                 <div class="form-group"><label for="cantidad_sobres">Sobres</label><input id="cantidad_sobres" name="cantidad_sobres" type="number" min="0" step="1" value="0" class="form-control" required></div>
                 <div class="form-group"><label for="cantidad_paquetes">Paquetes</label><input id="cantidad_paquetes" name="cantidad_paquetes" type="number" min="0" step="1" value="0" class="form-control" required></div>
                 <div class="form-group"><label for="descripcion-material">Descripción del material</label><input id="descripcion-material" name="descripcion" maxlength="200" class="form-control"></div>

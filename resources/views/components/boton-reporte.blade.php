@@ -5,7 +5,7 @@
 @push('scripts')
 <script>
     document.querySelectorAll('[data-reporte-modulo]').forEach(enlace => {
-        const campos = { buscar:'filtro-buscar', clinica_id:'filtro-clinica', periodo_id:'filtro-periodo', estado:'filtro-estado', desde:'filtro-desde', hasta:'filtro-hasta', tipo_pago:'filtro-tipo-pago', genero:'filtro-genero' };
+        const campos = { buscar:'filtro-buscar', clinica_id:'filtro-clinica', estado:'filtro-estado', desde:'filtro-desde', hasta:'filtro-hasta', tipo_pago:'filtro-tipo-pago', genero:'filtro-genero' };
         const actualizar = () => {
             const destino = new URL(enlace.dataset.base, window.location.origin);
             if (enlace.dataset.formato === 'pdf') destino.searchParams.set('formato', 'pdf');

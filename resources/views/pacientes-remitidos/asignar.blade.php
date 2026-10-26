@@ -164,34 +164,6 @@
                 @enderror
             </div>
 
-            {{-- ---------- Periodo ---------- --}}
-            <div class="form-group">
-                @if ($registro->periodo_id)
-                <label>Periodo de la remisión</label>
-                <strong>{{ $registro->periodo?->nombre_completo ?? '—' }}</strong>
-                @else
-                <label for="asignacion-periodo">
-                    Periodo <span class="req">*</span>
-                </label>
-                <select id="asignacion-periodo"
-                    name="periodo_id"
-                    class="form-control"
-                    required>
-                    <option value="">Seleccione un periodo...</option>
-                    @foreach ($periodos as $periodo)
-                    <option value="{{ $periodo->id }}"
-                        @selected((string) old('periodo_id')===(string) $periodo->id)>
-                        {{ $periodo->nombre_completo }}
-                    </option>
-                    @endforeach
-                </select>
-                @endif
-
-                @error('periodo_id')
-                <span class="form-error">{{ $message }}</span>
-                @enderror
-            </div>
-
             {{-- ---------- Acciones ---------- --}}
             <div class="actions actions--full">
                 <button type="submit" class="btn btn-primary">

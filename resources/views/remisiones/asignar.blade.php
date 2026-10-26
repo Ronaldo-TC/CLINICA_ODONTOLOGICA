@@ -10,17 +10,6 @@
 @foreach($personas as $persona) @if($persona->hasAnyRole($roles))<option value="{{ $persona->id }}" @selected((string) old($tipo.'_id') === (string) $persona->id)>{{ $persona->nombre_completo }}</option>@endif @endforeach
 </select></div>
 @endforeach
-@if (!$registro->periodo_id)
-<div class="form-group">
-    <label for="asignacion-periodo">Periodo</label>
-    <select id="asignacion-periodo" name="periodo_id" class="form-control" required>
-        <option value="">Seleccione...</option>
-        @foreach ($periodos as $periodo)
-        <option value="{{ $periodo->id }}" @selected((string) old('periodo_id') === (string) $periodo->id)>{{ $periodo->nombre_completo }}</option>
-        @endforeach
-    </select>
-</div>
-@endif
 <div><button class="btn btn-primary">Asignar y crear historia</button><a class="btn btn-secondary" href="{{ route('remisiones.index') }}">Volver</a></div>
 </form>
 </div></div>

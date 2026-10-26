@@ -26,16 +26,6 @@
     </td>
 
     <td>
-        @if ($historia->periodo)
-        <span class="badge badge-muted">
-            {{ $historia->periodo->gestion }}
-        </span>
-        @else
-        —
-        @endif
-    </td>
-
-    <td>
         <small>{{ $historia->estudiante?->nombre_completo ?? '—' }}</small>
     </td>
 
@@ -117,7 +107,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="12">
+    <td colspan="11">
         <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

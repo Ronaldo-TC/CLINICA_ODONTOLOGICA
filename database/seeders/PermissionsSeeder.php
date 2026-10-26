@@ -26,7 +26,6 @@ class PermissionsSeeder extends Seeder
             'roles' => 'Roles y permisos',
             'pacientes' => 'Datos de pacientes',
             'clinicas' => 'Especialidades',
-            'periodos' => 'Periodos académicos',
             'tratamientos' => 'Catálogo de tratamientos',
             'admisiones' => 'Registro inicial',
             'remisiones' => 'Derivaciones entre clínicas',

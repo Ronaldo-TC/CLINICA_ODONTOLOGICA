@@ -36,7 +36,7 @@
     </div>
 
     <div class="card-body" style="padding-bottom: 14px;">
-        <p style="color:var(--muted); margin-bottom:14px;">Administración registra los tratamientos por clínica. Insumos asigna los materiales y Caja establece los precios.</p>
+        <p style="color:var(--muted); margin-bottom:14px;">Administración registra los tratamientos y sus costos por clínica. Insumos asigna los materiales.</p>
         <div class="form-grid">
             <div class="form-group">
                 <label>Buscar</label>

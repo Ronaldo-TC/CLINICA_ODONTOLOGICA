@@ -11,7 +11,6 @@ class Admision extends Model
 
     protected $fillable = [
         'paciente_id',
-        'periodo_id',
         'motivo_consulta_id',
         'estado_civil',
         'escuela',
@@ -99,11 +98,6 @@ class Admision extends Model
     public function getFirmaImagenAttribute(): ?string
     {
         return preg_match('/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/', (string) $this->firma) === 1 ? $this->firma : null;
-    }
-
-    public function periodo()
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
     public function motivoConsulta()

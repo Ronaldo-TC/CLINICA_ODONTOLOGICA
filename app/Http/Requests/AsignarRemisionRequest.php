@@ -22,7 +22,6 @@ class AsignarRemisionRequest extends FormRequest
         return [
             'estudiante_id' => ['required', 'integer', 'exists:usuarios,id'],
             'docente_id' => [$this->docenteActual() ? 'nullable' : 'required', 'integer', 'exists:usuarios,id'],
-            'periodo_id' => ['nullable', 'integer', 'exists:periodos,id'],
         ];
     }
 
@@ -34,7 +33,6 @@ class AsignarRemisionRequest extends FormRequest
             'estudiante_id.exists' => 'Seleccione un estudiante o interno válido.',
             'docente_id.required' => 'Seleccione el docente responsable.',
             'docente_id.exists' => 'Seleccione un docente válido.',
-            'periodo_id.exists' => 'Seleccione un periodo válido.',
         ];
     }
 

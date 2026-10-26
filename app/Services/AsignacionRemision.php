@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\HistoriaClinica;
 use App\Models\Notificacion;
-use App\Models\Periodo;
 use App\Models\Remision;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
@@ -15,35 +14,26 @@ use Illuminate\Validation\ValidationException;
 
 class AsignacionRemision
 {
-    /** @return array{registro: Remision, personas: Collection<int, Usuario>, periodos: Collection<int, Periodo>, docenteActual: ?Usuario} */
+    /** @return array{registro: Remision, personas: Collection<int, Usuario>, docenteActual: ?Usuario} */
     public function datos(Remision $remision, Usuario $usuario): array
     {
         $this->verificarPendiente($remision);
 
         return [
-            'registro' => $remision->loadMissing(['paciente', 'clinica', 'periodo']),
+            'registro' => $remision->loadMissing(['paciente', 'clinica']),
             'personas' => Usuario::query()->where('habilitado', true)
                 ->whereHas('especialidades', fn (Builder $query) => $query->where('clinicas.id', $remision->clinica_id)->where('especialidades.habilitado', true))
                 ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', ['estudiante', 'interno', 'docente', 'jefe-catedra']))
                 ->with('roles')->orderBy('nombre_completo')->get(),
-            'periodos' => Periodo::orderByDesc('gestion')->get(['id', 'nombre', 'gestion']),
             'docenteActual' => ! $usuario->hasAnyRole(['admin', 'director']) && $usuario->hasAnyRole(['docente', 'jefe-catedra']) ? $usuario : null,
         ];
     }
 
-    public function asignar(Remision $remision, Usuario $usuario, int $estudianteId, int $docenteId, ?int $periodoId): HistoriaClinica
+    public function asignar(Remision $remision, Usuario $usuario, int $estudianteId, int $docenteId): HistoriaClinica
     {
-        return DB::transaction(function () use ($remision, $usuario, $estudianteId, $docenteId, $periodoId): HistoriaClinica {
+        return DB::transaction(function () use ($remision, $usuario, $estudianteId, $docenteId): HistoriaClinica {
             $registro = AccesoClinico::remisiones(Remision::query(), $usuario)->lockForUpdate()->findOrFail($remision->id);
             $this->verificarPendiente($registro);
-
-            if ($registro->periodo_id && $periodoId && (int) $registro->periodo_id !== $periodoId) {
-                throw ValidationException::withMessages(['periodo_id' => 'Debe conservar el periodo de la remisión.']);
-            }
-            $periodoId = $registro->periodo_id ?? $periodoId;
-            if (! $periodoId) {
-                throw ValidationException::withMessages(['periodo_id' => 'Seleccione el periodo antes de asignar una historia clínica.']);
-            }
 
             foreach (['estudiante' => [$estudianteId, ['estudiante', 'interno']], 'docente' => [$docenteId, ['docente', 'jefe-catedra']]] as $tipo => [$personaId, $roles]) {
                 $persona = Usuario::findOrFail($personaId);
@@ -52,7 +42,7 @@ class AsignacionRemision
                 }
             }
 
-            $asignacion = ['estudiante_id' => $estudianteId, 'docente_id' => $docenteId, 'periodo_id' => $periodoId];
+            $asignacion = ['estudiante_id' => $estudianteId, 'docente_id' => $docenteId];
             $registro->update($asignacion + ['asignado_por' => $usuario->id, 'fecha_asignacion' => now(), 'estado' => 'asignada']);
 
             $historia = HistoriaClinica::create($asignacion + [

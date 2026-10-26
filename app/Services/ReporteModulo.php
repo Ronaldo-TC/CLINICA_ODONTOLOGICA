@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Clinica;
-use App\Models\Periodo;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,18 +26,18 @@ class ReporteModulo
         ]],
         'admisiones' => ['titulo' => 'Admisiones de pacientes', 'columnas' => [
             ['Ficha', 'id'], ['Paciente', 'paciente.nombre_completo'], ['CI', 'paciente.ci'],
-            ['Fecha', 'fecha_admision', 'fecha'], ['Periodo', 'periodo.nombre'], ['Motivo', 'motivo_consulta'],
+            ['Fecha', 'fecha_admision', 'fecha'], ['Motivo', 'motivo_consulta'],
             ['Áreas derivadas', 'area_derivada'], ['Registrado por', 'registradoPor.nombre_completo'], ['Estado', 'estado', 'estado'],
         ]],
         'historias' => ['titulo' => 'Historias clínicas', 'columnas' => [
             ['Historia', 'id'], ['Paciente', 'paciente.nombre_completo'], ['CI', 'paciente.ci'],
-            ['Especialidad', 'clinica.especialidad'], ['Periodo', 'periodo.nombre'],
+            ['Especialidad', 'clinica.especialidad'],
             ['Estudiante', 'estudiante.nombre_completo'], ['Docente', 'docente.nombre_completo'],
             ['Estado', 'estado', 'estado'], ['Autorizada', 'autorizado', 'booleano'],
         ]],
         'remisiones' => ['titulo' => 'Derivaciones a especialidades', 'columnas' => [
             ['Derivación', 'id'], ['Ficha', 'admision_id'], ['Paciente', 'paciente.nombre_completo'],
-            ['CI', 'paciente.ci'], ['Especialidad', 'clinica.especialidad'], ['Periodo', 'periodo.nombre'],
+            ['CI', 'paciente.ci'], ['Especialidad', 'clinica.especialidad'],
             ['Asignación', 'fecha_asignacion', 'fecha'], ['Estado', 'estado', 'estado'], ['Habilitada', 'habilitado', 'booleano'],
         ]],
         'tratamientos-realizados' => ['titulo' => 'Tratamientos y seguimiento clínico', 'relaciones' => ['tratamiento', 'historiaClinica.paciente', 'clinica'], 'columnas' => [
@@ -58,7 +57,7 @@ class ReporteModulo
         ]],
         'esterilizacion' => ['titulo' => 'Control de esterilización', 'columnas' => [
             ['Control', 'id'], ['Estudiante', 'estudiante.nombre_completo'], ['Especialidad', 'clinica.especialidad'],
-            ['Periodo', 'periodo.nombre'], ['Sobres', 'cantidad_sobres'], ['Paquetes', 'cantidad_paquetes'],
+            ['Sobres', 'cantidad_sobres'], ['Paquetes', 'cantidad_paquetes'],
             ['Autorizado', 'autorizado', 'booleano'], ['Recepción', 'fecha_entrega', 'fecha'], ['Recojo', 'fecha_recojo', 'fecha'],
             ['Habilitado', 'habilitada', 'booleano'],
         ]],
@@ -80,7 +79,6 @@ class ReporteModulo
         $request->validate([
             'buscar' => ['nullable', 'string', 'max:200'],
             'clinica_id' => ['nullable', 'integer', 'min:1'],
-            'periodo_id' => ['nullable', 'integer', 'min:1'],
             'desde' => ['nullable', 'date_format:Y-m-d'],
             'hasta' => ['nullable', 'date_format:Y-m-d', ...($request->filled('desde') ? ['after_or_equal:desde'] : [])],
             'estado' => ['nullable', 'string', 'max:50'],
@@ -151,9 +149,6 @@ class ReporteModulo
         }
         if ($request->filled('clinica_id')) {
             $filtros['Especialidad'] = Clinica::find($request->integer('clinica_id'))?->especialidad ?? 'Especialidad no encontrada';
-        }
-        if ($request->filled('periodo_id')) {
-            $filtros['Periodo'] = Periodo::find($request->integer('periodo_id'))?->nombre ?? 'Periodo no encontrado';
         }
         if ($request->filled('stock_bajo')) {
             $filtros['Inventario'] = 'Solo stock bajo';

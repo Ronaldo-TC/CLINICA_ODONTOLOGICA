@@ -7,7 +7,6 @@ use App\Models\Caja;
 use App\Models\Clinica;
 use App\Models\HistoriaClinica;
 use App\Models\Paciente;
-use App\Models\Periodo;
 use App\Models\SesionAtencion;
 use App\Models\Tratamiento;
 use App\Models\TratamientoRealizado;
@@ -35,9 +34,8 @@ trait CreatesClinicalCase
             $person->especialidades()->attach($clinic->id, ['habilitado' => true]);
         }
         $patient = Paciente::create(['ci' => substr((string) Str::uuid(), 0, 12), 'nombre' => 'Paciente', 'apellido_paterno' => 'Prueba', 'apellido_materno' => 'Clínica', 'genero' => 'M', 'fecha_nacimiento' => '1990-01-01']);
-        $period = Periodo::query()->firstOrFail();
-        $admission = Admision::create(['paciente_id' => $patient->id, 'periodo_id' => $period->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'responsable_id' => $teacher->id, 'especialidad_responsable' => $clinic->id]);
-        $history = HistoriaClinica::create(['admision_id' => $admission->id, 'paciente_id' => $patient->id, 'periodo_id' => $period->id, 'clinica_id' => $clinic->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'docente_id' => $teacher->id, 'especialidad_docente' => $clinic->id, 'estado' => 'abierta', 'autorizado' => true]);
+        $admission = Admision::create(['paciente_id' => $patient->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'responsable_id' => $teacher->id, 'especialidad_responsable' => $clinic->id]);
+        $history = HistoriaClinica::create(['admision_id' => $admission->id, 'paciente_id' => $patient->id, 'clinica_id' => $clinic->id, 'estudiante_id' => $student->id, 'especialidad_estudiante' => $clinic->id, 'docente_id' => $teacher->id, 'especialidad_docente' => $clinic->id, 'estado' => 'abierta', 'autorizado' => true]);
         $treatment = Tratamiento::create([
             'clinica_id' => $clinic->id,
             'nombre' => 'Tratamiento prueba',
@@ -94,7 +92,6 @@ trait CreatesClinicalCase
                 'paciente_id' => $case['history']->paciente_id,
                 'remision_id' => $case['history']->remision_id,
                 'clinica_id' => $case['clinic']->id,
-                'periodo_id' => $case['history']->periodo_id,
                 'usuario_id' => $case['teacher']->id,
                 'recibo' => max(1000000, (int) Caja::max('recibo')) + 1,
                 'monto' => $balance,

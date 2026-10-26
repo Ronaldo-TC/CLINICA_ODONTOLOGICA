@@ -9,7 +9,6 @@ use App\Models\Clinica;
 use App\Models\HistoriaClinica;
 use App\Models\MotivoConsulta;
 use App\Models\Paciente;
-use App\Models\Periodo;
 use App\Models\Remision;
 use App\Models\Tratamiento;
 use App\Models\Usuario;
@@ -71,7 +70,6 @@ class AdmisionController extends Controller
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(),
             'tratamientosPropuestos' => Tratamiento::orderBy('nombre')->get(['id', 'nombre', 'clinica_id']),
-            'periodos' => Periodo::orderByDesc('gestion')->get(),
             'motivos' => MotivoConsulta::where('habilitado', true)->orderBy('nombre')->get(),
             'camposAutocompletar' => self::CAMPOS_AUTOCOMPLETAR,
         ];
@@ -118,7 +116,7 @@ class AdmisionController extends Controller
 
     protected function extraShowData(Model $model): array
     {
-        $model->load(['paciente', 'periodo', 'motivoConsulta', 'registradoPor', 'estudiante', 'responsable', 'clinicaEstudiante', 'clinicaResponsable', 'remisiones.clinica']);
+        $model->load(['paciente', 'motivoConsulta', 'registradoPor', 'estudiante', 'responsable', 'clinicaEstudiante', 'clinicaResponsable', 'remisiones.clinica']);
 
         return [];
     }
@@ -132,7 +130,6 @@ class AdmisionController extends Controller
         return AccesoClinico::admisiones(Admision::query(), $request->user())
             ->with([
                 'paciente:id,ci,nombre,apellido_paterno,apellido_materno',
-                'periodo:id,nombre,gestion',
                 'motivoConsulta:id,nombre',
                 'estudiante:id,nombre_completo',
                 'responsable:id,nombre_completo',
@@ -156,10 +153,6 @@ class AdmisionController extends Controller
             });
         }
 
-        if ($periodoId = $request->input('periodo_id')) {
-            $q->where('periodo_id', $periodoId);
-        }
-
         if ($desde = $request->input('desde')) {
             $q->whereDate('created_at', '>=', $desde);
         }
@@ -177,17 +170,13 @@ class AdmisionController extends Controller
 
     protected function extraIndexData(Request $request): array
     {
-        return [
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
-        ];
+        return [];
     }
 
     protected function extraDatosData($model): array
     {
         return [
             'pacientes' => Paciente::orderBy('nombre')->get(['id', 'ci', 'nombre', 'apellido_paterno', 'apellido_materno']),
-            'periodos' => Periodo::orderByDesc('gestion')->get(['id', 'nombre', 'gestion']),
             'motivos' => MotivoConsulta::where('habilitado', 1)->orderBy('nombre')->get(['id', 'nombre']),
             'estudiantes' => Usuario::where('habilitado', 1)
                 ->whereHas('roles', fn ($q) => $q->whereIn('name', ['estudiante', 'interno']))
@@ -209,7 +198,6 @@ class AdmisionController extends Controller
     {
         return [
             'paciente_id' => ['required', 'integer', 'exists:pacientes,id'],
-            'periodo_id' => ['nullable', 'integer', 'exists:periodos,id'],
             'motivo_consulta_id' => ['nullable', 'integer', 'exists:motivos_consulta,id'],
             'estudiante_id' => ['nullable', 'required_with:especialidad_estudiante,responsable_id,especialidad_responsable', 'integer', 'exists:usuarios,id'],
             'especialidad_estudiante' => ['nullable', 'required_with:estudiante_id,responsable_id,especialidad_responsable', 'integer', 'exists:clinicas,id'],
@@ -459,9 +447,6 @@ class AdmisionController extends Controller
         $this->validarResponsables($data);
         if ($model->remisiones()->exists() || $model->historiasClinicas()->exists()) {
             $campos = ['paciente_id', 'estudiante_id', 'responsable_id', 'especialidad_estudiante', 'especialidad_responsable'];
-            if ($model->historiasClinicas()->exists() || $model->remisiones()->where('estado', '!=', 'pendiente')->exists()) {
-                $campos[] = 'periodo_id';
-            }
             foreach ($campos as $campo) {
                 if (array_key_exists($campo, $data) && (string) $data[$campo] !== (string) $model->$campo) {
                     throw ValidationException::withMessages([$campo => 'La admisión ya tiene derivaciones; no se puede cambiar su asignación.']);
@@ -523,10 +508,6 @@ class AdmisionController extends Controller
     private function sincronizarDerivaciones(Admision $admision): void
     {
         if (! request()->has('clinica_ids') && ! request()->boolean('actualizar_derivaciones')) {
-            if ($admision->wasChanged('periodo_id')) {
-                $admision->remisiones()->where('estado', 'pendiente')->update(['periodo_id' => $admision->periodo_id]);
-            }
-
             return;
         }
         $seleccionadas = array_map('intval', request()->input('clinica_ids') ?? []);
@@ -554,9 +535,9 @@ class AdmisionController extends Controller
                     'observacion_propuesta' => request()->input('observaciones_propuestas.'.$clinicaId)]
                 : [];
             if (! $remision) {
-                Remision::create($propuesta + ['admision_id' => $admision->id, 'paciente_id' => $admision->paciente_id, 'periodo_id' => $admision->periodo_id, 'clinica_id' => $clinicaId, 'estado' => 'pendiente', 'habilitado' => true]);
+                Remision::create($propuesta + ['admision_id' => $admision->id, 'paciente_id' => $admision->paciente_id, 'clinica_id' => $clinicaId, 'estado' => 'pendiente', 'habilitado' => true]);
             } elseif ($remision->estado === 'pendiente') {
-                $remision->update($propuesta + ['habilitado' => true, 'periodo_id' => $admision->periodo_id]);
+                $remision->update($propuesta + ['habilitado' => true]);
             } elseif ($propuesta && (int) $remision->tratamiento_propuesto_id !== (int) $propuesta['tratamiento_propuesto_id']) {
                 throw ValidationException::withMessages(['tratamientos_propuestos.'.$clinicaId => 'La propuesta ya se transfirió a la historia; revísela con el docente.']);
             } elseif (! $remision->habilitado) {
@@ -706,20 +687,13 @@ class AdmisionController extends Controller
 
     /**
      * GET /admisiones/datos-iniciales
-     * Devuelve periodos, motivos y clínicas para llenar los selects.
+     * Devuelve motivos y clínicas para llenar los selects.
      */
     public function datosIniciales()
     {
         $this->authorizeAction('ver');
 
         return response()->json([
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion'])
-                ->map(fn ($p) => [
-                    'id' => $p->id,
-                    'texto' => "{$p->nombre} ({$p->gestion})",
-                ]),
-
             'motivos' => MotivoConsulta::where('habilitado', 1)
                 ->orderBy('nombre')
                 ->get(['id', 'nombre'])
@@ -741,7 +715,7 @@ class AdmisionController extends Controller
     {
         $query = Admision::query()->where(function (Builder $query) use ($request): void {
             $query->where('estudiante_id', $request->user()->id)->orWhere('registrado_por', $request->user()->id);
-        })->with(['paciente', 'responsable', 'periodo']);
+        })->with(['paciente', 'responsable']);
 
         return $this->respuestaListadoEstudiante($request, 'admisiones.estudiante', $this->datosListadoEstudiante($request, $query));
     }

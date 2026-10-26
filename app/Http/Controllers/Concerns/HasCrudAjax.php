@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\HistoriaClinica;
-use App\Models\Periodo;
 use App\Models\Remision;
 use App\Models\Usuario;
 use App\Services\ReporteModulo;
@@ -425,7 +424,6 @@ trait HasCrudAjax
         $filtros = $request->validate([
             'buscar' => ['nullable', 'string', 'max:255'],
             'clinica_id' => ['nullable', 'integer'],
-            'periodo_id' => ['nullable', 'integer'],
             'estado' => ['nullable', Rule::in(['revision', 'abierta', 'pendiente', 'asignada', 'autorizada', ...['cerrada', 'finalizada', 'culminada', 'completada', 'cancelada', 'completado', 'culminado', 'cancelado']])],
         ]);
         if ($buscar = trim($filtros['buscar'] ?? '')) {
@@ -434,7 +432,7 @@ trait HasCrudAjax
                     ->orWhere('apellido_materno', 'like', "%{$buscar}%")->orWhere('ci', 'like', "%{$buscar}%");
             });
         }
-        foreach (['clinica_id', 'periodo_id', 'estado'] as $campo) {
+        foreach (['clinica_id', 'estado'] as $campo) {
             if ($request->filled($campo) && ($campo !== 'clinica_id' || $query->getModel() instanceof HistoriaClinica || $query->getModel() instanceof Remision)) {
                 $query->where($campo, $filtros[$campo]);
             }
@@ -443,7 +441,6 @@ trait HasCrudAjax
         return [
             'registros' => $query->orderByDesc('id')->paginate(15)->withQueryString(),
             'clinicas' => $request->user()->especialidades()->wherePivot('habilitado', true)->orderBy('especialidad')->get(),
-            'periodos' => Periodo::orderByDesc('gestion')->get(),
         ];
     }
 }

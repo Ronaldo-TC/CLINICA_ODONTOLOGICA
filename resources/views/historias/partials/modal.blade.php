@@ -54,15 +54,6 @@
                         <span class="form-error" data-error-for="clinica_id"></span>
                     </div>
 
-                    {{-- Periodo --}}
-                    <div class="form-group">
-                        <label for="hist-periodo">Periodo <span class="req">*</span></label>
-                        <select id="hist-periodo" name="periodo_id" class="form-control" required>
-                            <option value="">Cargando...</option>
-                        </select>
-                        <span class="form-error" data-error-for="periodo_id"></span>
-                    </div>
-
                     {{-- Estado --}}
                     <div class="form-group">
                         <label for="hist-estado">Estado</label>
@@ -275,7 +266,6 @@
 
                 // Selects
                 $form.clinica_id.value = h.clinica_id ?? '';
-                $form.periodo_id.value = h.periodo_id ?? '';
                 $form.especialidad_estudiante.value = h.especialidad_estudiante ?? '';
                 $form.especialidad_docente.value = h.especialidad_docente ?? '';
 
@@ -330,11 +320,6 @@
                 $form.clinica_id.innerHTML = '<option value="">Seleccione...</option>' + clinicasOpts;
                 $form.especialidad_estudiante.innerHTML = '<option value="">Seleccione...</option>' + clinicasOpts;
                 $form.especialidad_docente.innerHTML = '<option value="">Seleccione...</option>' + clinicasOpts;
-
-                $form.periodo_id.innerHTML = '<option value="">Seleccione...</option>' +
-                    data.periodos.map((p) =>
-                        `<option value="${p.id}">${p.texto}</option>`
-                    ).join('');
 
                 datosInicialesCargados = true;
             } catch (err) {

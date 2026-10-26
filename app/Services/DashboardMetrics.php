@@ -9,7 +9,6 @@ use App\Models\HistoriaClinica;
 use App\Models\Insumo;
 use App\Models\InsumoSolicitado;
 use App\Models\Paciente;
-use App\Models\Periodo;
 use App\Models\TratamientoRealizado;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Collection;
@@ -55,21 +54,21 @@ class DashboardMetrics
     private static function clavesPorRol(Usuario $usuario): array
     {
         $mapa = [
-            'admin' => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total', 'ingresos_mes'],
-            'subadmin' => ['usuarios_activos', 'roles', 'clinicas', 'periodos', 'pacientes_total'],
-            'director' => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'historias_pendientes', 'insumos_bajo_stock'],
+            'admin' => ['usuarios_activos', 'roles', 'clinicas', 'pacientes_total', 'ingresos_mes'],
+            'subadmin' => ['usuarios_activos', 'roles', 'clinicas', 'pacientes_total'],
+            'director' => ['pacientes_total', 'tratamientos_total', 'ingresos_mes', 'historias_pendientes', 'insumos_bajo_stock'],
             'jefatura-clinicas' => ['historias_pendientes', 'insumos_bajo_stock', 'solicitudes_pendientes', 'admisiones_hoy', 'radiologias_hoy'],
             'jefe-catedra' => ['historias_catedra', 'solicitudes_catedra', 'pacientes_catedra', 'tratamientos_catedra'],
             'docente' => ['historias_por_autorizar', 'estudiantes_asignados', 'solicitudes_estudiantes', 'tratamientos_docente'],
             'estudiante' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes', 'historias_pendientes'],
             'interno' => ['mis_pacientes', 'mis_tratamientos', 'mis_solicitudes'],
-            'admision' => ['admisiones_hoy', 'pacientes_total', 'periodos', 'mis_admisiones'],
+            'admision' => ['admisiones_hoy', 'pacientes_total', 'mis_admisiones'],
             'cajas' => ['recaudacion_hoy', 'recibos_pendientes', 'ingresos_mes'],
             'insumos' => ['solicitudes_pendientes', 'insumos_bajo_stock', 'insumos_agotados', 'solicitudes_por_entregar'],
             'esterilizacion' => ['ciclos_hoy', 'paquetes_entregados', 'ciclos_mes'],
             'radiologia' => ['radiologias_hoy', 'radiografias_pendientes', 'radiografias_mes'],
-            'kardex' => ['pacientes_total', 'tratamientos_periodo', 'ingresos_mes', 'saldos'],
-            'investigacion' => ['cohorte_investigacion', 'pacientes_total', 'tratamientos_periodo'],
+            'kardex' => ['pacientes_total', 'tratamientos_total', 'ingresos_mes', 'saldos'],
+            'investigacion' => ['cohorte_investigacion', 'pacientes_total', 'tratamientos_total'],
         ];
 
         foreach ($usuario->getRoleNames() as $rol) {
@@ -112,10 +111,10 @@ class DashboardMetrics
                     self::contar(Paciente::query()->whereIn('id', AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('paciente_id'))
                         ->orWhereIn('id', AccesoClinico::admisiones(Admision::query(), $usuario)->select('paciente_id'))),
                     'en tus clínicas habilitadas', 'teal', 'users', self::ruta('admisiones.index')),
-                'tratamientos_catedra' => self::tarjeta('Tratamientos del periodo',
+                'tratamientos_catedra' => self::tarjeta('Tratamientos realizados',
                     self::contar(TratamientoRealizado::query()->whereIn('historia_clinica_id',
-                        AccesoClinico::historias(HistoriaClinica::query(), $usuario)->where('periodo_id', self::periodoIdVigente())->select('id'))),
-                    'de tu cátedra en el periodo vigente', 'fuchsia', 'activity', self::ruta('tratamientos-realizados.index')),
+                        AccesoClinico::historias(HistoriaClinica::query(), $usuario)->select('id'))),
+                    'de tu cátedra', 'fuchsia', 'activity', self::ruta('tratamientos-realizados.index')),
                 'usuarios_activos' => self::tarjeta(
                     'Usuarios activos',
                     self::contar(Usuario::query()->where('habilitado', true)->where('permitir_login', true)),
@@ -140,14 +139,6 @@ class DashboardMetrics
                     'hospital',
                     self::ruta('clinicas.index')
                 ),
-                'periodos' => self::tarjeta(
-                    'Periodos',
-                    self::contar(DB::table('periodos')),
-                    self::periodoVigente(),
-                    'amber',
-                    'folder',
-                    self::ruta('periodos.index')
-                ),
                 'pacientes_total' => self::tarjeta(
                     'Pacientes',
                     self::contar(DB::table('pacientes')),
@@ -156,13 +147,10 @@ class DashboardMetrics
                     'users',
                     self::ruta('pacientes.index')
                 ),
-                'tratamientos_periodo' => self::tarjeta(
-                    'Tratamientos del periodo',
-                    self::contar(DB::table('tratamientos_realizados')->whereIn(
-                        'historia_clinica_id',
-                        DB::table('historias_clinicas')->select('id')->where('periodo_id', self::periodoIdVigente())
-                    )),
-                    'en el periodo vigente',
+                'tratamientos_total' => self::tarjeta(
+                    'Tratamientos realizados',
+                    self::contar(DB::table('tratamientos_realizados')),
+                    'registrados en el sistema',
                     'fuchsia',
                     'activity',
                     self::ruta('tratamientos.index')
@@ -410,24 +398,6 @@ class DashboardMetrics
             ->value('saldo');
     }
 
-    private static function periodoIdVigente(): ?int
-    {
-        return Periodo::query()
-            ->where('habilitado', true)
-            ->orderByDesc('gestion')
-            ->value('id');
-    }
-
-    private static function periodoVigente(): ?string
-    {
-        $periodo = Periodo::query()
-            ->where('habilitado', true)
-            ->orderByDesc('gestion')
-            ->first();
-
-        return $periodo ? "vigente: {$periodo->nombre}" : 'sin periodo vigente';
-    }
-
     private static function tarjeta(
         string $label,
         string $value,
@@ -514,18 +484,5 @@ class DashboardMetrics
             ->orderByDesc('id')
             ->limit($limite)
             ->get();
-    }
-
-    /**
-     * Periodos que vencen en los próximos 30 días.
-     */
-    public static function proximosVencimientos(int $limite = 5)
-    {
-        return Periodo::query()
-            ->where('habilitado', true)
-            ->whereBetween('fecha_fin', [today(), today()->addDays(30)])
-            ->orderBy('fecha_fin')
-            ->limit($limite)
-            ->get(['id', 'nombre', 'fecha_fin']);
     }
 }

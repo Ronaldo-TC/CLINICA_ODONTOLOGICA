@@ -176,14 +176,6 @@ class MenuBuilder
             ],
             [
                 'type' => 'link',
-                'label' => 'Periodos',
-                'route' => 'periodos.index',
-                'icon' => 'folder',
-                'pattern' => 'periodos.*',
-                'permission' => 'periodos.ver',
-            ],
-            [
-                'type' => 'link',
                 'label' => 'Bitácoras',
                 'route' => 'bitacoras.index',
                 'icon' => 'book',
@@ -331,7 +323,7 @@ class MenuBuilder
 
         $secciones = [
             ['label' => 'Configuración', 'rutas' => [
-                'Seguridad', 'clinicas.index', 'periodos.index', 'especialidades.index',
+                'Seguridad', 'clinicas.index', 'especialidades.index',
                 'tratamientos.index', 'bitacoras.index',
             ]],
             ['label' => 'Atención clínica', 'rutas' => [

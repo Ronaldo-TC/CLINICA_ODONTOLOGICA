@@ -28,10 +28,6 @@ class HistoriaResource extends JsonResource
                 'id'           => $this->clinica?->id,
                 'especialidad' => $this->clinica?->especialidad,
             ]),
-            'periodo'     => $this->whenLoaded('periodo', fn () => [
-                'id'     => $this->periodo?->id,
-                'nombre' => $this->periodo?->nombre,
-            ]),
             'estudiante'  => $this->whenLoaded('estudiante', fn () => $this->estudiante?->nombre_completo),
             'docente'     => $this->whenLoaded('docente', fn () => $this->docente?->nombre_completo),
             'fecha_inicio' => $this->fecha_inicio?->format('Y-m-d'),

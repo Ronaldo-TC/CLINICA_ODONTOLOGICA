@@ -48,7 +48,6 @@
                 <div class="ficha-sub">
                     Ficha #{{ $registro->id }}
                     @if($registro->created_at) · {{ $registro->created_at->format('d/m/Y H:i') }} @endif
-                    · {{ $registro->periodo->nombre ?? 'Sin periodo' }}
                 </div>
             </div>
         </div>

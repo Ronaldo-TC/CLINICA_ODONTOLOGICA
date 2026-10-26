@@ -27,14 +27,6 @@
                         <span class="form-error" data-error-for="clinica_id"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="est-periodo">Periodo <span class="req">*</span></label>
-                        <select id="est-periodo" name="periodo_id" class="form-control" required>
-                            <option value="">Cargando...</option>
-                        </select>
-                        <span class="form-error" data-error-for="periodo_id"></span>
-                    </div>
-
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="est-estudiante-buscar">Estudiante <span class="req">*</span></label>
                         <div class="autocomplete-wrap" id="wrapEstudiante">
@@ -168,7 +160,6 @@
                 const e = data.registro || data;
 
                 $form.clinica_id.value = e.clinica_id ?? '';
-                $form.periodo_id.value = e.periodo_id ?? '';
                 $form.docente_id.value = e.docente_id ?? '';
                 $form.cantidad_sobres.value = e.cantidad_sobres ?? 0;
                 $form.cantidad_paquetes.value = e.cantidad_paquetes ?? 0;
@@ -207,9 +198,6 @@
 
                 $form.clinica_id.replaceChildren(new Option('Seleccione...', ''),
                     ...data.clinicas.map((clinica) => new Option(clinica.texto, clinica.id)));
-                $form.periodo_id.replaceChildren(new Option('Seleccione...', ''),
-                    ...data.periodos.map((periodo) => new Option(periodo.texto, periodo.id)));
-
                 datosInicialesCargados = true;
             } catch (err) {
                 console.error('[Esterilizacion] Error:', err);

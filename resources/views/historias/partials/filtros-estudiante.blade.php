@@ -15,15 +15,6 @@
         </div>
     @endif
     <div class="form-group">
-        <label for="periodo_id">Periodo</label>
-        <select id="periodo_id" name="periodo_id" class="form-control">
-            <option value="">Todos los periodos</option>
-            @foreach($periodos as $periodo)
-                <option value="{{ $periodo->id }}" @selected(request('periodo_id') == $periodo->id)>{{ $periodo->nombre }} · {{ $periodo->gestion }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="form-group">
         <label>&nbsp;</label>
         <div class="actions"><button class="btn btn-primary">Filtrar</button><button type="reset" class="btn btn-secondary">Limpiar</button></div>
     </div>

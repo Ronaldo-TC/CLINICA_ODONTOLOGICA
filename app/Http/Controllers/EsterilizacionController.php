@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\HasCrudAjax;
 use App\Models\Clinica;
 use App\Models\Esterilizacion;
 use App\Models\EsterilizacionCiclo;
-use App\Models\Periodo;
 use App\Models\Remision;
 use App\Models\Usuario;
 use App\Services\AccesoClinico;
@@ -45,7 +44,6 @@ class EsterilizacionController extends Controller
         return AccesoClinico::esterilizaciones(Esterilizacion::query(), $request->user())
             ->with([
                 'clinica:id,especialidad,modulo',
-                'periodo:id,nombre,gestion',
                 'estudiante:id,nombre_completo,habilitado',
                 'usuario:id,nombre_completo',
                 'ultimoCiclo',
@@ -68,10 +66,6 @@ class EsterilizacionController extends Controller
             $q->where('clinica_id', $clinicaId);
         }
 
-        if ($periodoId = $request->input('periodo_id')) {
-            $q->where('periodo_id', $periodoId);
-        }
-
         if (($estado = $request->input('estado')) !== null && $estado !== '') {
             $q->where('habilitada', (int) $estado);
         }
@@ -90,8 +84,6 @@ class EsterilizacionController extends Controller
                 ? $request->user()->only(['id', 'nombre_completo']) : null,
             'docentes' => Usuario::where('habilitado', true)->whereHas('roles', fn ($q) => $q->whereIn('name', ['docente', 'jefe-catedra']))->orderBy('nombre_completo')->get(['id', 'nombre_completo']),
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
         ];
     }
 
@@ -99,8 +91,6 @@ class EsterilizacionController extends Controller
     {
         return [
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo']),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion']),
             'estudiantes' => Usuario::where('habilitado', 1)
                 ->whereHas('roles', fn ($q) => $q->whereIn('name', ['estudiante', 'interno']))
                 ->orderBy('nombre_completo')
@@ -126,7 +116,6 @@ class EsterilizacionController extends Controller
             'fecha_recojo' => ['prohibited'],
             'estudiante_id' => ['nullable', 'integer', 'exists:usuarios,id'],
             'clinica_id' => ['required', 'integer', 'exists:clinicas,id'],
-            'periodo_id' => ['required', 'integer', 'exists:periodos,id'],
         ];
     }
 
@@ -137,7 +126,6 @@ class EsterilizacionController extends Controller
             'cantidad_paquetes.required' => 'La cantidad de paquetes es obligatoria.',
             'clinica_id.required' => 'Debe seleccionar una clínica.',
             'usuario_id.required' => 'Debe seleccionar un responsable.',
-            'periodo_id.required' => 'Debe seleccionar un periodo.',
             'fecha_recojo.after_or_equal' => 'La fecha de recojo debe ser igual o posterior a la entrega.',
         ];
     }
@@ -165,7 +153,7 @@ class EsterilizacionController extends Controller
         if (! empty($data['remision_id'])) {
             $remision = AccesoClinico::remisiones(Remision::query(), request()->user())
                 ->where('habilitado', true)->findOrFail($data['remision_id']);
-            foreach (['estudiante_id', 'docente_id', 'clinica_id', 'periodo_id'] as $campo) {
+            foreach (['estudiante_id', 'docente_id', 'clinica_id'] as $campo) {
                 if ((int) $remision->$campo !== (int) ($data[$campo] ?? 0)) {
                     throw ValidationException::withMessages([$campo => 'El control debe corresponder a la asignación del paciente.']);
                 }
@@ -512,9 +500,6 @@ class EsterilizacionController extends Controller
         return response()->json([
             'clinicas' => Clinica::orderBy('especialidad')->get(['id', 'especialidad', 'modulo'])
                 ->map(fn ($c) => ['id' => $c->id, 'texto' => "{$c->especialidad} ({$c->modulo})"]),
-            'periodos' => Periodo::orderByDesc('gestion')
-                ->get(['id', 'nombre', 'gestion'])
-                ->map(fn ($p) => ['id' => $p->id, 'texto' => "{$p->nombre} ({$p->gestion})"]),
         ]);
     }
 }
